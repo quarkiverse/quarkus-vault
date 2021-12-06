@@ -1,0 +1,12 @@
+---
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+name: "Vault"
+metadata:
+  keywords:
+  - "vault"
+  - "security"
+  categories:
+  - "security"
+  status: "preview"
+  config:
+  - "quarkus.vault."

@@ -3,14 +3,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>quarkus-integration-tests-parent</artifactId>
-        <groupId>io.quarkus</groupId>
-        <version>999-SNAPSHOT</version>
+        <artifactId>quarkus-vault-integration-tests-parent</artifactId>
+        <groupId>io.quarkiverse.vault</groupId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>quarkus-integration-test-vault-app</artifactId>
-    <name>Quarkus - Integration Tests - Vault App</name>
+    <artifactId>quarkus-vault-integration-test-app</artifactId>
+    <name>Quarkus - Vault - Integration Tests - App</name>
     <description>Module that contains vault orm test with native test</description>
     <dependencies>
         <dependency>
@@ -26,8 +26,9 @@
             <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
+            <groupId>io.quarkiverse.vault</groupId>
             <artifactId>quarkus-vault</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -46,76 +47,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
+            <groupId>io.quarkiverse.vault</groupId>
             <artifactId>quarkus-test-vault</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Minimal test dependencies to *-deployment artifacts for consistent build order -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-deployment</artifactId>
             <version>${project.version}</version>
-            <type>pom</type>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql-deployment</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-resteasy-deployment</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-health-deployment</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-vault-deployment</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 
@@ -128,18 +63,6 @@
         </resources>
         <plugins>
             <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <executions>
@@ -150,42 +73,31 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!-- see TLS availability in native mode https://github.com/quarkusio/quarkus/issues/3797 -->
+                        <!-- to activate tls, set vault-test-extension.use-tls=true and install /opt/graalvm -->
+                        <javax.net.ssl.trustStore>${project.basedir}/src/test/resources/vaultTrustStore</javax.net.ssl.trustStore>
+                        <vault-test-extension.use-tls>false</vault-test-extension.use-tls>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <profiles>
-
-        <profile>
-            <id>test-vault</id>
-            <activation>
-                <property>
-                    <name>test-containers</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>false</skip>
-                            <systemPropertyVariables>
-                                <!-- see TLS availability in native mode https://github.com/quarkusio/quarkus/issues/3797 -->
-                                <!-- to activate tls, set vault-test-extension.use-tls=true and install /opt/graalvm -->
-                                <javax.net.ssl.trustStore>${project.basedir}/src/test/resources/vaultTrustStore</javax.net.ssl.trustStore>
-                                <vault-test-extension.use-tls>false</vault-test-extension.use-tls>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
         <profile>
             <id>native-image</id>
             <activation>
@@ -194,24 +106,36 @@
                 </property>
             </activation>
             <build>
-                <!-- add some custom config, the rest comes from parent -->
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <!-- see TLS availability in native mode https://github.com/quarkusio/quarkus/issues/3797 -->
-                                <!-- to activate tls, set vault-test-extension.use-tls=true and install /opt/graalvm -->
-                                <javax.net.ssl.trustStore>
-                                    ${project.basedir}/src/test/resources/vaultTrustStore
-                                </javax.net.ssl.trustStore>
-                                <vault-test-extension.use-tls>false</vault-test-extension.use-tls>
-                            </systemPropertyVariables>
-                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <configuration>
+                                    <systemPropertyVariables>
+                                        <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+                                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                        <maven.home>${maven.home}</maven.home>
+                                        <!-- see TLS availability in native mode https://github.com/quarkusio/quarkus/issues/3797 -->
+                                        <!-- to activate tls, set vault-test-extension.use-tls=true and install /opt/graalvm -->
+                                        <javax.net.ssl.trustStore>
+                                            ${project.basedir}/src/test/resources/vaultTrustStore
+                                        </javax.net.ssl.trustStore>
+                                        <vault-test-extension.use-tls>false</vault-test-extension.use-tls>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
+            <properties>
+                <quarkus.package.type>native</quarkus.package.type>
+            </properties>
         </profile>
     </profiles>
 

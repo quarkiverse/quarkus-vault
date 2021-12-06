@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>quarkus-integration-tests-parent</artifactId>
-        <groupId>io.quarkus</groupId>
-        <version>999-SNAPSHOT</version>
+        <artifactId>quarkus-vault-integration-tests-parent</artifactId>
+        <groupId>io.quarkiverse.vault</groupId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>quarkus-integration-test-vault-agroal</artifactId>
-    <name>Quarkus - Integration Tests - Vault Agroal</name>
+    <artifactId>quarkus-vault-integration-test-agroal</artifactId>
+    <name>Quarkus - Vault - Integration Tests - Agroal</name>
 
     <dependencies>
         <dependency>
@@ -20,8 +20,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
+            <groupId>io.quarkiverse.vault</groupId>
             <artifactId>quarkus-test-vault</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -30,8 +31,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
+            <groupId>io.quarkiverse.vault</groupId>
             <artifactId>quarkus-vault-deployment</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -39,61 +41,35 @@
             <artifactId>quarkus-jdbc-postgresql</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- Minimal test dependencies to *-deployment artifacts for consistent build order -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql-deployment</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>test-vault</id>
-            <activation>
-                <property>
-                    <name>test-containers</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                    <goal>verify</goal>
-                                </goals>
-                                <configuration>
-                                    <skip>false</skip>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

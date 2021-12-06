@@ -1,0 +1,5 @@
+* xref:index.adoc[Quarkus Vault]
+* xref:vault-auth.adoc[Vault Authentication guide]
+* xref:vault-transit.adoc[Vault Transit Secret Engine Guide]
+* xref:vault-pki.adoc[Vault PKI Secret Engine Guide]
+* xref:vault-datasource.adoc[Vault Datasource Guide]

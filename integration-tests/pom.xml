@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.quarkiverse.vault</groupId>
+        <artifactId>quarkus-vault-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>quarkus-vault-integration-tests-parent</artifactId>
+    <name>Quarkus - Vault - Integration Tests - Parent</name>
+    <packaging>pom</packaging>
+    <modules>
+        <module>vault</module>
+        <module>vault-agroal</module>
+        <module>vault-app</module>
+    </modules>
+</project>
