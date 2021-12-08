@@ -89,7 +89,9 @@
                     <systemPropertyVariables>
                         <!-- see TLS availability in native mode https://github.com/quarkusio/quarkus/issues/3797 -->
                         <!-- to activate tls, set vault-test-extension.use-tls=true and install /opt/graalvm -->
+                        <!--
                         <javax.net.ssl.trustStore>${project.basedir}/src/test/resources/vaultTrustStore</javax.net.ssl.trustStore>
+                        -->
                         <vault-test-extension.use-tls>false</vault-test-extension.use-tls>
                     </systemPropertyVariables>
                 </configuration>
@@ -122,9 +124,11 @@
                                         <maven.home>${maven.home}</maven.home>
                                         <!-- see TLS availability in native mode https://github.com/quarkusio/quarkus/issues/3797 -->
                                         <!-- to activate tls, set vault-test-extension.use-tls=true and install /opt/graalvm -->
+                                        <!--
                                         <javax.net.ssl.trustStore>
                                             ${project.basedir}/src/test/resources/vaultTrustStore
                                         </javax.net.ssl.trustStore>
+                                        -->
                                         <vault-test-extension.use-tls>false</vault-test-extension.use-tls>
                                     </systemPropertyVariables>
                                 </configuration>
