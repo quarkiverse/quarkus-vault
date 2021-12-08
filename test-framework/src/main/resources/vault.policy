@@ -34,6 +34,9 @@ path "secret-v1/config" {
 path "database/creds/mydbrole" {
   capabilities = [ "read" ]
 }
+path "rabbitmq/creds/myrabbitmqrole" {
+  capabilities = [ "read" ]
+}
 
 # transit
 path "transit/*" {

@@ -1,6 +1,6 @@
 package io.quarkus.vault.runtime;
 
-import static io.quarkus.vault.runtime.config.CredentialsProviderConfig.DATABASE_MOUNT;
+import static io.quarkus.vault.runtime.config.CredentialsProviderConfig.DATABASE_DEFAULT_MOUNT;
 import static io.quarkus.vault.runtime.config.CredentialsProviderConfig.DEFAULT_REQUEST_PATH;
 
 import java.util.HashMap;
@@ -44,7 +44,7 @@ public class VaultCredentialsProvider implements CredentialsProvider {
         }
 
         if (config.databaseCredentialsRole.isPresent()) {
-            return vaultDynamicCredentialsManager.getDynamicCredentials(DATABASE_MOUNT, DEFAULT_REQUEST_PATH,
+            return vaultDynamicCredentialsManager.getDynamicCredentials(DATABASE_DEFAULT_MOUNT, DEFAULT_REQUEST_PATH,
                     config.databaseCredentialsRole.get());
         }
 

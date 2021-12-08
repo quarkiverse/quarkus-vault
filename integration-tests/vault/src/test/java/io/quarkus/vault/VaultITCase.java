@@ -3,8 +3,9 @@ package io.quarkus.vault;
 import static io.quarkus.credentials.CredentialsProvider.PASSWORD_PROPERTY_NAME;
 import static io.quarkus.credentials.CredentialsProvider.USER_PROPERTY_NAME;
 import static io.quarkus.vault.runtime.VaultAuthManager.USERPASS_WRAPPING_TOKEN_PASSWORD_KEY;
-import static io.quarkus.vault.runtime.config.CredentialsProviderConfig.DATABASE_MOUNT;
+import static io.quarkus.vault.runtime.config.CredentialsProviderConfig.DATABASE_DEFAULT_MOUNT;
 import static io.quarkus.vault.runtime.config.CredentialsProviderConfig.DEFAULT_REQUEST_PATH;
+import static io.quarkus.vault.runtime.config.CredentialsProviderConfig.RABBITMQ_DEFAULT_MOUNT;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
 import static io.quarkus.vault.test.VaultTestExtension.APP_SECRET_PATH;
@@ -21,13 +22,16 @@ import static io.quarkus.vault.test.VaultTestExtension.VAULT_AUTH_APPROLE;
 import static io.quarkus.vault.test.VaultTestExtension.VAULT_AUTH_USERPASS_PASSWORD;
 import static io.quarkus.vault.test.VaultTestExtension.VAULT_AUTH_USERPASS_USER;
 import static io.quarkus.vault.test.VaultTestExtension.VAULT_DBROLE;
+import static io.quarkus.vault.test.VaultTestExtension.VAULT_RMQROLE;
 import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
@@ -209,7 +213,8 @@ public class VaultITCase {
 
         assertTokenAppRole(appRoleClientToken);
         assertKvSecrets(appRoleClientToken);
-        assertDynamicCredentials(appRoleClientToken, APPROLE);
+        assertDynamicCredentials(appRoleClientToken, DATABASE_DEFAULT_MOUNT, VAULT_DBROLE, APPROLE);
+        assertDynamicCredentials(appRoleClientToken, RABBITMQ_DEFAULT_MOUNT, VAULT_RMQROLE, APPROLE);
         assertWrap(appRoleClientToken);
 
         VaultUserPassAuth vaultUserPassAuth = vaultInternalUserpassAuthMethod.login(VAULT_AUTH_USERPASS_USER,
@@ -222,7 +227,8 @@ public class VaultITCase {
 
         assertTokenUserPass(userPassClientToken);
         assertKvSecrets(userPassClientToken);
-        assertDynamicCredentials(userPassClientToken, USERPASS);
+        assertDynamicCredentials(userPassClientToken, DATABASE_DEFAULT_MOUNT, VAULT_DBROLE, USERPASS);
+        assertDynamicCredentials(userPassClientToken, RABBITMQ_DEFAULT_MOUNT, VAULT_RMQROLE, USERPASS);
         assertWrap(userPassClientToken);
     }
 
@@ -309,11 +315,22 @@ public class VaultITCase {
         return decryptBatchResult.data.batchResults.get(0).plaintext.decodeAsString();
     }
 
-    private void assertDynamicCredentials(String clientToken, VaultAuthenticationType authType) {
+    private void assertDynamicCredentials(String clientToken, String mount, String role, VaultAuthenticationType authType) {
         VaultDynamicCredentials vaultDynamicCredentials = vaultInternalDynamicCredentialsSecretEngine.generateCredentials(
-                clientToken, DATABASE_MOUNT, DEFAULT_REQUEST_PATH, VAULT_DBROLE);
-        String username = vaultDynamicCredentials.data.username;
-        assertTrue(username.startsWith("v-" + authType.name().toLowerCase() + "-" + VAULT_DBROLE + "-"));
+                clientToken, mount, DEFAULT_REQUEST_PATH, role);
+
+        switch (mount) {
+            case DATABASE_DEFAULT_MOUNT:
+                String dbUsername = vaultDynamicCredentials.data.username;
+                assertTrue(dbUsername.startsWith("v-" + authType.name().toLowerCase() + "-" + role + "-"));
+                break;
+
+            case RABBITMQ_DEFAULT_MOUNT:
+                String rmqUsername = vaultDynamicCredentials.data.username;
+                assertTrue(rmqUsername.startsWith(authType.name().toLowerCase() + "-"));
+                assertDoesNotThrow(() -> UUID.fromString(rmqUsername.substring(rmqUsername.length() - 36)));
+                break;
+        }
 
         VaultLeasesLookup vaultLeasesLookup = vaultInternalSystemBackend.lookupLease(clientToken,
                 vaultDynamicCredentials.leaseId);

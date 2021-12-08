@@ -42,6 +42,7 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.containers.output.OutputFrame;
 
 import io.quarkus.vault.VaultException;
@@ -68,6 +69,8 @@ public class VaultTestExtension {
     static final String DB_NAME = "mydb";
     static final String DB_USERNAME = "postgres";
     public static final String DB_PASSWORD = "bar";
+    static final String RMQ_USERNAME = "guest";
+    public static final String RMQ_PASSWORD = "yXvOzyOPE";
     public static final String SECRET_VALUE = "s\u20accr\u20act";
     static final int VAULT_PORT = 8200;
     static final int MAPPED_POSTGRESQL_PORT = 6543;
@@ -80,10 +83,12 @@ public class VaultTestExtension {
     public static final String LIST_SUB_PATH = "world";
     public static final String EXPECTED_SUB_PATHS = "[" + LIST_SUB_PATH + "]";
     public static final String VAULT_DBROLE = "mydbrole";
+    public static final String VAULT_RMQROLE = "myrabbitmqrole";
     public static final String APP_SECRET_PATH = "foo";
     static final String APP_CONFIG_PATH = "config";
     static final String VAULT_POLICY = "mypolicy";
     static final String POSTGRESQL_HOST = "mypostgresdb";
+    static final String RABBITMQ_HOST = "myrabbitmq";
     static final String VAULT_URL = (useTls() ? "https" : "http") + "://localhost:" + VAULT_PORT;
     public static final String SECRET_KEY = "secret";
     public static final String ENCRYPTION_KEY_NAME = "my-encryption-key";
@@ -107,6 +112,7 @@ public class VaultTestExtension {
 
     public GenericContainer vaultContainer;
     public PostgreSQLContainer postgresContainer;
+    public RabbitMQContainer rabbitMQContainer;
     public String rootToken = null;
     public String appRoleSecretId = null;
     public String appRoleRoleId = null;
@@ -212,6 +218,11 @@ public class VaultTestExtension {
 
         postgresContainer.setPortBindings(Arrays.asList(MAPPED_POSTGRESQL_PORT + ":" + POSTGRESQL_PORT));
 
+        rabbitMQContainer = new RabbitMQContainer()
+                .withAdminPassword(RMQ_PASSWORD)
+                .withNetwork(network)
+                .withNetworkAliases(RABBITMQ_HOST);
+
         String configFile = useTls() ? "vault-config-tls.json" : "vault-config.json";
 
         String vaultImage = getVaultImage();
@@ -236,6 +247,8 @@ public class VaultTestExtension {
 
         postgresContainer.start();
         execPostgres(format("psql -U %s -d %s -f %s", DB_USERNAME, DB_NAME, TMP_POSTGRES_INIT_SQL_FILE));
+
+        rabbitMQContainer.start();
 
         Consumer<OutputFrame> consumer = outputFrame -> System.out.print("VAULT >> " + outputFrame.getUtf8String());
         vaultContainer.setLogConsumers(Arrays.asList(consumer));
@@ -366,6 +379,24 @@ public class VaultTestExtension {
                 VAULT_DBROLE, DB_NAME, TMP_VAULT_POSTGRES_CREATION_SQL_FILE, db_default_ttl, db_max_ttl);
         execVault(vault_write_database_roles_mydbrole);
 
+        execVault("vault secrets enable rabbitmq");
+
+        String vault_write_rabbitmq_config = format(
+                "vault write rabbitmq/config/connection " +
+                        "connection_uri=http://%s:15672 " +
+                        "username=%s " +
+                        "password=%s",
+                RABBITMQ_HOST, RMQ_USERNAME, RMQ_PASSWORD);
+        execVault(vault_write_rabbitmq_config);
+
+        String vault_write_rabbitmq_roles_myrabbitmqrole = format(
+                "vault write rabbitmq/roles/%s " +
+                        "vhosts='{\"/\":{\"configure\":\".*\", \"write\":\".*\", \"read\":\".*\"}}' " +
+                        "default_ttl=%s " +
+                        "max_ttl=%s",
+                VAULT_RMQROLE, db_default_ttl, db_max_ttl);
+        execVault(vault_write_rabbitmq_roles_myrabbitmqrole);
+
         // transit
 
         execVault("vault secrets enable transit");
@@ -494,6 +525,9 @@ public class VaultTestExtension {
         }
         if (postgresContainer != null && postgresContainer.isRunning()) {
             postgresContainer.stop();
+        }
+        if (rabbitMQContainer != null && rabbitMQContainer.isRunning()) {
+            rabbitMQContainer.stop();
         }
 
         // VaultManager.getInstance().reset();

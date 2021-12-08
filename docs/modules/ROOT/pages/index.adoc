@@ -11,6 +11,7 @@ include::./includes/attributes.adoc[]
 :vault-transit-guide: xref:vault-transit.adoc[Vault Transit Secret Engine Guide]
 :vault-pki-guide: xref:vault-pki.adoc[Vault PKI Secret Engine Guide]
 :vault-datasource-guide: xref:vault-datasource.adoc[Vault Datasource Guide]
+:vault-rabbitmq-guide: link:https://quarkus.io/guides/rabbitmq-reference#dynamic-credentials[RabbitMQ Dynamic Credentials Guide]
 
 https://www.vaultproject.io/[HashiCorp Vault] is a multi-purpose tool aiming at protecting sensitive data, such as
 credentials, certificates, access tokens, encryption keys, ... In the context of Quarkus, several use cases
@@ -19,6 +20,7 @@ are supported:
 * mounting a map of properties stored into the
 https://www.vaultproject.io/docs/secrets/kv/index.html[Vault kv secret engine] as an Eclipse MicroProfile config source
 * fetching credentials from Vault when configuring an Agroal datasource, as documented in the {vault-datasource-guide}
+* fetching credentials from Vault when connecting to a RabbitMQ broker, as documented in the {vault-rabbitmq-guide}
 * accessing Vault _kv secret engine_ programmatically
 * support for the https://www.vaultproject.io/docs/secrets/totp[TOTP Secret Engine]
 * support for the https://www.vaultproject.io/docs/secrets/transit[Transit Secret Engine] as documented

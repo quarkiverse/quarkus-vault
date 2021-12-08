@@ -10,7 +10,8 @@ import io.quarkus.runtime.annotations.ConfigItem;
 @ConfigGroup
 public class CredentialsProviderConfig {
 
-    public static final String DATABASE_MOUNT = "database";
+    public static final String DATABASE_DEFAULT_MOUNT = "database";
+    public static final String RABBITMQ_DEFAULT_MOUNT = "rabbitmq";
     public static final String DEFAULT_REQUEST_PATH = "creds";
 
     /**
@@ -45,7 +46,7 @@ public class CredentialsProviderConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = DATABASE_MOUNT)
+    @ConfigItem(defaultValue = DATABASE_DEFAULT_MOUNT)
     public String credentialsMount;
 
     /**
