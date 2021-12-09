@@ -915,6 +915,9 @@ public class VaultPKIITCase {
         GeneratedRootCertificate generatedRootCertificate = pkiSecretEngine.generateRoot(genRootOptions);
         assertNotNull(generatedRootCertificate.certificate);
 
+        // Ensure root CA's returns empty CA chain
+        assertTrue(pkiSecretEngine.getCertificateAuthorityChain().getCertificates().isEmpty());
+
         // Generate intermediate CA CSR in "pki2"
         VaultPKISecretEngine pkiSecretEngine2 = pkiSecretEngineFactory.engine("pki2");
 

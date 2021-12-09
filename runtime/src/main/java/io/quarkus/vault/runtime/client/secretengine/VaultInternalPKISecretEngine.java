@@ -50,7 +50,8 @@ public class VaultInternalPKISecretEngine extends VaultInternalBase {
 
     private Buffer getRaw(String token, String mount, String path, String format) {
         String suffix = format != null ? "/" + format : "";
-        return vaultClient.get(getPath(mount, path + suffix), token);
+        Buffer result = vaultClient.get(getPath(mount, path + suffix), token);
+        return result != null ? result : Buffer.buffer();
     }
 
     public VaultPKICertificateResult getCertificate(String token, String mount, String serial) {
