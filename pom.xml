@@ -28,7 +28,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.version>2.6.0.CR1</quarkus.version>
 
-        <wiremock-jre8.version>2.27.2</wiremock-jre8.version>
+        <wiremock-jre8.version>2.32.0</wiremock-jre8.version>
         <wiremock-maven-plugin.version>7.0.0</wiremock-maven-plugin.version>
     </properties>
     <dependencyManagement>
