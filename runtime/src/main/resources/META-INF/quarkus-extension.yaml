@@ -7,6 +7,6 @@ metadata:
   - "security"
   categories:
   - "security"
-  status: "preview"
+  guide: https://quarkiverse.github.io/quarkiverse-docs/quarkus-vault/dev/index.html
   config:
   - "quarkus.vault."
