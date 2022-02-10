@@ -2,6 +2,7 @@ package io.quarkus.vault.runtime.client;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.quarkus.vault.runtime.client.MutinyVertxClientFactory.createHttpClient;
+import static io.vertx.core.spi.resolver.ResolverProvider.DISABLE_DNS_RESOLVER_PROP_NAME;
 import static java.util.Collections.emptyMap;
 
 import java.net.ConnectException;
@@ -30,6 +31,7 @@ import io.quarkus.vault.runtime.VaultIOException;
 import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.VertxException;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
@@ -58,7 +60,28 @@ public class VertxVaultClient implements VaultClient {
         this.tlsConfig = tlsConfig;
         this.mapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        this.vertx = Vertx.vertx();
+        this.vertx = createVertxInstance();
+    }
+
+    private Vertx createVertxInstance() {
+        // We must disable the async DNS resolver as it can cause issues when resolving the Vault instance.
+        // This is done using the DISABLE_DNS_RESOLVER_PROP_NAME system property.
+        // The DNS resolver used by vert.x is configured during the (synchronous) initialization.
+        // So, we just need to disable the async resolver around the Vert.x instance creation.
+        String originalValue = System.getProperty(DISABLE_DNS_RESOLVER_PROP_NAME);
+        Vertx vertx;
+        try {
+            System.setProperty(DISABLE_DNS_RESOLVER_PROP_NAME, "true");
+            vertx = Vertx.vertx(new VertxOptions());
+        } finally {
+            // Restore the original value
+            if (originalValue == null) {
+                System.clearProperty(DISABLE_DNS_RESOLVER_PROP_NAME);
+            } else {
+                System.setProperty(DISABLE_DNS_RESOLVER_PROP_NAME, originalValue);
+            }
+        }
+        return vertx;
     }
 
     public void init() {
