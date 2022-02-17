@@ -3,7 +3,7 @@
     <parent>
         <artifactId>quarkus-vault-integration-tests-parent</artifactId>
         <groupId>io.quarkiverse.vault</groupId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
