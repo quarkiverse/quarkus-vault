@@ -13,6 +13,7 @@ import io.quarkus.vault.runtime.client.dto.sys.VaultHealthResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultInitResponse;
 import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultSealStatusResult;
+import io.quarkus.vault.runtime.client.dto.sys.VaultSecretEngineInfoResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultTuneBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultTuneResult;
 import io.quarkus.vault.runtime.config.VaultBuildTimeConfig;
@@ -22,6 +23,7 @@ import io.quarkus.vault.sys.VaultHealthStatus;
 import io.quarkus.vault.sys.VaultInit;
 import io.quarkus.vault.sys.VaultSealStatus;
 import io.quarkus.vault.sys.VaultSecretEngine;
+import io.quarkus.vault.sys.VaultSecretEngineInfo;
 import io.quarkus.vault.sys.VaultTuneInfo;
 
 @ApplicationScoped
@@ -140,6 +142,20 @@ public class VaultSystemBackendManager implements VaultSystemBackendEngine {
     }
 
     @Override
+    public VaultSecretEngineInfo getSecretEngineInfo(String mount) {
+        String token = vaultAuthManager.getClientToken();
+        VaultSecretEngineInfoResult result = vaultInternalSystemBackend.getSecretEngineInfo(token, mount);
+        VaultSecretEngineInfo info = new VaultSecretEngineInfo()
+                .setDescription(result.data.description)
+                .setType(result.data.type)
+                .setLocal(result.data.local)
+                .setExternalEntropyAccess(result.data.externalEntropyAccess)
+                .setSealWrap(result.data.sealWrap)
+                .setOptions(result.data.options);
+        return info;
+    }
+
+    @Override
     public VaultTuneInfo getTuneInfo(String mount) {
         String token = vaultAuthManager.getClientToken();
         VaultTuneResult vaultTuneResult = vaultInternalSystemBackend.getTuneInfo(token, mount);
@@ -166,6 +182,23 @@ public class VaultSystemBackendManager implements VaultSystemBackendEngine {
 
     @Override
     public boolean isEngineMounted(String mount) {
+
+        try {
+            getSecretEngineInfo(mount);
+            return true;
+        } catch (VaultClientException e) {
+            if (e.getStatus() == 405) {
+                // vault < 1.10.0 - need to use getTuneInfo()
+            } else if (e.getStatus() == 400) {
+                // engine not found
+                return false;
+            } else {
+                throw e;
+            }
+        }
+
+        // vault < 1.10.0
+
         try {
             getTuneInfo(mount);
             return true;

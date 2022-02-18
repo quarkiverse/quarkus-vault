@@ -9,6 +9,7 @@ import io.quarkus.vault.sys.VaultHealthStatus;
 import io.quarkus.vault.sys.VaultInit;
 import io.quarkus.vault.sys.VaultSealStatus;
 import io.quarkus.vault.sys.VaultSecretEngine;
+import io.quarkus.vault.sys.VaultSecretEngineInfo;
 import io.quarkus.vault.sys.VaultTuneInfo;
 
 /**
@@ -90,6 +91,17 @@ public interface VaultSystemBackendEngine {
      * @return current tune info
      */
     VaultTuneInfo getTuneInfo(String mount);
+
+    /**
+     * Get the info for a secret engine, including its type.
+     * 
+     * @since Vault 1.10.0
+     * @see https://www.vaultproject.io/api-docs/system/mounts#get-the-configuration-of-a-secret-engine
+     *
+     * @param mount Name of the secret engine
+     * @return current secret engine info
+     */
+    VaultSecretEngineInfo getSecretEngineInfo(String mount);
 
     /**
      * Update the tune info for a secret engine at a specific mount.
