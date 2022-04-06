@@ -182,8 +182,8 @@ public class VaultTestExtension {
         vaultBootstrapConfig.enterprise.namespace = Optional.empty();
         vaultBootstrapConfig.tls.skipVerify = Optional.of(true);
         vaultBootstrapConfig.tls.caCert = Optional.empty();
-        vaultBootstrapConfig.connectTimeout = Duration.ofSeconds(5);
-        vaultBootstrapConfig.readTimeout = Duration.ofSeconds(1);
+        vaultBootstrapConfig.connectTimeout = Duration.ofSeconds(30);
+        vaultBootstrapConfig.readTimeout = Duration.ofSeconds(5);
         vaultBootstrapConfig.nonProxyHosts = Optional.empty();
         vaultBootstrapConfig.authentication = new VaultAuthenticationConfig();
         vaultBootstrapConfig.authentication.kubernetes = new VaultKubernetesAuthenticationConfig();

@@ -19,6 +19,7 @@ import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultRenewLease;
 import io.quarkus.vault.runtime.client.dto.sys.VaultSealStatusResult;
+import io.quarkus.vault.runtime.client.dto.sys.VaultSecretEngineInfoResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultTuneBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultTuneResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultUnwrapBody;
@@ -96,6 +97,10 @@ public class VaultInternalSystemBackend extends VaultInternalBase {
 
     public void updateTuneInfo(String token, String mount, VaultTuneBody body) {
         vaultClient.post("sys/mounts/" + mount + "/tune", token, body, 204);
+    }
+
+    public VaultSecretEngineInfoResult getSecretEngineInfo(String token, String mount) {
+        return vaultClient.get("sys/mounts/" + mount, token, VaultSecretEngineInfoResult.class);
     }
 
     // ---
