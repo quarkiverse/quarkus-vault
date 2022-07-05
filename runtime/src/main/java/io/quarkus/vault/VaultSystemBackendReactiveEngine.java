@@ -22,7 +22,7 @@ public interface VaultSystemBackendReactiveEngine {
 
     /**
      * Initializes a new Vault.
-     * 
+     *
      * @param secretShares specifies the number of shares to split the master key into.
      * @param secretThreshold specifies the number of shares required to reconstruct the master key.
      * @return Vault Init.
@@ -57,7 +57,7 @@ public interface VaultSystemBackendReactiveEngine {
 
     /**
      * Get the rules for the named policy.
-     * 
+     *
      * @param name of the policy
      * @return rules of named policy
      */
@@ -80,7 +80,7 @@ public interface VaultSystemBackendReactiveEngine {
 
     /**
      * List existing policies.
-     * 
+     *
      * @return a list of all policy names
      */
     Uni<List<String>> getPolicies();

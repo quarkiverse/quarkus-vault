@@ -6,7 +6,7 @@ import io.quarkus.vault.VaultTransitSecretEngine;
 
 /**
  * A request to encrypt some arbitrary data, with optional key version and transit context.
- * 
+ *
  * @see VaultTransitSecretEngine#encrypt(String, List)
  */
 public class EncryptionRequest extends VaultTransitBatchItem {

@@ -323,7 +323,7 @@ public class VaultTransitSecretEngine {
 
     /**
      * Create a new Transit key.
-     * 
+     *
      * @param keyName key name
      * @param detail key creation detail or null
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#create-key">create key</a>
@@ -334,7 +334,7 @@ public class VaultTransitSecretEngine {
 
     /**
      * Update the configuration of a Transit key. The key must exist.
-     * 
+     *
      * @param keyName key name
      * @param detail key configuration detail
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#update-key-configuration">update key configuration</a>
@@ -345,7 +345,7 @@ public class VaultTransitSecretEngine {
 
     /**
      * Delete a Transit key. Key must have been configured with deletion allowed. The key must exist.
-     * 
+     *
      * @param keyName key name
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#delete-key">delete key</a>
      */
@@ -356,7 +356,7 @@ public class VaultTransitSecretEngine {
     /**
      * Export a Transit Key. Key must have made exportable through creation or configuration update.
      * The key must exist.
-     * 
+     *
      * @param keyName name of the key
      * @param keyType key type
      * @param keyVersion null, "latest" or a valid version number as a String. If null all versions will be returned
@@ -369,7 +369,7 @@ public class VaultTransitSecretEngine {
 
     /**
      * Read the configuration of a Transit key.
-     * 
+     *
      * @param keyName key name
      * @return key detail, or null if the key does not exist
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#read-key">read key</a>

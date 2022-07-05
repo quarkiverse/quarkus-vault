@@ -17,7 +17,7 @@ public class KeyDefinition {
 
     /**
      * QR code in base64-formatteed PNG bytes.
-     * 
+     *
      * @return Barcode.
      */
     public String getBarcode() {
@@ -27,7 +27,7 @@ public class KeyDefinition {
     /**
      * URL in otpauth format (ie
      * otpauth://totp/Google:test@gmail.com?algorithm=SHA1&digits=6&issuer=Google&period=30&secret=HTXT7KJFVNAJUPYWQRWMNVQE5AF5YZI2)
-     * 
+     *
      * @return URL in otpauth format.
      */
     public String getUrl() {
