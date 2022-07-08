@@ -15,6 +15,12 @@ import io.quarkus.deployment.builditem.RunTimeConfigurationSourceValueBuildItem;
 import io.quarkus.deployment.builditem.SslNativeConfigBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
+import io.quarkus.vault.VaultKVSecretEngine;
+import io.quarkus.vault.VaultKubernetesAuthService;
+import io.quarkus.vault.VaultPKISecretEngine;
+import io.quarkus.vault.VaultSystemBackendEngine;
+import io.quarkus.vault.VaultTOTPSecretEngine;
+import io.quarkus.vault.VaultTransitSecretEngine;
 import io.quarkus.vault.runtime.Base64StringDeserializer;
 import io.quarkus.vault.runtime.Base64StringSerializer;
 import io.quarkus.vault.runtime.VaultAuthManager;
@@ -80,15 +86,21 @@ public class VaultProcessor {
                 .setUnremovable()
                 .addBeanClass(VaultCredentialsProvider.class)
                 .addBeanClass(VaultKvManager.class)
+                .addBeanClass(VaultKVSecretEngine.class)
                 .addBeanClass(VaultTransitManager.class)
+                .addBeanClass(VaultTransitSecretEngine.class)
                 .addBeanClass(VaultTOTPManager.class)
+                .addBeanClass(VaultTOTPSecretEngine.class)
                 .addBeanClass(VaultSystemBackendManager.class)
+                .addBeanClass(VaultSystemBackendEngine.class)
                 .addBeanClass(VaultKubernetesAuthManager.class)
+                .addBeanClass(VaultKubernetesAuthService.class)
                 .addBeanClass(VaultAuthManager.class)
                 .addBeanClass(VaultDynamicCredentialsManager.class)
                 .addBeanClass(VertxVaultClient.class)
                 .addBeanClass(VaultConfigHolder.class)
                 .addBeanClass(VaultPKIManager.class)
+                .addBeanClass(VaultPKISecretEngine.class)
                 .addBeanClass(VaultPKIManagerFactory.class)
                 .addBeanClass(VaultInternalKvV1SecretEngine.class)
                 .addBeanClass(VaultInternalKvV2SecretEngine.class)

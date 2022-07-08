@@ -6,16 +6,17 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.quarkus.vault.VaultKubernetesAuthService;
+import io.quarkus.vault.VaultKubernetesAuthReactiveService;
 import io.quarkus.vault.auth.VaultKubernetesAuthConfig;
 import io.quarkus.vault.auth.VaultKubernetesAuthRole;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalKubernetesAuthMethod;
 import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthConfigData;
 import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthRoleData;
+import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
-public class VaultKubernetesAuthManager implements VaultKubernetesAuthService {
+public class VaultKubernetesAuthManager implements VaultKubernetesAuthReactiveService {
 
     @Inject
     private VaultAuthManager vaultAuthManager;
@@ -23,48 +24,53 @@ public class VaultKubernetesAuthManager implements VaultKubernetesAuthService {
     private VaultInternalKubernetesAuthMethod vaultInternalKubernetesAuthMethod;
 
     @Override
-    public void configure(VaultKubernetesAuthConfig config) {
-        String token = vaultAuthManager.getClientToken();
-        vaultInternalKubernetesAuthMethod.configureAuth(token, new VaultKubernetesAuthConfigData()
-                .setIssuer(config.issuer)
-                .setKubernetesCaCert(config.kubernetesCaCert)
-                .setKubernetesHost(config.kubernetesHost)
-                .setPemKeys(config.pemKeys)
-                .setTokenReviewerJwt(config.tokenReviewerJwt));
+    public Uni<Void> configure(VaultKubernetesAuthConfig config) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.configureAuth(token, new VaultKubernetesAuthConfigData()
+                    .setIssuer(config.issuer)
+                    .setKubernetesCaCert(config.kubernetesCaCert)
+                    .setKubernetesHost(config.kubernetesHost)
+                    .setPemKeys(config.pemKeys)
+                    .setTokenReviewerJwt(config.tokenReviewerJwt));
+        });
     }
 
     @Override
-    public VaultKubernetesAuthConfig getConfig() {
-        String token = vaultAuthManager.getClientToken();
-        VaultKubernetesAuthConfigData data = vaultInternalKubernetesAuthMethod.readAuthConfig(token).data;
-        return new VaultKubernetesAuthConfig()
-                .setKubernetesCaCert(data.kubernetesCaCert)
-                .setKubernetesHost(data.kubernetesHost)
-                .setIssuer(data.issuer)
-                .setPemKeys(data.pemKeys)
-                .setTokenReviewerJwt(data.tokenReviewerJwt);
+    public Uni<VaultKubernetesAuthConfig> getConfig() {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.readAuthConfig(token)
+                    .map(result -> new VaultKubernetesAuthConfig()
+                            .setKubernetesCaCert(result.data.kubernetesCaCert)
+                            .setKubernetesHost(result.data.kubernetesHost)
+                            .setIssuer(result.data.issuer)
+                            .setPemKeys(result.data.pemKeys)
+                            .setTokenReviewerJwt(result.data.tokenReviewerJwt));
+        });
     }
 
-    public VaultKubernetesAuthRole getRole(String name) {
-        String token = vaultAuthManager.getClientToken();
-        VaultKubernetesAuthRoleData role = vaultInternalKubernetesAuthMethod.getVaultAuthRole(token, name).data;
-        return new VaultKubernetesAuthRole()
-                .setBoundServiceAccountNames(role.boundServiceAccountNames)
-                .setBoundServiceAccountNamespaces(role.boundServiceAccountNamespaces)
-                .setAudience(role.audience)
-                .setTokenTtl(role.tokenTtl)
-                .setTokenMaxTtl(role.tokenMaxTtl)
-                .setTokenPolicies(role.tokenPolicies)
-                .setTokenBoundCidrs(role.tokenBoundCidrs)
-                .setTokenExplicitMaxTtl(role.tokenExplicitMaxTtl)
-                .setTokenNoDefaultPolicy(role.tokenNoDefaultPolicy)
-                .setTokenNumUses(role.tokenNumUses)
-                .setTokenPeriod(role.tokenPeriod)
-                .setTokenType(role.tokenType);
+    public Uni<VaultKubernetesAuthRole> getRole(String name) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.getVaultAuthRole(token, name)
+                    .map(result -> {
+                        VaultKubernetesAuthRoleData role = result.data;
+                        return new VaultKubernetesAuthRole()
+                                .setBoundServiceAccountNames(role.boundServiceAccountNames)
+                                .setBoundServiceAccountNamespaces(role.boundServiceAccountNamespaces)
+                                .setAudience(role.audience)
+                                .setTokenTtl(role.tokenTtl)
+                                .setTokenMaxTtl(role.tokenMaxTtl)
+                                .setTokenPolicies(role.tokenPolicies)
+                                .setTokenBoundCidrs(role.tokenBoundCidrs)
+                                .setTokenExplicitMaxTtl(role.tokenExplicitMaxTtl)
+                                .setTokenNoDefaultPolicy(role.tokenNoDefaultPolicy)
+                                .setTokenNumUses(role.tokenNumUses)
+                                .setTokenPeriod(role.tokenPeriod)
+                                .setTokenType(role.tokenType);
+                    });
+        });
     }
 
-    public void createRole(String name, VaultKubernetesAuthRole role) {
-        String token = vaultAuthManager.getClientToken();
+    public Uni<Void> createRole(String name, VaultKubernetesAuthRole role) {
         VaultKubernetesAuthRoleData body = new VaultKubernetesAuthRoleData()
                 .setBoundServiceAccountNames(role.boundServiceAccountNames)
                 .setBoundServiceAccountNamespaces(role.boundServiceAccountNamespaces)
@@ -78,26 +84,30 @@ public class VaultKubernetesAuthManager implements VaultKubernetesAuthService {
                 .setTokenNumUses(role.tokenNumUses)
                 .setTokenPeriod(role.tokenPeriod)
                 .setTokenType(role.tokenType);
-        vaultInternalKubernetesAuthMethod.createAuthRole(token, name, body);
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.createAuthRole(token, name, body);
+        });
     }
 
     @Override
-    public List<String> getRoles() {
-        try {
-            String token = vaultAuthManager.getClientToken();
-            return vaultInternalKubernetesAuthMethod.listAuthRoles(token).data.keys;
-        } catch (VaultClientException e) {
-            if (e.getStatus() == 404) {
-                return Collections.emptyList();
-            } else {
-                throw e;
-            }
-        }
+    public Uni<List<String>> getRoles() {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.listAuthRoles(token)
+                    .map(r -> r.data.keys)
+                    .onFailure(VaultClientException.class).recoverWithUni(e -> {
+                        if (((VaultClientException) e).getStatus() == 404) {
+                            return Uni.createFrom().item(Collections.emptyList());
+                        } else {
+                            return Uni.createFrom().failure(e);
+                        }
+                    });
+        });
     }
 
     @Override
-    public void deleteRole(String name) {
-        String token = vaultAuthManager.getClientToken();
-        vaultInternalKubernetesAuthMethod.deleteAuthRoles(token, name);
+    public Uni<Void> deleteRole(String name) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.deleteAuthRoles(token, name);
+        });
     }
 }

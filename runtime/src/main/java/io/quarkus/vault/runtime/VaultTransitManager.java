@@ -5,7 +5,6 @@ import static io.quarkus.vault.transit.VaultTransitSecretEngineConstants.INVALID
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 import java.util.HashMap;
@@ -13,6 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -21,28 +21,22 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.quarkus.vault.VaultException;
-import io.quarkus.vault.VaultTransitSecretEngine;
-import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.VaultTransitSecretReactiveEngine;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitCreateKeyBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitDecrypt;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitDecryptBatchInput;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitDecryptBody;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitDecryptDataBatchResult;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitEncrypt;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitEncryptBatchInput;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitEncryptBody;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitEncryptDataBatchResult;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitKeyConfigBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitKeyExport;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitKeyVersionData;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitReadKeyData;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitRewrapBatchInput;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitRewrapBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitSign;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitSignBatchInput;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitSignBody;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitSignDataBatchResult;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerify;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerifyBatchInput;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerifyBody;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerifyDataBatchResult;
@@ -77,9 +71,12 @@ import io.quarkus.vault.transit.VaultTransitSymmetricKeyDetail;
 import io.quarkus.vault.transit.VaultTransitSymmetricKeyVersion;
 import io.quarkus.vault.transit.VaultVerificationBatchException;
 import io.quarkus.vault.transit.VerificationRequest;
+import io.quarkus.vault.utils.Plugs;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
-public class VaultTransitManager implements VaultTransitSecretEngine {
+public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
     @Inject
     private VaultAuthManager vaultAuthManager;
@@ -93,37 +90,46 @@ public class VaultTransitManager implements VaultTransitSecretEngine {
     }
 
     @Override
-    public String encrypt(String keyName, String clearData) {
+    public Uni<String> encrypt(String keyName, String clearData) {
         return encrypt(keyName, new ClearData(clearData), null);
     }
 
     @Override
-    public String encrypt(String keyName, ClearData clearData, TransitContext transitContext) {
+    public Uni<String> encrypt(String keyName, ClearData clearData, TransitContext transitContext) {
         EncryptionRequest item = new EncryptionRequest(clearData, transitContext);
-        return encryptBatch(keyName, singletonList(item)).get(0).getValueOrElseError();
+        return encryptBatch(keyName, singletonList(item)).map(results -> results.get(0).getValueOrElseError());
     }
 
     // workaround https://github.com/hashicorp/vault/issues/10232
-    private String encrypt(String keyName, EncryptionRequest request) {
+    private Uni<String> encrypt(String keyName, EncryptionRequest request) {
         VaultTransitEncryptBody body = new VaultTransitEncryptBody();
         body.plaintext = Base64String.from(request.getData().getValue());
         body.context = Base64String.from(request.getContext());
         body.keyVersion = request.getKeyVersion();
 
         TransitKeyConfig config = getTransitConfig(keyName);
+
+        String configKeyName;
         if (config != null) {
-            keyName = config.name.orElse(keyName);
+            configKeyName = config.name.orElse(keyName);
             body.type = config.type.orElse(null);
             body.convergentEncryption = config.convergentEncryption.orElse(null);
+        } else {
+            configKeyName = keyName;
         }
-        VaultTransitEncrypt encrypt = vaultInternalTransitSecretEngine.encrypt(getToken(), keyName, body);
-        EncryptionResult result = new EncryptionResult(encrypt.data.ciphertext, encrypt.data.error);
-        if (result.isInError()) {
-            Map<EncryptionRequest, EncryptionResult> errorMap = new HashMap<>();
-            errorMap.put(request, result);
-            throw new VaultEncryptionBatchException("encryption error with key " + keyName, errorMap);
-        }
-        return result.getValue();
+
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.encrypt(token, configKeyName, body)
+                    .map(encrypt -> {
+                        EncryptionResult result = new EncryptionResult(encrypt.data.ciphertext, encrypt.data.error);
+                        if (result.isInError()) {
+                            Map<EncryptionRequest, EncryptionResult> errorMap = new HashMap<>();
+                            errorMap.put(request, result);
+                            throw new VaultEncryptionBatchException("encryption error with key " + configKeyName, errorMap);
+                        }
+                        return result.getValue();
+                    });
+        });
     }
 
     private TransitKeyConfig getTransitConfig(String keyName) {
@@ -131,144 +137,187 @@ public class VaultTransitManager implements VaultTransitSecretEngine {
     }
 
     @Override
-    public Map<EncryptionRequest, String> encrypt(String keyName, List<EncryptionRequest> requests) {
+    public Uni<Map<EncryptionRequest, String>> encrypt(String keyName, List<EncryptionRequest> requests) {
         if (requests.size() == 1) {
             EncryptionRequest request = requests.get(0);
-            Map<EncryptionRequest, String> result = new HashMap<>();
-            result.put(request, encrypt(keyName, request));
-            return result;
+            return encrypt(keyName, request)
+                    .map(result -> Map.of(request, result));
         }
-        List<EncryptionResult> results = encryptBatch(keyName, requests);
-        checkBatchErrors(results,
-                errors -> new VaultEncryptionBatchException(errors + " encryption errors", zip(requests, results)));
-        return zipRequestToValue(requests, results);
+        return encryptBatch(keyName, requests)
+                .map(results -> {
+                    checkBatchErrors(results,
+                            errors -> new VaultEncryptionBatchException(errors + " encryption errors",
+                                    zip(requests, results)));
+                    return zipRequestToValue(requests, results);
+                });
     }
 
-    private List<EncryptionResult> encryptBatch(String keyName, List<EncryptionRequest> requests) {
+    private Uni<List<EncryptionResult>> encryptBatch(String keyName, List<EncryptionRequest> requests) {
 
         VaultTransitEncryptBody body = new VaultTransitEncryptBody();
         body.batchInput = requests.stream().map(this::getVaultTransitEncryptBatchInput).collect(toList());
 
         TransitKeyConfig config = getTransitConfig(keyName);
+
+        String configKeyName;
         if (config != null) {
-            keyName = config.name.orElse(keyName);
+            configKeyName = config.name.orElse(keyName);
             body.type = config.type.orElse(null);
             body.convergentEncryption = config.convergentEncryption.orElse(null);
+        } else {
+            configKeyName = keyName;
         }
 
-        VaultTransitEncrypt encrypt = vaultInternalTransitSecretEngine.encrypt(getToken(), keyName, body);
-        return encrypt.data.batchResults.stream().map(this::getVaultTransitEncryptBatchResult).collect(toList());
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.encrypt(token, configKeyName, body)
+                    .map(encrypt -> encrypt.data.batchResults.stream()
+                            .map(this::getVaultTransitEncryptBatchResult)
+                            .collect(toList()));
+        });
     }
 
     @Override
-    public ClearData decrypt(String keyName, String ciphertext) {
+    public Uni<ClearData> decrypt(String keyName, String ciphertext) {
         return decrypt(keyName, ciphertext, null);
     }
 
     @Override
-    public ClearData decrypt(String keyName, String ciphertext, TransitContext transitContext) {
+    public Uni<ClearData> decrypt(String keyName, String ciphertext, TransitContext transitContext) {
         DecryptionRequest item = new DecryptionRequest(ciphertext, transitContext);
-        return decryptBatch(keyName, singletonList(item)).get(0).getValueOrElseError();
+        return decryptBatch(keyName, singletonList(item)).map(results -> results.get(0).getValueOrElseError());
     }
 
     @Override
-    public Map<DecryptionRequest, ClearData> decrypt(String keyName, List<DecryptionRequest> requests) {
-        List<DecryptionResult> results = decryptBatch(keyName, requests);
-        checkBatchErrors(results,
-                errors -> new VaultDecryptionBatchException(errors + " decryption errors", zip(requests, results)));
-        return zipRequestToValue(requests, results);
+    public Uni<Map<DecryptionRequest, ClearData>> decrypt(String keyName, List<DecryptionRequest> requests) {
+        return decryptBatch(keyName, requests)
+                .map(results -> {
+                    checkBatchErrors(results,
+                            errors -> new VaultDecryptionBatchException(errors + " decryption errors",
+                                    zip(requests, results)));
+                    return zipRequestToValue(requests, results);
+                });
     }
 
-    private List<DecryptionResult> decryptBatch(String keyName, List<DecryptionRequest> requests) {
+    private Uni<List<DecryptionResult>> decryptBatch(String keyName, List<DecryptionRequest> requests) {
         VaultTransitDecryptBody body = new VaultTransitDecryptBody();
         body.batchInput = requests.stream().map(this::getVaultTransitDecryptBatchInput).collect(toList());
 
         TransitKeyConfig config = getTransitConfig(keyName);
+
+        String configKeyName;
         if (config != null) {
-            keyName = config.name.orElse(keyName);
+            configKeyName = config.name.orElse(keyName);
+        } else {
+            configKeyName = keyName;
         }
 
-        VaultTransitDecrypt decrypt = vaultInternalTransitSecretEngine.decrypt(getToken(), keyName, body);
-        return decrypt.data.batchResults.stream().map(this::getVaultTransitDecryptBatchResult).collect(toList());
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.decrypt(token, configKeyName, body)
+                    .map(decrypt -> decrypt.data.batchResults.stream()
+                            .map(this::getVaultTransitDecryptBatchResult)
+                            .collect(toList()));
+        });
     }
 
     // ---
 
     @Override
-    public String rewrap(String keyName, String ciphertext) {
+    public Uni<String> rewrap(String keyName, String ciphertext) {
         return rewrap(keyName, ciphertext, null);
     }
 
     @Override
-    public String rewrap(String keyName, String ciphertext, TransitContext transitContext) {
+    public Uni<String> rewrap(String keyName, String ciphertext, TransitContext transitContext) {
         RewrappingRequest item = new RewrappingRequest(ciphertext, transitContext);
-        return rewrapBatch(keyName, singletonList(item)).get(0).getValueOrElseError();
+        return rewrapBatch(keyName, singletonList(item)).map(results -> results.get(0).getValueOrElseError());
     }
 
     @Override
-    public Map<RewrappingRequest, String> rewrap(String keyName, List<RewrappingRequest> requests) {
-        List<EncryptionResult> results = rewrapBatch(keyName, requests);
-        checkBatchErrors(results,
-                errors -> new VaultRewrappingBatchException(errors + " rewrapping errors", zip(requests, results)));
-        return zipRequestToValue(requests, results);
+    public Uni<Map<RewrappingRequest, String>> rewrap(String keyName, List<RewrappingRequest> requests) {
+        return rewrapBatch(keyName, requests)
+                .map(results -> {
+                    checkBatchErrors(results,
+                            errors -> new VaultRewrappingBatchException(errors + " rewrapping errors",
+                                    zip(requests, results)));
+                    return zipRequestToValue(requests, results);
+                });
     }
 
-    private List<EncryptionResult> rewrapBatch(String keyName, List<RewrappingRequest> requests) {
+    private Uni<List<EncryptionResult>> rewrapBatch(String keyName, List<RewrappingRequest> requests) {
 
         VaultTransitRewrapBody body = new VaultTransitRewrapBody();
         body.batchInput = requests.stream().map(this::getVaultTransitRewrapBatchInput).collect(toList());
 
         TransitKeyConfig config = getTransitConfig(keyName);
+
+        String configKeyName;
         if (config != null) {
-            keyName = config.name.orElse(keyName);
+            configKeyName = config.name.orElse(keyName);
+        } else {
+            configKeyName = keyName;
         }
 
-        VaultTransitEncrypt encrypt = vaultInternalTransitSecretEngine.rewrap(getToken(), keyName, body);
-        return encrypt.data.batchResults.stream().map(this::getVaultTransitEncryptBatchResult).collect(toList());
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.rewrap(token, configKeyName, body)
+                    .map(encrypt -> encrypt.data.batchResults.stream()
+                            .map(this::getVaultTransitEncryptBatchResult)
+                            .collect(toList()));
+        });
     }
 
     // ---
 
     @Override
-    public String sign(String keyName, String input) {
+    public Uni<String> sign(String keyName, String input) {
         return sign(keyName, new SigningInput(input), null);
     }
 
     @Override
-    public String sign(String keyName, SigningInput input, TransitContext transitContext) {
+    public Uni<String> sign(String keyName, SigningInput input, TransitContext transitContext) {
         return sign(keyName, input, null, transitContext);
     }
 
     @Override
-    public String sign(String keyName, SigningInput input, SignVerifyOptions options, TransitContext transitContext) {
+    public Uni<String> sign(String keyName, SigningInput input, SignVerifyOptions options,
+            TransitContext transitContext) {
         SigningRequest item = new SigningRequest(input, transitContext);
         List<SigningRequestResultPair> pairs = singletonList(new SigningRequestResultPair(item));
-        signBatch(keyName, NO_KEY_VERSION, pairs, options);
-        return pairs.get(0).getResult().getValueOrElseError();
+        return signBatch(keyName, NO_KEY_VERSION, pairs, options)
+                .map(v -> pairs.get(0).getResult().getValueOrElseError());
     }
 
     @Override
-    public Map<SigningRequest, String> sign(String keyName, List<SigningRequest> requests) {
+    public Uni<Map<SigningRequest, String>> sign(String keyName, List<SigningRequest> requests) {
         return sign(keyName, requests, null);
     }
 
     @Override
-    public Map<SigningRequest, String> sign(String keyName, List<SigningRequest> requests, SignVerifyOptions options) {
-
-        List<SigningRequestResultPair> pairs = requests.stream().map(SigningRequestResultPair::new).collect(toList());
-
-        pairs.stream()
-                .collect(groupingBy(SigningRequestResultPair::getKeyVersion))
-                .forEach((keyVersion, subpairs) -> signBatch(keyName, keyVersion, subpairs, options));
-
-        List<SigningResult> results = pairs.stream().map(SigningRequestResultPair::getResult).collect(toList());
-        checkBatchErrors(results, errors -> new VaultSigningBatchException(errors + " signing errors", zip(requests, results)));
-        return zipRequestToValue(requests, results);
+    public Uni<Map<SigningRequest, String>> sign(String keyName, List<SigningRequest> requests,
+            SignVerifyOptions options) {
+        return Multi.createFrom().iterable(requests)
+                .map(SigningRequestResultPair::new)
+                .group().by(SigningRequestResultPair::getKeyVersion)
+                .onItem().transformToMultiAndMerge(group -> {
+                    // Sign each batch of requests, which are grouped by key version. When each
+                    // batch is complete, return the result from each request pair as a merged stream.
+                    int keyVersion = group.key();
+                    return group.collect().asList().onItem().transformToMulti(pairs -> {
+                        return signBatch(keyName, keyVersion, pairs, options)
+                                .onItem().transformToMulti(v -> {
+                                    return Multi.createFrom().iterable(pairs).map(SigningRequestResultPair::getResult);
+                                });
+                    });
+                })
+                .collect().asList().map(results -> {
+                    checkBatchErrors(results,
+                            errors -> new VaultSigningBatchException(errors + " signing errors",
+                                    zip(requests, results)));
+                    return zipRequestToValue(requests, results);
+                });
     }
 
-    private void signBatch(String keyName, int keyVersion, List<SigningRequestResultPair> pairs, SignVerifyOptions options) {
-
-        String hashAlgorithm = null;
+    private Uni<Void> signBatch(String keyName, int keyVersion, List<SigningRequestResultPair> pairs,
+            SignVerifyOptions options) {
 
         VaultTransitSignBody body = new VaultTransitSignBody();
         body.keyVersion = keyVersion == NO_KEY_VERSION ? null : keyVersion;
@@ -278,91 +327,124 @@ public class VaultTransitManager implements VaultTransitSecretEngine {
                 .collect(toList());
 
         TransitKeyConfig config = getTransitConfig(keyName);
+
+        final String configKeyName;
+        final String configHashAlgorithm;
         if (config != null) {
-            keyName = config.name.orElse(keyName);
-            hashAlgorithm = config.hashAlgorithm.orElse(null);
+            configKeyName = config.name.orElse(keyName);
+            configHashAlgorithm = config.hashAlgorithm.orElse(null);
             body.signatureAlgorithm = config.signatureAlgorithm.orElse(null);
             body.prehashed = config.prehashed.orElse(null);
+        } else {
+            configKeyName = keyName;
+            configHashAlgorithm = null;
         }
 
+        final String selectedHashAlgorithm;
         if (options != null) {
-            hashAlgorithm = defaultIfNull(options.getHashAlgorithm(), hashAlgorithm);
+            selectedHashAlgorithm = defaultIfNull(options.getHashAlgorithm(), configHashAlgorithm);
             body.signatureAlgorithm = defaultIfNull(options.getSignatureAlgorithm(), body.signatureAlgorithm);
             body.prehashed = defaultIfNull(options.getPrehashed(), body.prehashed);
             body.marshalingAlgorithm = defaultIfNull(options.getMarshalingAlgorithm(), null);
+        } else {
+            selectedHashAlgorithm = configHashAlgorithm;
         }
 
-        VaultTransitSign sign = vaultInternalTransitSecretEngine.sign(getToken(), keyName, hashAlgorithm, body);
-
-        for (int i = 0; i < pairs.size(); i++) {
-            VaultTransitSignDataBatchResult result = sign.data.batchResults.get(i);
-            pairs.get(i).setResult(getVaultTransitSignBatchResult(result));
-        }
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.sign(token, configKeyName, selectedHashAlgorithm, body)
+                    .map(sign -> {
+                        for (int i = 0; i < pairs.size(); i++) {
+                            VaultTransitSignDataBatchResult result = sign.data.batchResults.get(i);
+                            pairs.get(i).setResult(getVaultTransitSignBatchResult(result));
+                        }
+                        return null;
+                    });
+        });
     }
 
     // ---
 
     @Override
-    public void verifySignature(String keyName, String signature, String input) {
-        verifySignature(keyName, signature, new SigningInput(input), null);
+    public Uni<Void> verifySignature(String keyName, String signature, String input) {
+        return verifySignature(keyName, signature, new SigningInput(input), null);
     }
 
     @Override
-    public void verifySignature(String keyName, String signature, SigningInput input, TransitContext transitContext) {
-        verifySignature(keyName, signature, input, null, transitContext);
+    public Uni<Void> verifySignature(String keyName, String signature, SigningInput input,
+            TransitContext transitContext) {
+        return verifySignature(keyName, signature, input, null, transitContext);
     }
 
     @Override
-    public void verifySignature(String keyName, String signature, SigningInput input, SignVerifyOptions options,
+    public Uni<Void> verifySignature(String keyName, String signature, SigningInput input, SignVerifyOptions options,
             TransitContext transitContext) {
         VerificationRequest item = new VerificationRequest(signature, input, transitContext);
-        Boolean valid = verifyBatch(keyName, singletonList(item), options).get(0).getValueOrElseError();
-        if (!TRUE.equals(valid)) {
-            throw new VaultException(INVALID_SIGNATURE);
-        }
+        return verifyBatch(keyName, singletonList(item), options)
+                .map(batch -> {
+                    Boolean valid = batch.get(0).getValueOrElseError();
+                    if (!TRUE.equals(valid)) {
+                        throw new VaultException(INVALID_SIGNATURE);
+                    }
+                    return null;
+                });
     }
 
     @Override
-    public void verifySignature(String keyName, List<VerificationRequest> requests) {
-        verifySignature(keyName, requests, null);
+    public Uni<Void> verifySignature(String keyName, List<VerificationRequest> requests) {
+        return verifySignature(keyName, requests, null);
     }
 
     @Override
-    public void verifySignature(String keyName, List<VerificationRequest> requests, SignVerifyOptions options) {
-        List<VerificationResult> results = verifyBatch(keyName, requests, options);
-        Map<VerificationRequest, VerificationResult> resultMap = zip(requests, results);
-        checkBatchErrors(results, errors -> new VaultVerificationBatchException(errors + " verification errors", resultMap));
+    public Uni<Void> verifySignature(String keyName, List<VerificationRequest> requests, SignVerifyOptions options) {
+        return verifyBatch(keyName, requests, options)
+                .map(results -> {
+                    Map<VerificationRequest, VerificationResult> resultMap = zip(requests, results);
+                    checkBatchErrors(results,
+                            errors -> new VaultVerificationBatchException(errors + " verification errors", resultMap));
+                    return null;
+                });
     }
 
-    private List<VerificationResult> verifyBatch(String keyName, List<VerificationRequest> requests,
+    private Uni<List<VerificationResult>> verifyBatch(String keyName, List<VerificationRequest> requests,
             SignVerifyOptions options) {
-
-        String hashAlgorithm = null;
 
         VaultTransitVerifyBody body = new VaultTransitVerifyBody();
         body.batchInput = requests.stream().map(this::getVaultTransitVerifyBatchInput).collect(toList());
 
         TransitKeyConfig config = getTransitConfig(keyName);
+
+        final String configKeyName;
+        final String configHashAlgorithm;
         if (config != null) {
-            keyName = config.name.orElse(keyName);
-            hashAlgorithm = config.hashAlgorithm.orElse(null);
+            configKeyName = config.name.orElse(keyName);
+            configHashAlgorithm = config.hashAlgorithm.orElse(null);
             body.signatureAlgorithm = config.signatureAlgorithm.orElse(null);
             body.prehashed = config.prehashed.orElse(null);
+        } else {
+            configKeyName = keyName;
+            configHashAlgorithm = null;
         }
 
+        final String selectedHashAlgorithm;
+
         if (options != null) {
-            hashAlgorithm = defaultIfNull(options.getHashAlgorithm(), hashAlgorithm);
+            selectedHashAlgorithm = defaultIfNull(options.getHashAlgorithm(), configHashAlgorithm);
             body.signatureAlgorithm = defaultIfNull(options.getSignatureAlgorithm(), body.signatureAlgorithm);
             body.prehashed = defaultIfNull(options.getPrehashed(), body.prehashed);
             body.marshalingAlgorithm = defaultIfNull(options.getMarshalingAlgorithm(), null);
+        } else {
+            selectedHashAlgorithm = configHashAlgorithm;
         }
 
-        VaultTransitVerify verify = vaultInternalTransitSecretEngine.verify(getToken(), keyName, hashAlgorithm, body);
-        return verify.data.batchResults.stream().map(this::getVaultTransitVerifyBatchResult).collect(toList());
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.verify(token, configKeyName, selectedHashAlgorithm, body)
+                    .map(verify -> verify.data.batchResults.stream().map(this::getVaultTransitVerifyBatchResult)
+                            .collect(toList()));
+        });
     }
 
     @Override
-    public void createKey(String keyName, KeyCreationRequestDetail detail) {
+    public Uni<Void> createKey(String keyName, KeyCreationRequestDetail detail) {
         VaultTransitCreateKeyBody body = new VaultTransitCreateKeyBody();
         if (detail != null) {
             body.allowPlaintextBackup = detail.getAllowPlaintextBackup();
@@ -371,52 +453,59 @@ public class VaultTransitManager implements VaultTransitSecretEngine {
             body.exportable = detail.getExportable();
             body.type = detail.getType();
         }
-        vaultInternalTransitSecretEngine.createTransitKey(getToken(), keyName, body);
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.createTransitKey(token, keyName, body);
+        });
     }
 
     @Override
-    public void updateKeyConfiguration(String keyName, KeyConfigRequestDetail detail) {
+    public Uni<Void> updateKeyConfiguration(String keyName, KeyConfigRequestDetail detail) {
         VaultTransitKeyConfigBody body = new VaultTransitKeyConfigBody();
         body.allowPlaintextBackup = detail.getAllowPlaintextBackup();
         body.deletionAllowed = detail.getDeletionAllowed();
         body.minEncryptionVersion = detail.getMinEncryptionVersion();
         body.minDecryptionVersion = detail.getMinDecryptionVersion();
         body.exportable = detail.getExportable();
-        vaultInternalTransitSecretEngine.updateTransitKeyConfiguration(getToken(), keyName, body);
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.updateTransitKeyConfiguration(token, keyName, body);
+        });
     }
 
     @Override
-    public void deleteKey(String keyName) {
-        vaultInternalTransitSecretEngine.deleteTransitKey(getToken(), keyName);
+    public Uni<Void> deleteKey(String keyName) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.deleteTransitKey(token, keyName);
+        });
     }
 
     @Override
-    public VaultTransitKeyExportDetail exportKey(String keyName, VaultTransitExportKeyType keyType, String keyVersion) {
-        VaultTransitKeyExport keyExport = vaultInternalTransitSecretEngine.exportTransitKey(getToken(), keyType.name() + "-key",
-                keyName,
-                keyVersion);
-        VaultTransitKeyExportDetail detail = new VaultTransitKeyExportDetail();
-        detail.setName(keyExport.data.name);
-        detail.setKeys(keyExport.data.keys);
-        return detail;
+    public Uni<VaultTransitKeyExportDetail> exportKey(String keyName, VaultTransitExportKeyType keyType,
+            String keyVersion) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.exportTransitKey(token, keyType.name() + "-key", keyName, keyVersion)
+                    .map(keyExport -> {
+                        VaultTransitKeyExportDetail detail = new VaultTransitKeyExportDetail();
+                        detail.setName(keyExport.data.name);
+                        detail.setKeys(keyExport.data.keys);
+                        return detail;
+                    });
+        });
     }
 
     @Override
-    public VaultTransitKeyDetail<?> readKey(String keyName) {
-        try {
-            return map(vaultInternalTransitSecretEngine.readTransitKey(getToken(), keyName).data);
-        } catch (VaultClientException e) {
-            if (e.getStatus() == 404) {
-                return null;
-            } else {
-                throw e;
-            }
-        }
+    public Uni<Optional<VaultTransitKeyDetail<?>>> readKey(String keyName) {
+        Uni<Optional<VaultTransitKeyDetail<?>>> x = vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.readTransitKey(token, keyName)
+                    .map(result -> Optional.of(map(result.data)));
+        });
+        return x.plug(Plugs::notFoundToEmpty);
     }
 
     @Override
-    public List<String> listKeys() {
-        return vaultInternalTransitSecretEngine.listTransitKeys(getToken()).data.keys;
+    public Uni<List<String>> listKeys() {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalTransitSecretEngine.listTransitKeys(token).map(r -> r.data.keys);
+        });
     }
 
     protected VaultTransitKeyDetail<?> map(VaultTransitReadKeyData data) {
@@ -461,7 +550,8 @@ public class VaultTransitManager implements VaultTransitSecretEngine {
         return version;
     }
 
-    private static VaultTransitSymmetricKeyVersion mapSymmetricKeyVersion(Map.Entry<String, VaultTransitKeyVersionData> entry) {
+    private static VaultTransitSymmetricKeyVersion mapSymmetricKeyVersion(
+            Map.Entry<String, VaultTransitKeyVersionData> entry) {
         VaultTransitKeyVersionData data = entry.getValue();
         VaultTransitSymmetricKeyVersion version = new VaultTransitSymmetricKeyVersion();
         version.setCreationTime(data.creationTime);
@@ -470,16 +560,12 @@ public class VaultTransitManager implements VaultTransitSecretEngine {
 
     // ---
 
-    private void checkBatchErrors(List<? extends VaultTransitBatchResult> results,
+    private void checkBatchErrors(List<? extends VaultTransitBatchResult<?>> results,
             Function<Long, ? extends VaultException> exceptionProducer) {
         long errors = results.stream().filter(VaultTransitBatchResult::isInError).count();
         if (errors != 0) {
             throw exceptionProducer.apply(errors);
         }
-    }
-
-    private String getToken() {
-        return vaultAuthManager.getClientToken();
     }
 
     private EncryptionResult getVaultTransitEncryptBatchResult(VaultTransitEncryptDataBatchResult result) {
@@ -546,8 +632,8 @@ public class VaultTransitManager implements VaultTransitSecretEngine {
         return zip(keys, values, identity());
     }
 
-    private <K, V extends VaultTransitBatchResult, T> Map<K, T> zipRequestToValue(List<K> keys, List<V> values) {
-        return zip(keys, values, VaultTransitBatchResult<T>::getValue);
+    private <K, V extends VaultTransitBatchResult<T>, T> Map<K, T> zipRequestToValue(List<K> keys, List<V> values) {
+        return zip(keys, values, VaultTransitBatchResult::getValue);
     }
 
     private <K, T, V> Map<K, V> zip(List<K> keys, List<T> values, Function<T, V> f) {
@@ -560,8 +646,9 @@ public class VaultTransitManager implements VaultTransitSecretEngine {
     }
 
     private <T> T defaultIfNull(T value, T defaultValue) {
-        if (value != null)
+        if (value != null) {
             return value;
+        }
         return defaultValue;
     }
 

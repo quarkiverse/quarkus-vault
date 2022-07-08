@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import io.quarkus.vault.transit.ClearData;
 import io.quarkus.vault.transit.DecryptionRequest;
 import io.quarkus.vault.transit.EncryptionRequest;
@@ -26,22 +23,14 @@ import io.quarkus.vault.transit.VaultTransitKeyDetail;
 import io.quarkus.vault.transit.VaultTransitKeyExportDetail;
 import io.quarkus.vault.transit.VaultVerificationBatchException;
 import io.quarkus.vault.transit.VerificationRequest;
+import io.smallrye.mutiny.Uni;
 
 /**
  * A service that interacts with Hashicorp's Vault Transit secret engine to encrypt, decrypt and sign arbitrary data.
  *
- * @implNote Wrapper for reactive engine. Request timeouts are accounted for in Vault client.
  * @see <a href="https://www.vaultproject.io/docs/secrets/transit/index.html#transit-secrets-engine">Transit Secrets Engine</a>
  */
-@ApplicationScoped
-public class VaultTransitSecretEngine {
-
-    private final VaultTransitSecretReactiveEngine engine;
-
-    @Inject
-    public VaultTransitSecretEngine(VaultTransitSecretReactiveEngine engine) {
-        this.engine = engine;
-    }
+public interface VaultTransitSecretReactiveEngine {
 
     /**
      * Encrypt a regular string with a Vault key configured in the transit secret engine.
@@ -55,9 +44,7 @@ public class VaultTransitSecretEngine {
      * @return cipher text
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#encrypt-data">encrypt data</a>
      */
-    public String encrypt(String keyName, String clearData) {
-        return engine.encrypt(keyName, clearData).await().indefinitely();
-    }
+    Uni<String> encrypt(String keyName, String clearData);
 
     /**
      * Encrypt a regular string with a Vault key configured in the transit secret engine.
@@ -71,9 +58,7 @@ public class VaultTransitSecretEngine {
      * @return cipher text
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#encrypt-data">encrypt data</a>
      */
-    public String encrypt(String keyName, ClearData clearData, TransitContext transitContext) {
-        return engine.encrypt(keyName, clearData, transitContext).await().indefinitely();
-    }
+    Uni<String> encrypt(String keyName, ClearData clearData, TransitContext transitContext);
 
     /**
      * Encrypt a list of elements. This will return a list of cipher texts.
@@ -86,9 +71,7 @@ public class VaultTransitSecretEngine {
      * @return a map of each request and its corresponding cipher text
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#encrypt-data">encrypt data</a>
      */
-    public Map<EncryptionRequest, String> encrypt(String keyName, List<EncryptionRequest> requests) {
-        return engine.encrypt(keyName, requests).await().indefinitely();
-    }
+    Uni<Map<EncryptionRequest, String>> encrypt(String keyName, List<EncryptionRequest> requests);
 
     /**
      * Decrypt the encrypted data with the specified key, and return unencrypted data.
@@ -98,9 +81,7 @@ public class VaultTransitSecretEngine {
      * @return the unencrypted data
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#decrypt-data">decrypt data</a>
      */
-    public ClearData decrypt(String keyName, String ciphertext) {
-        return engine.decrypt(keyName, ciphertext).await().indefinitely();
-    }
+    Uni<ClearData> decrypt(String keyName, String ciphertext);
 
     /**
      * Decrypt the encrypted data with the specified key and a transit context used for key derivation.
@@ -112,9 +93,7 @@ public class VaultTransitSecretEngine {
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#decrypt-data">decrypt data</a>
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#derived">create key derived attribute</a>
      */
-    public ClearData decrypt(String keyName, String ciphertext, TransitContext transitContext) {
-        return engine.decrypt(keyName, ciphertext, transitContext).await().indefinitely();
-    }
+    Uni<ClearData> decrypt(String keyName, String ciphertext, TransitContext transitContext);
 
     /**
      * Decrypt a list of encrypted data items. Each item shall specify the encrypted data plus an optional transit
@@ -126,9 +105,7 @@ public class VaultTransitSecretEngine {
      * @return a map of each request with its corresponding decrypted data item
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#decrypt-data">decrypt data</a>
      */
-    public Map<DecryptionRequest, ClearData> decrypt(String keyName, List<DecryptionRequest> requests) {
-        return engine.decrypt(keyName, requests).await().indefinitely();
-    }
+    Uni<Map<DecryptionRequest, ClearData>> decrypt(String keyName, List<DecryptionRequest> requests);
 
     /**
      * Reencrypt into a new cipher text a cipher text that was obtained from encryption using an old key version
@@ -141,9 +118,7 @@ public class VaultTransitSecretEngine {
      * @see <a href="https://www.vaultproject.io/docs/secrets/transit/index.html#working-set-management">working set
      *      management</a>
      */
-    public String rewrap(String keyName, String ciphertext) {
-        return engine.rewrap(keyName, ciphertext).await().indefinitely();
-    }
+    Uni<String> rewrap(String keyName, String ciphertext);
 
     /**
      * Reencrypt into a new cipher text a cipher text that was obtained from encryption using an old key version
@@ -157,9 +132,7 @@ public class VaultTransitSecretEngine {
      * @see <a href="https://www.vaultproject.io/docs/secrets/transit/index.html#working-set-management">working set
      *      management</a>
      */
-    public String rewrap(String keyName, String ciphertext, TransitContext transitContext) {
-        return engine.rewrap(keyName, ciphertext, transitContext).await().indefinitely();
-    }
+    Uni<String> rewrap(String keyName, String ciphertext, TransitContext transitContext);
 
     /**
      * Reencrypt a list of encrypted data items with the last version of the specified key.
@@ -174,9 +147,7 @@ public class VaultTransitSecretEngine {
      * @see <a href="https://www.vaultproject.io/docs/secrets/transit/index.html#working-set-management">working set
      *      management</a>
      */
-    public Map<RewrappingRequest, String> rewrap(String keyName, List<RewrappingRequest> requests) {
-        return engine.rewrap(keyName, requests).await().indefinitely();
-    }
+    Uni<Map<RewrappingRequest, String>> rewrap(String keyName, List<RewrappingRequest> requests);
 
     /**
      * Sign an input string with the specified key.
@@ -186,9 +157,7 @@ public class VaultTransitSecretEngine {
      * @return the signature
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#sign-data">sign data</a>
      */
-    public String sign(String keyName, String input) {
-        return engine.sign(keyName, input).await().indefinitely();
-    }
+    Uni<String> sign(String keyName, String input);
 
     /**
      * Sign the input with the specified key and an optional transit context used for key derivation, if applicable.
@@ -199,9 +168,7 @@ public class VaultTransitSecretEngine {
      * @return the signature
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#sign-data">sign data</a>
      */
-    public String sign(String keyName, SigningInput input, TransitContext transitContext) {
-        return engine.sign(keyName, input, transitContext).await().indefinitely();
-    }
+    Uni<String> sign(String keyName, SigningInput input, TransitContext transitContext);
 
     /**
      * Sign the input with the specified key and an optional explicit sign/verify options and an optional transit
@@ -214,9 +181,7 @@ public class VaultTransitSecretEngine {
      * @return the signature
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#sign-data">sign data</a>
      */
-    public String sign(String keyName, SigningInput input, SignVerifyOptions options, TransitContext transitContext) {
-        return engine.sign(keyName, input, options, transitContext).await().indefinitely();
-    }
+    Uni<String> sign(String keyName, SigningInput input, SignVerifyOptions options, TransitContext transitContext);
 
     /**
      * Sign a list of inputs items. Each item shall specify the input to sign, an optional key version, and
@@ -228,9 +193,7 @@ public class VaultTransitSecretEngine {
      * @return a map of each request with its corresponding signature item
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#sign-data">sign data</a>
      */
-    public Map<SigningRequest, String> sign(String keyName, List<SigningRequest> requests) {
-        return engine.sign(keyName, requests).await().indefinitely();
-    }
+    Uni<Map<SigningRequest, String>> sign(String keyName, List<SigningRequest> requests);
 
     /**
      * Sign a list of inputs items and an optional explicit sign/verify options. Each item shall specify the input to
@@ -243,9 +206,7 @@ public class VaultTransitSecretEngine {
      * @return a map of each request with its corresponding signature item
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#sign-data">sign data</a>
      */
-    public Map<SigningRequest, String> sign(String keyName, List<SigningRequest> requests, SignVerifyOptions options) {
-        return engine.sign(keyName, requests, options).await().indefinitely();
-    }
+    Uni<Map<SigningRequest, String>> sign(String keyName, List<SigningRequest> requests, SignVerifyOptions options);
 
     /**
      * Checks that the signature was obtained from signing the input with the specified key.
@@ -256,9 +217,7 @@ public class VaultTransitSecretEngine {
      * @param input the original input data
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#verify-signed-data">verify signed data</a>
      */
-    public void verifySignature(String keyName, String signature, String input) {
-        engine.verifySignature(keyName, signature, input).await().indefinitely();
-    }
+    Uni<Void> verifySignature(String keyName, String signature, String input);
 
     /**
      * Checks that the signature was obtained from signing the input with the specified key.
@@ -270,9 +229,7 @@ public class VaultTransitSecretEngine {
      * @param transitContext optional transit context used for key derivation
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#verify-signed-data">verify signed data</a>
      */
-    public void verifySignature(String keyName, String signature, SigningInput input, TransitContext transitContext) {
-        engine.verifySignature(keyName, signature, input, transitContext).await().indefinitely();
-    }
+    Uni<Void> verifySignature(String keyName, String signature, SigningInput input, TransitContext transitContext);
 
     /**
      * Checks that the signature was obtained from signing the input with the specified key an an optional explicit
@@ -286,10 +243,8 @@ public class VaultTransitSecretEngine {
      * @param transitContext optional transit context used for key derivation
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#verify-signed-data">verify signed data</a>
      */
-    public void verifySignature(String keyName, String signature, SigningInput input, SignVerifyOptions options,
-            TransitContext transitContext) {
-        engine.verifySignature(keyName, signature, input, options, transitContext).await().indefinitely();
-    }
+    Uni<Void> verifySignature(String keyName, String signature, SigningInput input, SignVerifyOptions options,
+            TransitContext transitContext);
 
     /**
      * Checks a list of verification requests. Each request shall specify an input and the signature we want to match
@@ -300,9 +255,7 @@ public class VaultTransitSecretEngine {
      * @param requests a list of items specifying an input and a signature to match against
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#verify-signed-data">verify signed data</a>
      */
-    public void verifySignature(String keyName, List<VerificationRequest> requests) {
-        engine.verifySignature(keyName, requests).await().indefinitely();
-    }
+    Uni<Void> verifySignature(String keyName, List<VerificationRequest> requests);
 
     /**
      * Checks a list of verification requests. Each request shall specify an input and the signature we want to match
@@ -315,9 +268,7 @@ public class VaultTransitSecretEngine {
      * @param options optional explicit sign/verify options
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#verify-signed-data">verify signed data</a>
      */
-    public void verifySignature(String keyName, List<VerificationRequest> requests, SignVerifyOptions options) {
-        engine.verifySignature(keyName, requests, options).await().indefinitely();
-    }
+    Uni<Void> verifySignature(String keyName, List<VerificationRequest> requests, SignVerifyOptions options);
 
     // --- admin operations
 
@@ -328,9 +279,7 @@ public class VaultTransitSecretEngine {
      * @param detail key creation detail or null
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#create-key">create key</a>
      */
-    public void createKey(String keyName, KeyCreationRequestDetail detail) {
-        engine.createKey(keyName, detail).await().indefinitely();
-    }
+    Uni<Void> createKey(String keyName, KeyCreationRequestDetail detail);
 
     /**
      * Update the configuration of a Transit key. The key must exist.
@@ -339,9 +288,7 @@ public class VaultTransitSecretEngine {
      * @param detail key configuration detail
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#update-key-configuration">update key configuration</a>
      */
-    public void updateKeyConfiguration(String keyName, KeyConfigRequestDetail detail) {
-        engine.updateKeyConfiguration(keyName, detail).await().indefinitely();
-    }
+    Uni<Void> updateKeyConfiguration(String keyName, KeyConfigRequestDetail detail);
 
     /**
      * Delete a Transit key. Key must have been configured with deletion allowed. The key must exist.
@@ -349,9 +296,7 @@ public class VaultTransitSecretEngine {
      * @param keyName key name
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#delete-key">delete key</a>
      */
-    public void deleteKey(String keyName) {
-        engine.deleteKey(keyName).await().indefinitely();
-    }
+    Uni<Void> deleteKey(String keyName);
 
     /**
      * Export a Transit Key. Key must have made exportable through creation or configuration update.
@@ -363,9 +308,7 @@ public class VaultTransitSecretEngine {
      * @return All specified key versions
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#export-key">export key</a>
      */
-    public VaultTransitKeyExportDetail exportKey(String keyName, VaultTransitExportKeyType keyType, String keyVersion) {
-        return engine.exportKey(keyName, keyType, keyVersion).await().indefinitely();
-    }
+    Uni<VaultTransitKeyExportDetail> exportKey(String keyName, VaultTransitExportKeyType keyType, String keyVersion);
 
     /**
      * Read the configuration of a Transit key.
@@ -374,9 +317,7 @@ public class VaultTransitSecretEngine {
      * @return key detail, or null if the key does not exist
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#read-key">read key</a>
      */
-    public Optional<VaultTransitKeyDetail<?>> readKey(String keyName) {
-        return engine.readKey(keyName).await().indefinitely();
-    }
+    Uni<Optional<VaultTransitKeyDetail<?>>> readKey(String keyName);
 
     /**
      * List all Transit keys.
@@ -384,7 +325,5 @@ public class VaultTransitSecretEngine {
      * @return key names
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#list-keys">list keys</a>
      */
-    public List<String> listKeys() {
-        return engine.listKeys().await().indefinitely();
-    }
+    Uni<List<String>> listKeys();
 }

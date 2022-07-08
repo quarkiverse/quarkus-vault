@@ -4,7 +4,6 @@ import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -13,7 +12,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -31,12 +29,12 @@ import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
 import io.quarkus.vault.runtime.client.dto.auth.AbstractVaultAuthAuth;
 import io.quarkus.vault.runtime.client.dto.auth.VaultAppRoleGenerateNewSecretID;
 import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthAuth;
-import io.quarkus.vault.runtime.client.dto.auth.VaultRenewSelfAuth;
 import io.quarkus.vault.runtime.client.dto.auth.VaultTokenCreate;
 import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
 import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
 import io.quarkus.vault.runtime.config.VaultAuthenticationType;
 import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.smallrye.mutiny.Uni;
 
 /**
  * Handles authentication. Supports revocation and renewal.
@@ -49,8 +47,7 @@ public class VaultAuthManager {
     public static final String USERPASS_WRAPPING_TOKEN_PASSWORD_KEY = "password";
 
     private AtomicReference<VaultToken> loginCache = new AtomicReference<>(null);
-    private Map<String, String> wrappedCache = new ConcurrentHashMap<>();
-    private Semaphore unwrapSem = new Semaphore(1);
+    private Map<String, Uni<String>> unwrappingCache = new ConcurrentHashMap<>();
     private VaultConfigHolder vaultConfigHolder;
     private VaultInternalSystemBackend vaultInternalSystemBackend;
     private VaultInternalAppRoleAuthMethod vaultInternalAppRoleAuthMethod;
@@ -75,15 +72,16 @@ public class VaultAuthManager {
         return vaultConfigHolder.getVaultBootstrapConfig();
     }
 
-    public String getClientToken() {
-        return getConfig().authentication.isDirectClientToken() ? getDirectClientToken() : login().clientToken;
+    public Uni<String> getClientToken() {
+        return getConfig().authentication.isDirectClientToken() ? getDirectClientToken()
+                : login().map(vaultToken -> vaultToken.clientToken);
     }
 
-    private String getDirectClientToken() {
+    private Uni<String> getDirectClientToken() {
 
         Optional<String> clientTokenOption = getConfig().authentication.clientToken;
         if (clientTokenOption.isPresent()) {
-            return clientTokenOption.get();
+            return Uni.createFrom().item(clientTokenOption.get());
         }
 
         return unwrapWrappingTokenOnce("client token",
@@ -91,88 +89,96 @@ public class VaultAuthManager {
                 VaultTokenCreate.class);
     }
 
-    private VaultToken login() {
-        VaultToken vaultToken = login(loginCache.get());
-        loginCache.set(vaultToken);
-        return vaultToken;
+    private Uni<VaultToken> login() {
+        return login(loginCache.get())
+                .map(vaultToken -> {
+                    loginCache.set(vaultToken);
+                    return vaultToken;
+                });
     }
 
-    public VaultToken login(VaultToken currentVaultToken) {
+    public Uni<VaultToken> login(VaultToken currentVaultToken) {
+        return Uni.createFrom().item(Optional.ofNullable(currentVaultToken))
+                // check clientToken is still valid
+                .flatMap(this::validate)
+                // extend clientToken if necessary
+                .flatMap(vaultToken -> {
+                    if (vaultToken.isPresent() && vaultToken.get().shouldExtend(getConfig().renewGracePeriod)) {
+                        return extend(vaultToken.get().clientToken).map(Optional::of);
+                    }
+                    return Uni.createFrom().item(vaultToken);
+                })
+                // create new clientToken if necessary
+                .flatMap(vaultToken -> {
+                    if (vaultToken.isEmpty() || vaultToken.get().isExpired()
+                            || vaultToken.get().expiresSoon(getConfig().renewGracePeriod)) {
+                        return vaultLogin();
+                    }
+                    return Uni.createFrom().item(vaultToken.get());
+                });
+    }
 
-        VaultToken vaultToken = currentVaultToken;
-
-        // check clientToken is still valid
-        if (vaultToken != null) {
-            vaultToken = validate(vaultToken);
+    private Uni<Optional<VaultToken>> validate(Optional<VaultToken> vaultToken) {
+        if (vaultToken.isEmpty()) {
+            return Uni.createFrom().item(Optional.empty());
         }
-
-        // extend clientToken if necessary
-        if (vaultToken != null && vaultToken.shouldExtend(getConfig().renewGracePeriod)) {
-            vaultToken = extend(vaultToken.clientToken);
-        }
-
-        // create new clientToken if necessary
-        if (vaultToken == null || vaultToken.isExpired() || vaultToken.expiresSoon(getConfig().renewGracePeriod)) {
-            vaultToken = vaultLogin();
-        }
-
-        return vaultToken;
+        return vaultInternalTokenAuthMethod.lookupSelf(vaultToken.get().clientToken)
+                .map(i -> vaultToken)
+                .onFailure(VaultClientException.class).recoverWithUni(e -> {
+                    if (((VaultClientException) e).getStatus() == 403) { // forbidden
+                        log.debug("login token " + vaultToken.get().clientToken + " has become invalid");
+                        return Uni.createFrom().item(Optional.empty());
+                    } else {
+                        return Uni.createFrom().failure(e);
+                    }
+                });
     }
 
-    private VaultToken validate(VaultToken vaultToken) {
-        try {
-            vaultInternalTokenAuthMethod.lookupSelf(vaultToken.clientToken);
-            return vaultToken;
-        } catch (VaultClientException e) {
-            if (e.getStatus() == 403) { // forbidden
-                log.debug("login token " + vaultToken.clientToken + " has become invalid");
-                return null;
-            } else {
-                throw e;
-            }
-        }
+    private Uni<VaultToken> extend(String clientToken) {
+        return vaultInternalTokenAuthMethod.renewSelf(clientToken, null)
+                .map(renew -> {
+                    VaultToken vaultToken = new VaultToken(renew.auth.clientToken, renew.auth.renewable,
+                            renew.auth.leaseDurationSecs);
+                    sanityCheck(vaultToken);
+                    log.debug("extended login token: " + vaultToken.getConfidentialInfo(getConfig().logConfidentialityLevel));
+                    return vaultToken;
+                });
     }
 
-    private VaultToken extend(String clientToken) {
-        VaultRenewSelfAuth auth = vaultInternalTokenAuthMethod.renewSelf(clientToken, null).auth;
-        VaultToken vaultToken = new VaultToken(auth.clientToken, auth.renewable, auth.leaseDurationSecs);
-        sanityCheck(vaultToken);
-        log.debug("extended login token: " + vaultToken.getConfidentialInfo(getConfig().logConfidentialityLevel));
-        return vaultToken;
+    private Uni<VaultToken> vaultLogin() {
+        return login(getConfig().getAuthenticationType())
+                .map(vaultToken -> {
+                    sanityCheck(vaultToken);
+                    log.debug(
+                            "created new login token: " + vaultToken.getConfidentialInfo(getConfig().logConfidentialityLevel));
+                    return vaultToken;
+                });
     }
 
-    private VaultToken vaultLogin() {
-        VaultToken vaultToken = login(getConfig().getAuthenticationType());
-        sanityCheck(vaultToken);
-        log.debug(
-                "created new login token: " + vaultToken.getConfidentialInfo(getConfig().logConfidentialityLevel));
-        return vaultToken;
-    }
-
-    private VaultToken login(VaultAuthenticationType type) {
-        AbstractVaultAuthAuth<?> auth;
+    private Uni<VaultToken> login(VaultAuthenticationType type) {
+        Uni<? extends AbstractVaultAuthAuth<?>> authRequest;
         if (type == KUBERNETES) {
-            auth = loginKubernetes();
+            authRequest = loginKubernetes();
         } else if (type == USERPASS) {
             String username = getConfig().authentication.userpass.username.get();
-            String password = getPassword();
-            auth = vaultInternalUserpassAuthMethod.login(username, password).auth;
+            authRequest = getPassword()
+                    .flatMap(password -> vaultInternalUserpassAuthMethod.login(username, password).map(r -> r.auth));
         } else if (type == APPROLE) {
             String roleId = getConfig().authentication.appRole.roleId.get();
-            String secretId = getSecretId();
-            auth = vaultInternalAppRoleAuthMethod.login(roleId, secretId).auth;
+            authRequest = getSecretId().flatMap(secretId -> vaultInternalAppRoleAuthMethod.login(roleId, secretId))
+                    .map(r -> r.auth);
         } else {
             throw new UnsupportedOperationException("unknown authType " + getConfig().getAuthenticationType());
         }
 
-        return new VaultToken(auth.clientToken, auth.renewable, auth.leaseDurationSecs);
+        return authRequest.map(auth -> new VaultToken(auth.clientToken, auth.renewable, auth.leaseDurationSecs));
     }
 
-    private String getSecretId() {
+    private Uni<String> getSecretId() {
 
         Optional<String> secretIdOption = getConfig().authentication.appRole.secretId;
         if (secretIdOption.isPresent()) {
-            return secretIdOption.get();
+            return Uni.createFrom().item(secretIdOption.get());
         }
 
         return unwrapWrappingTokenOnce("secret id",
@@ -180,11 +186,11 @@ public class VaultAuthManager {
                 VaultAppRoleGenerateNewSecretID.class);
     }
 
-    private String getPassword() {
+    private Uni<String> getPassword() {
 
         Optional<String> passwordOption = getConfig().authentication.userpass.password;
         if (passwordOption.isPresent()) {
-            return passwordOption.get();
+            return Uni.createFrom().item(passwordOption.get());
         }
 
         String wrappingToken = getConfig().authentication.userpass.passwordWrappingToken.get();
@@ -197,63 +203,39 @@ public class VaultAuthManager {
         }
     }
 
-    private <T> String unwrapWrappingTokenOnce(String type, String wrappingToken,
-            Function<T, String> f, Class<T> clazz) {
+    private <T> Uni<String> unwrapWrappingTokenOnce(String type, String wrappingToken, Function<T, String> f, Class<T> clazz) {
+        return unwrappingCache.computeIfAbsent(wrappingToken, (token) -> {
+            return vaultInternalSystemBackend.unwrap(wrappingToken, clazz)
+                    .map(unwrap -> {
+                        String wrappedValue = f.apply(unwrap);
 
-        // if the wrapped info is already in the cache, no need to go through semaphore acquisition
-        String wrappedValue = wrappedCache.get(wrappingToken);
-        if (wrappedValue != null) {
-            return wrappedValue;
-        }
+                        String displayValue = getConfig().logConfidentialityLevel.maskWithTolerance(wrappedValue, LOW);
+                        log.debug("unwrapped " + type + ": " + displayValue);
 
-        try {
-            boolean success = unwrapSem.tryAcquire(1, 10, SECONDS);
-            if (!success) {
-                throw new RuntimeException("unable to enter critical section when unwrapping " + type);
-            }
-            try {
-                // by the time we reach here, may be somebody has populated the cache
-                wrappedValue = wrappedCache.get(wrappingToken);
-                if (wrappedValue != null) {
-                    return wrappedValue;
-                }
-
-                T unwrap;
-
-                try {
-                    unwrap = vaultInternalSystemBackend.unwrap(wrappingToken, clazz);
-                } catch (VaultClientException e) {
-                    if (e.getStatus() == 400) {
-                        String message = "wrapping token is not valid or does not exist; " +
-                                "this means that the token has already expired " +
-                                "(if so you can increase the ttl on the wrapping token) or " +
-                                "has been consumed by somebody else " +
-                                "(potentially indicating that the wrapping token has been stolen)";
-                        throw new VaultException(message, e);
-                    } else {
-                        throw e;
-                    }
-                }
-
-                wrappedValue = f.apply(unwrap);
-                wrappedCache.put(wrappingToken, wrappedValue);
-                String displayValue = getConfig().logConfidentialityLevel.maskWithTolerance(wrappedValue, LOW);
-                log.debug("unwrapped " + type + ": " + displayValue);
-                return wrappedValue;
-
-            } finally {
-                unwrapSem.release();
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException("unable to enter critical section when unwrapping " + type, e);
-        }
+                        return wrappedValue;
+                    })
+                    .onFailure(VaultClientException.class).transform(e -> {
+                        if (((VaultClientException) e).getStatus() == 400) {
+                            String message = "wrapping token is not valid or does not exist; " +
+                                    "this means that the token has already expired " +
+                                    "(if so you can increase the ttl on the wrapping token) or " +
+                                    "has been consumed by somebody else " +
+                                    "(potentially indicating that the wrapping token has been stolen)";
+                            return new VaultException(message, e);
+                        } else {
+                            return e;
+                        }
+                    })
+                    .memoize().indefinitely();
+        });
     }
 
-    private VaultKubernetesAuthAuth loginKubernetes() {
+    private Uni<VaultKubernetesAuthAuth> loginKubernetes() {
         String jwt = new String(read(getConfig().authentication.kubernetes.jwtTokenPath), StandardCharsets.UTF_8);
         log.debug("authenticate with jwt at: " + getConfig().authentication.kubernetes.jwtTokenPath + " => "
                 + getConfig().logConfidentialityLevel.maskWithTolerance(jwt, LOW));
-        return vaultInternalKubernetesAuthMethod.login(getConfig().authentication.kubernetes.role.get(), jwt).auth;
+        String role = getConfig().authentication.kubernetes.role.get();
+        return vaultInternalKubernetesAuthMethod.login(role, jwt).map(r -> r.auth);
     }
 
     private byte[] read(String path) {

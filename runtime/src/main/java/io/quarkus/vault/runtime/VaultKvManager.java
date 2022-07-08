@@ -6,16 +6,15 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.quarkus.vault.VaultKVSecretEngine;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
+import io.quarkus.vault.VaultKVSecretReactiveEngine;
 import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2WriteBody;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalKvV1SecretEngine;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalKvV2SecretEngine;
 import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
-public class VaultKvManager implements VaultKVSecretEngine {
+public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
     @Inject
     private VaultAuthManager vaultAuthManager;
@@ -31,55 +30,59 @@ public class VaultKvManager implements VaultKVSecretEngine {
     }
 
     @Override
-    public Map<String, String> readSecret(String path) {
+    public Uni<Map<String, String>> readSecret(String path) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
 
-        String clientToken = vaultAuthManager.getClientToken();
-        String mount = getConfig().kvSecretEngineMountPath;
+            String mount = getConfig().kvSecretEngineMountPath;
 
-        if (isV1()) {
-            VaultKvSecretV1 secretV1 = vaultInternalKvV1SecretEngine.getSecret(clientToken, mount, path);
-            return secretV1.data;
-        } else {
-            VaultKvSecretV2 secretV2 = vaultInternalKvV2SecretEngine.getSecret(clientToken, mount, path);
-            return secretV2.data.data;
-        }
+            if (isV1()) {
+                return vaultInternalKvV1SecretEngine.getSecret(token, mount, path).map(r -> r.data);
+            } else {
+                return vaultInternalKvV2SecretEngine.getSecret(token, mount, path).map(r -> r.data.data);
+            }
+        });
     }
 
     @Override
-    public void writeSecret(String path, Map<String, String> secret) {
+    public Uni<Void> writeSecret(String path, Map<String, String> secret) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
 
-        String clientToken = vaultAuthManager.getClientToken();
-        String mount = getConfig().kvSecretEngineMountPath;
+            String mount = getConfig().kvSecretEngineMountPath;
 
-        if (isV1()) {
-            vaultInternalKvV1SecretEngine.writeSecret(clientToken, mount, path, secret);
-        } else {
-            VaultKvSecretV2WriteBody body = new VaultKvSecretV2WriteBody();
-            body.data = secret;
-            vaultInternalKvV2SecretEngine.writeSecret(clientToken, mount, path, body);
-        }
+            if (isV1()) {
+                return vaultInternalKvV1SecretEngine.writeSecret(token, mount, path, secret);
+            } else {
+                VaultKvSecretV2WriteBody body = new VaultKvSecretV2WriteBody();
+                body.data = secret;
+                return vaultInternalKvV2SecretEngine.writeSecret(token, mount, path, body);
+            }
+        });
     }
 
     @Override
-    public void deleteSecret(String path) {
-        String clientToken = vaultAuthManager.getClientToken();
-        String mount = getConfig().kvSecretEngineMountPath;
+    public Uni<Void> deleteSecret(String path) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
 
-        if (isV1()) {
-            vaultInternalKvV1SecretEngine.deleteSecret(clientToken, mount, path);
-        } else {
-            vaultInternalKvV2SecretEngine.deleteSecret(clientToken, mount, path);
-        }
+            String mount = getConfig().kvSecretEngineMountPath;
+
+            if (isV1()) {
+                return vaultInternalKvV1SecretEngine.deleteSecret(token, mount, path);
+            } else {
+                return vaultInternalKvV2SecretEngine.deleteSecret(token, mount, path);
+            }
+        });
     }
 
     @Override
-    public List<String> listSecrets(String path) {
-        String clientToken = vaultAuthManager.getClientToken();
-        String mount = getConfig().kvSecretEngineMountPath;
+    public Uni<List<String>> listSecrets(String path) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
 
-        return (isV1()
-                ? vaultInternalKvV1SecretEngine.listSecrets(clientToken, mount, path)
-                : vaultInternalKvV2SecretEngine.listSecrets(clientToken, mount, path)).data.keys;
+            String mount = getConfig().kvSecretEngineMountPath;
+
+            return (isV1()
+                    ? vaultInternalKvV1SecretEngine.listSecrets(token, mount, path)
+                    : vaultInternalKvV2SecretEngine.listSecrets(token, mount, path)).map(r -> r.data.keys);
+        });
     }
 
     private boolean isV1() {

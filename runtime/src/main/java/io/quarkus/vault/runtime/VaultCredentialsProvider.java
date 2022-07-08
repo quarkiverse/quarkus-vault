@@ -45,12 +45,12 @@ public class VaultCredentialsProvider implements CredentialsProvider {
 
         if (config.databaseCredentialsRole.isPresent()) {
             return vaultDynamicCredentialsManager.getDynamicCredentials(DATABASE_DEFAULT_MOUNT, DEFAULT_REQUEST_PATH,
-                    config.databaseCredentialsRole.get());
+                    config.databaseCredentialsRole.get()).await().indefinitely();
         }
 
         if (config.credentialsRole.isPresent()) {
             return vaultDynamicCredentialsManager.getDynamicCredentials(config.credentialsMount, config.credentialsRequestPath,
-                    config.credentialsRole.get());
+                    config.credentialsRole.get()).await().indefinitely();
         }
 
         if (config.kvPath.isPresent()) {

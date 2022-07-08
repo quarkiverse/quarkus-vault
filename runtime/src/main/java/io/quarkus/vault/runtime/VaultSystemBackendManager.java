@@ -5,17 +5,12 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.quarkus.vault.VaultSystemBackendEngine;
+import io.quarkus.vault.VaultSystemBackendReactiveEngine;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
 import io.quarkus.vault.runtime.client.dto.sys.VaultEnableEngineBody;
-import io.quarkus.vault.runtime.client.dto.sys.VaultHealthResult;
-import io.quarkus.vault.runtime.client.dto.sys.VaultInitResponse;
 import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
-import io.quarkus.vault.runtime.client.dto.sys.VaultSealStatusResult;
-import io.quarkus.vault.runtime.client.dto.sys.VaultSecretEngineInfoResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultTuneBody;
-import io.quarkus.vault.runtime.client.dto.sys.VaultTuneResult;
 import io.quarkus.vault.runtime.config.VaultBuildTimeConfig;
 import io.quarkus.vault.sys.EnableEngineOptions;
 import io.quarkus.vault.sys.VaultHealth;
@@ -25,9 +20,10 @@ import io.quarkus.vault.sys.VaultSealStatus;
 import io.quarkus.vault.sys.VaultSecretEngine;
 import io.quarkus.vault.sys.VaultSecretEngineInfo;
 import io.quarkus.vault.sys.VaultTuneInfo;
+import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
-public class VaultSystemBackendManager implements VaultSystemBackendEngine {
+public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngine {
 
     @Inject
     private VaultBuildTimeConfig buildTimeConfig;
@@ -37,184 +33,170 @@ public class VaultSystemBackendManager implements VaultSystemBackendEngine {
     private VaultInternalSystemBackend vaultInternalSystemBackend;
 
     @Override
-    public VaultInit init(int secretShares, int secretThreshold) {
-        final VaultInitResponse init = vaultInternalSystemBackend.init(secretShares, secretThreshold);
-        return new VaultInit(init.keys, init.keysBase64, init.rootToken);
+    public Uni<VaultInit> init(int secretShares, int secretThreshold) {
+        return vaultInternalSystemBackend.init(secretShares, secretThreshold)
+                .map(init -> new VaultInit(init.keys, init.keysBase64, init.rootToken));
     }
 
     @Override
-    public VaultHealth health() {
-
-        boolean isStandByOk = false;
-        if (this.buildTimeConfig.health.standByOk) {
-            isStandByOk = true;
-        }
-
-        boolean isPerfStandByOk = false;
-        if (this.buildTimeConfig.health.performanceStandByOk) {
-            isPerfStandByOk = true;
-        }
+    public Uni<VaultHealth> health() {
+        boolean isStandByOk = this.buildTimeConfig.health.standByOk;
+        boolean isPerfStandByOk = this.buildTimeConfig.health.performanceStandByOk;
 
         return this.health(isStandByOk, isPerfStandByOk);
     }
 
     @Override
-    public VaultHealthStatus healthStatus() {
-        boolean isStandByOk = false;
-        if (this.buildTimeConfig.health.standByOk) {
-            isStandByOk = true;
-        }
-
-        boolean isPerfStandByOk = false;
-        if (this.buildTimeConfig.health.performanceStandByOk) {
-            isPerfStandByOk = true;
-        }
+    public Uni<VaultHealthStatus> healthStatus() {
+        boolean isStandByOk = this.buildTimeConfig.health.standByOk;
+        boolean isPerfStandByOk = this.buildTimeConfig.health.performanceStandByOk;
 
         return this.healthStatus(isStandByOk, isPerfStandByOk);
     }
 
     @Override
-    public VaultSealStatus sealStatus() {
-        final VaultSealStatusResult vaultSealStatusResult = vaultInternalSystemBackend.systemSealStatus();
+    public Uni<VaultSealStatus> sealStatus() {
+        return vaultInternalSystemBackend.systemSealStatus()
+                .map(vaultSealStatusResult -> {
 
-        final VaultSealStatus vaultSealStatus = new VaultSealStatus();
-        vaultSealStatus.setClusterId(vaultSealStatusResult.clusterId);
-        vaultSealStatus.setClusterName(vaultSealStatusResult.clusterName);
-        vaultSealStatus.setInitialized(vaultSealStatusResult.initialized);
-        vaultSealStatus.setMigration(vaultSealStatusResult.migration);
-        vaultSealStatus.setN(vaultSealStatusResult.n);
-        vaultSealStatus.setNonce(vaultSealStatusResult.nonce);
-        vaultSealStatus.setProgress(vaultSealStatusResult.progress);
-        vaultSealStatus.setRecoverySeal(vaultSealStatusResult.recoverySeal);
-        vaultSealStatus.setSealed(vaultSealStatusResult.sealed);
-        vaultSealStatus.setT(vaultSealStatusResult.t);
-        vaultSealStatus.setType(vaultSealStatusResult.type);
-        vaultSealStatus.setVersion(vaultSealStatusResult.version);
+                    final VaultSealStatus vaultSealStatus = new VaultSealStatus();
+                    vaultSealStatus.setClusterId(vaultSealStatusResult.clusterId);
+                    vaultSealStatus.setClusterName(vaultSealStatusResult.clusterName);
+                    vaultSealStatus.setInitialized(vaultSealStatusResult.initialized);
+                    vaultSealStatus.setMigration(vaultSealStatusResult.migration);
+                    vaultSealStatus.setN(vaultSealStatusResult.n);
+                    vaultSealStatus.setNonce(vaultSealStatusResult.nonce);
+                    vaultSealStatus.setProgress(vaultSealStatusResult.progress);
+                    vaultSealStatus.setRecoverySeal(vaultSealStatusResult.recoverySeal);
+                    vaultSealStatus.setSealed(vaultSealStatusResult.sealed);
+                    vaultSealStatus.setT(vaultSealStatusResult.t);
+                    vaultSealStatus.setType(vaultSealStatusResult.type);
+                    vaultSealStatus.setVersion(vaultSealStatusResult.version);
 
-        return vaultSealStatus;
+                    return vaultSealStatus;
+                });
     }
 
-    private VaultHealthStatus healthStatus(boolean isStandByOk, boolean isPerfStandByOk) {
-        final VaultHealthResult vaultHealthResult = vaultInternalSystemBackend.systemHealthStatus(isStandByOk, isPerfStandByOk);
+    private Uni<VaultHealthStatus> healthStatus(boolean isStandByOk, boolean isPerfStandByOk) {
+        return vaultInternalSystemBackend.systemHealthStatus(isStandByOk, isPerfStandByOk)
+                .map(vaultHealthResult -> {
 
-        final VaultHealthStatus vaultHealthStatus = new VaultHealthStatus();
-        vaultHealthStatus.setClusterId(vaultHealthResult.clusterId);
-        vaultHealthStatus.setClusterName(vaultHealthResult.clusterName);
-        vaultHealthStatus.setInitialized(vaultHealthResult.initialized);
-        vaultHealthStatus.setPerformanceStandby(vaultHealthResult.performanceStandby);
-        vaultHealthStatus.setReplicationDrMode(vaultHealthResult.replicationDrMode);
-        vaultHealthStatus.setReplicationPerfMode(vaultHealthResult.replicationPerfMode);
-        vaultHealthStatus.setSealed(vaultHealthResult.sealed);
-        vaultHealthStatus.setServerTimeUtc(vaultHealthResult.serverTimeUtc);
-        vaultHealthStatus.setStandby(vaultHealthResult.standby);
-        vaultHealthStatus.setVersion(vaultHealthResult.version);
+                    final VaultHealthStatus vaultHealthStatus = new VaultHealthStatus();
+                    vaultHealthStatus.setClusterId(vaultHealthResult.clusterId);
+                    vaultHealthStatus.setClusterName(vaultHealthResult.clusterName);
+                    vaultHealthStatus.setInitialized(vaultHealthResult.initialized);
+                    vaultHealthStatus.setPerformanceStandby(vaultHealthResult.performanceStandby);
+                    vaultHealthStatus.setReplicationDrMode(vaultHealthResult.replicationDrMode);
+                    vaultHealthStatus.setReplicationPerfMode(vaultHealthResult.replicationPerfMode);
+                    vaultHealthStatus.setSealed(vaultHealthResult.sealed);
+                    vaultHealthStatus.setServerTimeUtc(vaultHealthResult.serverTimeUtc);
+                    vaultHealthStatus.setStandby(vaultHealthResult.standby);
+                    vaultHealthStatus.setVersion(vaultHealthResult.version);
 
-        return vaultHealthStatus;
+                    return vaultHealthStatus;
+                });
     }
 
-    private VaultHealth health(boolean isStandByOk, boolean isPerfStandByOk) {
-        final int systemHealthStatusCode = vaultInternalSystemBackend.systemHealth(isStandByOk, isPerfStandByOk);
-        return new VaultHealth(systemHealthStatusCode);
-    }
-
-    @Override
-    public String getPolicyRules(String name) {
-        String token = vaultAuthManager.getClientToken();
-        return vaultInternalSystemBackend.getPolicy(token, name).data.rules;
-    }
-
-    @Override
-    public void createUpdatePolicy(String name, String policy) {
-        String token = vaultAuthManager.getClientToken();
-        vaultInternalSystemBackend.createUpdatePolicy(token, name, new VaultPolicyBody(policy));
+    private Uni<VaultHealth> health(boolean isStandByOk, boolean isPerfStandByOk) {
+        return vaultInternalSystemBackend.systemHealth(isStandByOk, isPerfStandByOk)
+                .map(VaultHealth::new);
     }
 
     @Override
-    public void deletePolicy(String name) {
-        String token = vaultAuthManager.getClientToken();
-        vaultInternalSystemBackend.deletePolicy(token, name);
+    public Uni<String> getPolicyRules(String name) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.getPolicy(token, name).map(r -> r.data.rules);
+        });
     }
 
     @Override
-    public List<String> getPolicies() {
-        String token = vaultAuthManager.getClientToken();
-        return vaultInternalSystemBackend.listPolicies(token).data.policies;
+    public Uni<Void> createUpdatePolicy(String name, String policy) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.createUpdatePolicy(token, name, new VaultPolicyBody(policy));
+        });
     }
 
     @Override
-    public VaultSecretEngineInfo getSecretEngineInfo(String mount) {
-        String token = vaultAuthManager.getClientToken();
-        VaultSecretEngineInfoResult result = vaultInternalSystemBackend.getSecretEngineInfo(token, mount);
-        VaultSecretEngineInfo info = new VaultSecretEngineInfo()
-                .setDescription(result.data.description)
-                .setType(result.data.type)
-                .setLocal(result.data.local)
-                .setExternalEntropyAccess(result.data.externalEntropyAccess)
-                .setSealWrap(result.data.sealWrap)
-                .setOptions(result.data.options);
-        return info;
+    public Uni<Void> deletePolicy(String name) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.deletePolicy(token, name);
+        });
     }
 
     @Override
-    public VaultTuneInfo getTuneInfo(String mount) {
-        String token = vaultAuthManager.getClientToken();
-        VaultTuneResult vaultTuneResult = vaultInternalSystemBackend.getTuneInfo(token, mount);
-
-        VaultTuneInfo tuneInfo = new VaultTuneInfo();
-        tuneInfo.setDefaultLeaseTimeToLive(vaultTuneResult.data.defaultLeaseTimeToLive);
-        tuneInfo.setMaxLeaseTimeToLive(vaultTuneResult.data.maxLeaseTimeToLive);
-        tuneInfo.setDescription(vaultTuneResult.data.description);
-        tuneInfo.setForceNoCache(vaultTuneResult.data.forceNoCache);
-        return tuneInfo;
+    public Uni<List<String>> getPolicies() {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.listPolicies(token).map(r -> r.data.policies);
+        });
     }
 
     @Override
-    public void updateTuneInfo(String mount, VaultTuneInfo tuneInfoUpdates) {
+    public Uni<VaultSecretEngineInfo> getSecretEngineInfo(String mount) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.getSecretEngineInfo(token, mount)
+                    .map(result -> {
+                        VaultSecretEngineInfo info = new VaultSecretEngineInfo();
+                        info.setDescription(result.data.description);
+                        info.setType(result.data.type);
+                        info.setLocal(result.data.local);
+                        info.setExternalEntropyAccess(result.data.externalEntropyAccess);
+                        info.setSealWrap(result.data.sealWrap);
+                        info.setOptions(result.data.options);
+                        return info;
+                    });
+        });
+    }
+
+    public Uni<VaultTuneInfo> getTuneInfo(String mount) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.getTuneInfo(token, mount)
+                    .map(vaultTuneResult -> {
+                        VaultTuneInfo tuneInfo = new VaultTuneInfo();
+                        tuneInfo.setDefaultLeaseTimeToLive(vaultTuneResult.data.defaultLeaseTimeToLive);
+                        tuneInfo.setMaxLeaseTimeToLive(vaultTuneResult.data.maxLeaseTimeToLive);
+                        tuneInfo.setDescription(vaultTuneResult.data.description);
+                        tuneInfo.setForceNoCache(vaultTuneResult.data.forceNoCache);
+                        return tuneInfo;
+                    });
+        });
+    }
+
+    @Override
+    public Uni<Void> updateTuneInfo(String mount, VaultTuneInfo tuneInfoUpdates) {
         VaultTuneBody body = new VaultTuneBody();
         body.description = tuneInfoUpdates.getDescription();
         body.defaultLeaseTimeToLive = tuneInfoUpdates.getDefaultLeaseTimeToLive();
         body.maxLeaseTimeToLive = tuneInfoUpdates.getMaxLeaseTimeToLive();
         body.forceNoCache = tuneInfoUpdates.getForceNoCache();
 
-        String token = vaultAuthManager.getClientToken();
-        vaultInternalSystemBackend.updateTuneInfo(token, mount, body);
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.updateTuneInfo(token, mount, body);
+        });
     }
 
     @Override
-    public boolean isEngineMounted(String mount) {
-
-        try {
-            getSecretEngineInfo(mount);
-            return true;
-        } catch (VaultClientException e) {
-            if (e.getStatus() == 405) {
-                // vault < 1.10.0 - need to use getTuneInfo()
-            } else if (e.getStatus() == 400) {
-                // engine not found
-                return false;
-            } else {
-                throw e;
-            }
-        }
-
-        // vault < 1.10.0
-
-        try {
-            getTuneInfo(mount);
-            return true;
-        } catch (VaultClientException x) {
-            if (x.getStatus() != 400) {
-                throw x;
-            }
-            return false;
-        }
+    public Uni<Boolean> isEngineMounted(String mount) {
+        return getSecretEngineInfo(mount).map(i -> true)
+                .onFailure(VaultClientException.class).recoverWithUni(x -> {
+                    if (((VaultClientException) x).getStatus() == 405) {
+                        // Fallback for < 1.10.0
+                        return getTuneInfo(mount).map(i -> true);
+                    }
+                    return Uni.createFrom().failure(x);
+                })
+                .onFailure(VaultClientException.class).recoverWithUni(x -> {
+                    if (((VaultClientException) x).getStatus() == 400) {
+                        return Uni.createFrom().item(false);
+                    }
+                    return Uni.createFrom().failure(x);
+                });
     }
 
-    public void enable(VaultSecretEngine engine, String mount, String description, EnableEngineOptions options) {
-        enable(engine.getType(), mount, description, options);
+    public Uni<Void> enable(VaultSecretEngine engine, String mount, String description, EnableEngineOptions options) {
+        return enable(engine.getType(), mount, description, options);
     }
 
-    public void enable(String engineType, String mount, String description, EnableEngineOptions options) {
+    public Uni<Void> enable(String engineType, String mount, String description, EnableEngineOptions options) {
         VaultEnableEngineBody body = new VaultEnableEngineBody();
         body.type = engineType;
         body.description = description;
@@ -223,11 +205,15 @@ public class VaultSystemBackendManager implements VaultSystemBackendEngine {
         body.config.maxLeaseTimeToLive = options.maxLeaseTimeToLive;
         body.options = options.options;
 
-        vaultInternalSystemBackend.enableEngine(vaultAuthManager.getClientToken(), mount, body);
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.enableEngine(token, mount, body);
+        });
     }
 
     @Override
-    public void disable(String mount) {
-        vaultInternalSystemBackend.disableEngine(vaultAuthManager.getClientToken(), mount);
+    public Uni<Void> disable(String mount) {
+        return vaultAuthManager.getClientToken().flatMap(token -> {
+            return vaultInternalSystemBackend.disableEngine(token, mount);
+        });
     }
 }
