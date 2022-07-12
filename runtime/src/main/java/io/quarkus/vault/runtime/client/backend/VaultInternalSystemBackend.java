@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
+import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultInternalBase;
 import io.quarkus.vault.runtime.client.dto.sys.VaultEnableEngineBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultHealthResult;
@@ -29,79 +30,84 @@ import io.smallrye.mutiny.Uni;
 @Singleton
 public class VaultInternalSystemBackend extends VaultInternalBase {
 
-    public Uni<Integer> systemHealth(boolean isStandByOk, boolean isPerfStandByOk) {
+    @Override
+    protected String opNamePrefix() {
+        return super.opNamePrefix() + " [SYS]";
+    }
+
+    public Uni<Integer> systemHealth(VaultClient vaultClient, boolean isStandByOk, boolean isPerfStandByOk) {
         Map<String, String> queryParams = getHealthParams(isStandByOk, isPerfStandByOk);
-        return vaultClient.head("sys/health", queryParams);
+        return vaultClient.head(opName("Health"), "sys/health", queryParams);
     }
 
-    public Uni<VaultHealthResult> systemHealthStatus(boolean isStandByOk, boolean isPerfStandByOk) {
+    public Uni<VaultHealthResult> systemHealthStatus(VaultClient vaultClient, boolean isStandByOk, boolean isPerfStandByOk) {
         Map<String, String> queryParams = getHealthParams(isStandByOk, isPerfStandByOk);
-        return vaultClient.get("sys/health", queryParams, VaultHealthResult.class);
+        return vaultClient.get(opName("Health Status"), "sys/health", queryParams, VaultHealthResult.class);
     }
 
-    public Uni<VaultSealStatusResult> systemSealStatus() {
-        return vaultClient.get("sys/seal-status", emptyMap(), VaultSealStatusResult.class);
+    public Uni<VaultSealStatusResult> systemSealStatus(VaultClient vaultClient) {
+        return vaultClient.get(opName("Seal Status"), "sys/seal-status", emptyMap(), VaultSealStatusResult.class);
     }
 
-    public Uni<VaultInitResponse> init(int secretShares, int secretThreshold) {
+    public Uni<VaultInitResponse> init(VaultClient vaultClient, int secretShares, int secretThreshold) {
         VaultInitBody body = new VaultInitBody(secretShares, secretThreshold);
-        return vaultClient.put("sys/init", body, VaultInitResponse.class);
+        return vaultClient.put(opName("Initialize"), "sys/init", body, VaultInitResponse.class);
     }
 
-    public Uni<VaultWrapResult> wrap(String token, long ttl, Object object) {
+    public Uni<VaultWrapResult> wrap(VaultClient vaultClient, String token, long ttl, Object object) {
         Map<String, String> headers = new HashMap<>();
         headers.put("X-Vault-Wrap-TTL", "" + ttl);
-        return vaultClient.post("sys/wrapping/wrap", token, headers, object, VaultWrapResult.class);
+        return vaultClient.post(opName("Wrap"), "sys/wrapping/wrap", token, headers, object, VaultWrapResult.class);
     }
 
-    public <T> Uni<T> unwrap(String wrappingToken, Class<T> resultClass) {
-        return vaultClient.post("sys/wrapping/unwrap", wrappingToken, VaultUnwrapBody.EMPTY, resultClass);
+    public <T> Uni<T> unwrap(VaultClient vaultClient, String wrappingToken, Class<T> resultClass) {
+        return vaultClient.post(opName("Unwrap"), "sys/wrapping/unwrap", wrappingToken, VaultUnwrapBody.EMPTY, resultClass);
     }
 
-    public Uni<VaultPolicyResult> getPolicy(String token, String name) {
-        return vaultClient.get("sys/policy/" + name, token, VaultPolicyResult.class);
+    public Uni<VaultPolicyResult> getPolicy(VaultClient vaultClient, String token, String name) {
+        return vaultClient.get(opName("Get Policy"), "sys/policy/" + name, token, VaultPolicyResult.class);
     }
 
-    public Uni<Void> createUpdatePolicy(String token, String name, VaultPolicyBody body) {
-        return vaultClient.put("sys/policy/" + name, token, body, 204);
+    public Uni<Void> createUpdatePolicy(VaultClient vaultClient, String token, String name, VaultPolicyBody body) {
+        return vaultClient.put(opName("Update Policy"), "sys/policy/" + name, token, body, 204);
     }
 
-    public Uni<VaultListPolicyResult> listPolicies(String token) {
-        return vaultClient.get("sys/policy", token, VaultListPolicyResult.class);
+    public Uni<VaultListPolicyResult> listPolicies(VaultClient vaultClient, String token) {
+        return vaultClient.get(opName("List Policies"), "sys/policy", token, VaultListPolicyResult.class);
     }
 
-    public Uni<Void> deletePolicy(String token, String name) {
-        return vaultClient.delete("sys/policy/" + name, token, 204);
+    public Uni<Void> deletePolicy(VaultClient vaultClient, String token, String name) {
+        return vaultClient.delete(opName("Delete Policy"), "sys/policy/" + name, token, 204);
     }
 
-    public Uni<VaultLeasesLookup> lookupLease(String token, String leaseId) {
+    public Uni<VaultLeasesLookup> lookupLease(VaultClient vaultClient, String token, String leaseId) {
         VaultLeasesBody body = new VaultLeasesBody(leaseId);
-        return vaultClient.put("sys/leases/lookup", token, body, VaultLeasesLookup.class);
+        return vaultClient.put(opName("Lookup Lease"), "sys/leases/lookup", token, body, VaultLeasesLookup.class);
     }
 
-    public Uni<VaultRenewLease> renewLease(String token, String leaseId) {
+    public Uni<VaultRenewLease> renewLease(VaultClient vaultClient, String token, String leaseId) {
         VaultLeasesBody body = new VaultLeasesBody(leaseId);
-        return vaultClient.put("sys/leases/renew", token, body, VaultRenewLease.class);
+        return vaultClient.put(opName("Renew Lease"), "sys/leases/renew", token, body, VaultRenewLease.class);
     }
 
-    public Uni<Void> enableEngine(String token, String mount, VaultEnableEngineBody body) {
-        return vaultClient.post("sys/mounts/" + mount, token, body, 204);
+    public Uni<Void> enableEngine(VaultClient vaultClient, String token, String mount, VaultEnableEngineBody body) {
+        return vaultClient.post(opName("Enable Engine"), "sys/mounts/" + mount, token, body, 204);
     }
 
-    public Uni<Void> disableEngine(String token, String mount) {
-        return vaultClient.delete("sys/mounts/" + mount, token, 204);
+    public Uni<Void> disableEngine(VaultClient vaultClient, String token, String mount) {
+        return vaultClient.delete(opName("Disable Engine"), "sys/mounts/" + mount, token, 204);
     }
 
-    public Uni<VaultTuneResult> getTuneInfo(String token, String mount) {
-        return vaultClient.get("sys/mounts/" + mount + "/tune", token, VaultTuneResult.class);
+    public Uni<VaultTuneResult> getTuneInfo(VaultClient vaultClient, String token, String mount) {
+        return vaultClient.get(opName("Tune Info"), "sys/mounts/" + mount + "/tune", token, VaultTuneResult.class);
     }
 
-    public Uni<Void> updateTuneInfo(String token, String mount, VaultTuneBody body) {
-        return vaultClient.post("sys/mounts/" + mount + "/tune", token, body, 204);
+    public Uni<Void> updateTuneInfo(VaultClient vaultClient, String token, String mount, VaultTuneBody body) {
+        return vaultClient.post(opName("Tune"), "sys/mounts/" + mount + "/tune", token, body, 204);
     }
 
-    public Uni<VaultSecretEngineInfoResult> getSecretEngineInfo(String token, String mount) {
-        return vaultClient.get("sys/mounts/" + mount, token, VaultSecretEngineInfoResult.class);
+    public Uni<VaultSecretEngineInfoResult> getSecretEngineInfo(VaultClient vaultClient, String token, String mount) {
+        return vaultClient.get(opName("Engine Info"), "sys/mounts/" + mount, token, VaultSecretEngineInfoResult.class);
     }
 
     // ---

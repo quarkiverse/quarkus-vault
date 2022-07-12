@@ -20,6 +20,7 @@ import javax.inject.Singleton;
 import org.jboss.logging.Logger;
 
 import io.quarkus.vault.VaultException;
+import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalAppRoleAuthMethod;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalKubernetesAuthMethod;
@@ -55,7 +56,8 @@ public class VaultAuthManager {
     private VaultInternalUserpassAuthMethod vaultInternalUserpassAuthMethod;
     private VaultInternalTokenAuthMethod vaultInternalTokenAuthMethod;
 
-    VaultAuthManager(VaultConfigHolder vaultConfigHolder, VaultInternalSystemBackend vaultInternalSystemBackend,
+    VaultAuthManager(VaultConfigHolder vaultConfigHolder,
+            VaultInternalSystemBackend vaultInternalSystemBackend,
             VaultInternalAppRoleAuthMethod vaultInternalAppRoleAuthMethod,
             VaultInternalKubernetesAuthMethod vaultInternalKubernetesAuthMethod,
             VaultInternalUserpassAuthMethod vaultInternalUserpassAuthMethod,
@@ -72,39 +74,39 @@ public class VaultAuthManager {
         return vaultConfigHolder.getVaultBootstrapConfig();
     }
 
-    public Uni<String> getClientToken() {
-        return getConfig().authentication.isDirectClientToken() ? getDirectClientToken()
-                : login().map(vaultToken -> vaultToken.clientToken);
+    public Uni<String> getClientToken(VaultClient vaultClient) {
+        return getConfig().authentication.isDirectClientToken() ? getDirectClientToken(vaultClient)
+                : login(vaultClient).map(vaultToken -> vaultToken.clientToken);
     }
 
-    private Uni<String> getDirectClientToken() {
+    private Uni<String> getDirectClientToken(VaultClient vaultClient) {
 
         Optional<String> clientTokenOption = getConfig().authentication.clientToken;
         if (clientTokenOption.isPresent()) {
             return Uni.createFrom().item(clientTokenOption.get());
         }
 
-        return unwrapWrappingTokenOnce("client token",
+        return unwrapWrappingTokenOnce(vaultClient, "client token",
                 getConfig().authentication.clientTokenWrappingToken.get(), unwrap -> unwrap.auth.clientToken,
                 VaultTokenCreate.class);
     }
 
-    private Uni<VaultToken> login() {
-        return login(loginCache.get())
+    private Uni<VaultToken> login(VaultClient vaultClient) {
+        return login(vaultClient, loginCache.get())
                 .map(vaultToken -> {
                     loginCache.set(vaultToken);
                     return vaultToken;
                 });
     }
 
-    public Uni<VaultToken> login(VaultToken currentVaultToken) {
+    public Uni<VaultToken> login(VaultClient vaultClient, VaultToken currentVaultToken) {
         return Uni.createFrom().item(Optional.ofNullable(currentVaultToken))
                 // check clientToken is still valid
-                .flatMap(this::validate)
+                .flatMap(vaultToken -> validate(vaultClient, vaultToken))
                 // extend clientToken if necessary
                 .flatMap(vaultToken -> {
                     if (vaultToken.isPresent() && vaultToken.get().shouldExtend(getConfig().renewGracePeriod)) {
-                        return extend(vaultToken.get().clientToken).map(Optional::of);
+                        return extend(vaultClient, vaultToken.get().clientToken).map(Optional::of);
                     }
                     return Uni.createFrom().item(vaultToken);
                 })
@@ -112,17 +114,17 @@ public class VaultAuthManager {
                 .flatMap(vaultToken -> {
                     if (vaultToken.isEmpty() || vaultToken.get().isExpired()
                             || vaultToken.get().expiresSoon(getConfig().renewGracePeriod)) {
-                        return vaultLogin();
+                        return vaultLogin(vaultClient);
                     }
                     return Uni.createFrom().item(vaultToken.get());
                 });
     }
 
-    private Uni<Optional<VaultToken>> validate(Optional<VaultToken> vaultToken) {
+    private Uni<Optional<VaultToken>> validate(VaultClient vaultClient, Optional<VaultToken> vaultToken) {
         if (vaultToken.isEmpty()) {
             return Uni.createFrom().item(Optional.empty());
         }
-        return vaultInternalTokenAuthMethod.lookupSelf(vaultToken.get().clientToken)
+        return vaultInternalTokenAuthMethod.lookupSelf(vaultClient, vaultToken.get().clientToken)
                 .map(i -> vaultToken)
                 .onFailure(VaultClientException.class).recoverWithUni(e -> {
                     if (((VaultClientException) e).getStatus() == 403) { // forbidden
@@ -134,8 +136,8 @@ public class VaultAuthManager {
                 });
     }
 
-    private Uni<VaultToken> extend(String clientToken) {
-        return vaultInternalTokenAuthMethod.renewSelf(clientToken, null)
+    private Uni<VaultToken> extend(VaultClient vaultClient, String clientToken) {
+        return vaultInternalTokenAuthMethod.renewSelf(vaultClient, clientToken, null)
                 .map(renew -> {
                     VaultToken vaultToken = new VaultToken(renew.auth.clientToken, renew.auth.renewable,
                             renew.auth.leaseDurationSecs);
@@ -145,8 +147,8 @@ public class VaultAuthManager {
                 });
     }
 
-    private Uni<VaultToken> vaultLogin() {
-        return login(getConfig().getAuthenticationType())
+    private Uni<VaultToken> vaultLogin(VaultClient vaultClient) {
+        return login(vaultClient, getConfig().getAuthenticationType())
                 .map(vaultToken -> {
                     sanityCheck(vaultToken);
                     log.debug(
@@ -155,17 +157,19 @@ public class VaultAuthManager {
                 });
     }
 
-    private Uni<VaultToken> login(VaultAuthenticationType type) {
+    private Uni<VaultToken> login(VaultClient vaultClient, VaultAuthenticationType type) {
         Uni<? extends AbstractVaultAuthAuth<?>> authRequest;
         if (type == KUBERNETES) {
-            authRequest = loginKubernetes();
+            authRequest = loginKubernetes(vaultClient);
         } else if (type == USERPASS) {
             String username = getConfig().authentication.userpass.username.get();
-            authRequest = getPassword()
-                    .flatMap(password -> vaultInternalUserpassAuthMethod.login(username, password).map(r -> r.auth));
+            authRequest = getPassword(vaultClient)
+                    .flatMap(password -> vaultInternalUserpassAuthMethod.login(vaultClient, username, password)
+                            .map(r -> r.auth));
         } else if (type == APPROLE) {
             String roleId = getConfig().authentication.appRole.roleId.get();
-            authRequest = getSecretId().flatMap(secretId -> vaultInternalAppRoleAuthMethod.login(roleId, secretId))
+            authRequest = getSecretId(vaultClient)
+                    .flatMap(secretId -> vaultInternalAppRoleAuthMethod.login(vaultClient, roleId, secretId))
                     .map(r -> r.auth);
         } else {
             throw new UnsupportedOperationException("unknown authType " + getConfig().getAuthenticationType());
@@ -174,19 +178,19 @@ public class VaultAuthManager {
         return authRequest.map(auth -> new VaultToken(auth.clientToken, auth.renewable, auth.leaseDurationSecs));
     }
 
-    private Uni<String> getSecretId() {
+    private Uni<String> getSecretId(VaultClient vaultClient) {
 
         Optional<String> secretIdOption = getConfig().authentication.appRole.secretId;
         if (secretIdOption.isPresent()) {
             return Uni.createFrom().item(secretIdOption.get());
         }
 
-        return unwrapWrappingTokenOnce("secret id",
+        return unwrapWrappingTokenOnce(vaultClient, "secret id",
                 getConfig().authentication.appRole.secretIdWrappingToken.get(), unwrap -> unwrap.data.secretId,
                 VaultAppRoleGenerateNewSecretID.class);
     }
 
-    private Uni<String> getPassword() {
+    private Uni<String> getPassword(VaultClient vaultClient) {
 
         Optional<String> passwordOption = getConfig().authentication.userpass.password;
         if (passwordOption.isPresent()) {
@@ -196,16 +200,17 @@ public class VaultAuthManager {
         String wrappingToken = getConfig().authentication.userpass.passwordWrappingToken.get();
         if (getConfig().kvSecretEngineVersion == 1) {
             Function<VaultKvSecretV1, String> f = unwrap -> unwrap.data.get(USERPASS_WRAPPING_TOKEN_PASSWORD_KEY);
-            return unwrapWrappingTokenOnce("password", wrappingToken, f, VaultKvSecretV1.class);
+            return unwrapWrappingTokenOnce(vaultClient, "password", wrappingToken, f, VaultKvSecretV1.class);
         } else {
             Function<VaultKvSecretV2, String> f = unwrap -> unwrap.data.data.get(USERPASS_WRAPPING_TOKEN_PASSWORD_KEY);
-            return unwrapWrappingTokenOnce("password", wrappingToken, f, VaultKvSecretV2.class);
+            return unwrapWrappingTokenOnce(vaultClient, "password", wrappingToken, f, VaultKvSecretV2.class);
         }
     }
 
-    private <T> Uni<String> unwrapWrappingTokenOnce(String type, String wrappingToken, Function<T, String> f, Class<T> clazz) {
+    private <T> Uni<String> unwrapWrappingTokenOnce(VaultClient vaultClient, String type, String wrappingToken,
+            Function<T, String> f, Class<T> clazz) {
         return unwrappingCache.computeIfAbsent(wrappingToken, (token) -> {
-            return vaultInternalSystemBackend.unwrap(wrappingToken, clazz)
+            return vaultInternalSystemBackend.unwrap(vaultClient, token, clazz)
                     .map(unwrap -> {
                         String wrappedValue = f.apply(unwrap);
 
@@ -230,12 +235,12 @@ public class VaultAuthManager {
         });
     }
 
-    private Uni<VaultKubernetesAuthAuth> loginKubernetes() {
+    private Uni<VaultKubernetesAuthAuth> loginKubernetes(VaultClient vaultClient) {
         String jwt = new String(read(getConfig().authentication.kubernetes.jwtTokenPath), StandardCharsets.UTF_8);
         log.debug("authenticate with jwt at: " + getConfig().authentication.kubernetes.jwtTokenPath + " => "
                 + getConfig().logConfidentialityLevel.maskWithTolerance(jwt, LOW));
         String role = getConfig().authentication.kubernetes.role.get();
-        return vaultInternalKubernetesAuthMethod.login(role, jwt).map(r -> r.auth);
+        return vaultInternalKubernetesAuthMethod.login(vaultClient, role, jwt).map(r -> r.auth);
     }
 
     private byte[] read(String path) {

@@ -16,8 +16,9 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
 import io.quarkus.vault.VaultException;
-import io.quarkus.vault.VaultKVSecretEngine;
+import io.quarkus.vault.VaultKVSecretReactiveEngine;
 import io.quarkus.vault.runtime.VaultIOException;
+import io.quarkus.vault.runtime.client.Private;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 public class VaultConfigSource implements ConfigSource {
@@ -128,11 +129,12 @@ public class VaultConfigSource implements ConfigSource {
     }
 
     private Map<String, String> fetchSecrets(String path, String prefix) {
-        return prefixMap(getVaultKVSecretEngine().readSecret(path), prefix);
+        Map<String, String> secrets = getVaultKVSecretEngine().readSecret(path).await().indefinitely();
+        return prefixMap(secrets, prefix);
     }
 
-    private VaultKVSecretEngine getVaultKVSecretEngine() {
-        return Arc.container().instance(VaultKVSecretEngine.class).get();
+    private VaultKVSecretReactiveEngine getVaultKVSecretEngine() {
+        return Arc.container().instance(VaultKVSecretReactiveEngine.class, Private.Literal.INSTANCE).get();
     }
 
     private Map<String, String> prefixMap(Map<String, String> map, String prefix) {
