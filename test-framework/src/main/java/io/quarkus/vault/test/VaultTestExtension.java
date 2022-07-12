@@ -267,15 +267,14 @@ public class VaultTestExtension {
         waitForContainerToStart();
         vaultClient = createVaultClient();
         VaultInternalSystemBackend vaultInternalSystemBackend = new VaultInternalSystemBackend();
-        vaultInternalSystemBackend.setVaultClient(vaultClient);
         waitForVaultAPIToBeReady(vaultInternalSystemBackend);
 
-        VaultInitResponse vaultInit = vaultInternalSystemBackend.init(1, 1).await().indefinitely();
+        VaultInitResponse vaultInit = vaultInternalSystemBackend.init(vaultClient, 1, 1).await().indefinitely();
         String unsealKey = vaultInit.keys.get(0);
         rootToken = vaultInit.rootToken;
 
         try {
-            vaultInternalSystemBackend.systemHealthStatus(false, false).await().indefinitely();
+            vaultInternalSystemBackend.systemHealthStatus(vaultClient, false, false).await().indefinitely();
         } catch (VaultClientException e) {
             // https://www.vaultproject.io/api/system/health.html
             // 503 = sealed
@@ -285,7 +284,7 @@ public class VaultTestExtension {
         // unseal
         execVault("vault operator unseal " + unsealKey);
 
-        VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus().await().indefinitely();
+        VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus(vaultClient).await().indefinitely();
         assertFalse(sealStatus.sealed);
 
         // userpass auth
@@ -308,7 +307,8 @@ public class VaultTestExtension {
 
         // policy
         String policyContent = readResourceContent("vault.policy");
-        vaultInternalSystemBackend.createUpdatePolicy(rootToken, VAULT_POLICY, new VaultPolicyBody(policyContent)).await()
+        vaultInternalSystemBackend.createUpdatePolicy(vaultClient, rootToken, VAULT_POLICY, new VaultPolicyBody(policyContent))
+                .await()
                 .indefinitely();
 
         // static secrets kv v1
@@ -471,7 +471,8 @@ public class VaultTestExtension {
         while (Instant.now().isBefore(started.plusSeconds(20))) {
             try {
                 log.info("checking seal status");
-                VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus().await().indefinitely();
+                VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus(vaultClient).await()
+                        .indefinitely();
                 log.info(sealStatus);
                 return;
             } catch (VaultIOException e) {

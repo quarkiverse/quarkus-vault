@@ -6,6 +6,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.quarkus.vault.VaultSystemBackendReactiveEngine;
+import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
 import io.quarkus.vault.runtime.client.dto.sys.VaultEnableEngineBody;
@@ -26,6 +27,8 @@ import io.smallrye.mutiny.Uni;
 public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngine {
 
     @Inject
+    private VaultClient vaultClient;
+    @Inject
     private VaultBuildTimeConfig buildTimeConfig;
     @Inject
     private VaultAuthManager vaultAuthManager;
@@ -34,7 +37,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
 
     @Override
     public Uni<VaultInit> init(int secretShares, int secretThreshold) {
-        return vaultInternalSystemBackend.init(secretShares, secretThreshold)
+        return vaultInternalSystemBackend.init(vaultClient, secretShares, secretThreshold)
                 .map(init -> new VaultInit(init.keys, init.keysBase64, init.rootToken));
     }
 
@@ -56,7 +59,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
 
     @Override
     public Uni<VaultSealStatus> sealStatus() {
-        return vaultInternalSystemBackend.systemSealStatus()
+        return vaultInternalSystemBackend.systemSealStatus(vaultClient)
                 .map(vaultSealStatusResult -> {
 
                     final VaultSealStatus vaultSealStatus = new VaultSealStatus();
@@ -78,7 +81,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     }
 
     private Uni<VaultHealthStatus> healthStatus(boolean isStandByOk, boolean isPerfStandByOk) {
-        return vaultInternalSystemBackend.systemHealthStatus(isStandByOk, isPerfStandByOk)
+        return vaultInternalSystemBackend.systemHealthStatus(vaultClient, isStandByOk, isPerfStandByOk)
                 .map(vaultHealthResult -> {
 
                     final VaultHealthStatus vaultHealthStatus = new VaultHealthStatus();
@@ -98,42 +101,42 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     }
 
     private Uni<VaultHealth> health(boolean isStandByOk, boolean isPerfStandByOk) {
-        return vaultInternalSystemBackend.systemHealth(isStandByOk, isPerfStandByOk)
+        return vaultInternalSystemBackend.systemHealth(vaultClient, isStandByOk, isPerfStandByOk)
                 .map(VaultHealth::new);
     }
 
     @Override
     public Uni<String> getPolicyRules(String name) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.getPolicy(token, name).map(r -> r.data.rules);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.getPolicy(vaultClient, token, name).map(r -> r.data.rules);
         });
     }
 
     @Override
     public Uni<Void> createUpdatePolicy(String name, String policy) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.createUpdatePolicy(token, name, new VaultPolicyBody(policy));
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.createUpdatePolicy(vaultClient, token, name, new VaultPolicyBody(policy));
         });
     }
 
     @Override
     public Uni<Void> deletePolicy(String name) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.deletePolicy(token, name);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.deletePolicy(vaultClient, token, name);
         });
     }
 
     @Override
     public Uni<List<String>> getPolicies() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.listPolicies(token).map(r -> r.data.policies);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.listPolicies(vaultClient, token).map(r -> r.data.policies);
         });
     }
 
     @Override
     public Uni<VaultSecretEngineInfo> getSecretEngineInfo(String mount) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.getSecretEngineInfo(token, mount)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.getSecretEngineInfo(vaultClient, token, mount)
                     .map(result -> {
                         VaultSecretEngineInfo info = new VaultSecretEngineInfo();
                         info.setDescription(result.data.description);
@@ -148,8 +151,8 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     }
 
     public Uni<VaultTuneInfo> getTuneInfo(String mount) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.getTuneInfo(token, mount)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.getTuneInfo(vaultClient, token, mount)
                     .map(vaultTuneResult -> {
                         VaultTuneInfo tuneInfo = new VaultTuneInfo();
                         tuneInfo.setDefaultLeaseTimeToLive(vaultTuneResult.data.defaultLeaseTimeToLive);
@@ -169,8 +172,8 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
         body.maxLeaseTimeToLive = tuneInfoUpdates.getMaxLeaseTimeToLive();
         body.forceNoCache = tuneInfoUpdates.getForceNoCache();
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.updateTuneInfo(token, mount, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.updateTuneInfo(vaultClient, token, mount, body);
         });
     }
 
@@ -205,15 +208,15 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
         body.config.maxLeaseTimeToLive = options.maxLeaseTimeToLive;
         body.options = options.options;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.enableEngine(token, mount, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.enableEngine(vaultClient, token, mount, body);
         });
     }
 
     @Override
     public Uni<Void> disable(String mount) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalSystemBackend.disableEngine(token, mount);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.disableEngine(vaultClient, token, mount);
         });
     }
 }

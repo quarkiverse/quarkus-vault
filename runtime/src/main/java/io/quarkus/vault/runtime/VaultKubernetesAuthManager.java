@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import io.quarkus.vault.VaultKubernetesAuthReactiveService;
 import io.quarkus.vault.auth.VaultKubernetesAuthConfig;
 import io.quarkus.vault.auth.VaultKubernetesAuthRole;
+import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalKubernetesAuthMethod;
 import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthConfigData;
@@ -19,14 +20,16 @@ import io.smallrye.mutiny.Uni;
 public class VaultKubernetesAuthManager implements VaultKubernetesAuthReactiveService {
 
     @Inject
+    private VaultClient vaultClient;
+    @Inject
     private VaultAuthManager vaultAuthManager;
     @Inject
     private VaultInternalKubernetesAuthMethod vaultInternalKubernetesAuthMethod;
 
     @Override
     public Uni<Void> configure(VaultKubernetesAuthConfig config) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalKubernetesAuthMethod.configureAuth(token, new VaultKubernetesAuthConfigData()
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.configureAuth(vaultClient, token, new VaultKubernetesAuthConfigData()
                     .setIssuer(config.issuer)
                     .setKubernetesCaCert(config.kubernetesCaCert)
                     .setKubernetesHost(config.kubernetesHost)
@@ -37,8 +40,8 @@ public class VaultKubernetesAuthManager implements VaultKubernetesAuthReactiveSe
 
     @Override
     public Uni<VaultKubernetesAuthConfig> getConfig() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalKubernetesAuthMethod.readAuthConfig(token)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.readAuthConfig(vaultClient, token)
                     .map(result -> new VaultKubernetesAuthConfig()
                             .setKubernetesCaCert(result.data.kubernetesCaCert)
                             .setKubernetesHost(result.data.kubernetesHost)
@@ -49,8 +52,8 @@ public class VaultKubernetesAuthManager implements VaultKubernetesAuthReactiveSe
     }
 
     public Uni<VaultKubernetesAuthRole> getRole(String name) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalKubernetesAuthMethod.getVaultAuthRole(token, name)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.getVaultAuthRole(vaultClient, token, name)
                     .map(result -> {
                         VaultKubernetesAuthRoleData role = result.data;
                         return new VaultKubernetesAuthRole()
@@ -84,15 +87,15 @@ public class VaultKubernetesAuthManager implements VaultKubernetesAuthReactiveSe
                 .setTokenNumUses(role.tokenNumUses)
                 .setTokenPeriod(role.tokenPeriod)
                 .setTokenType(role.tokenType);
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalKubernetesAuthMethod.createAuthRole(token, name, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.createAuthRole(vaultClient, token, name, body);
         });
     }
 
     @Override
     public Uni<List<String>> getRoles() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalKubernetesAuthMethod.listAuthRoles(token)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.listAuthRoles(vaultClient, token)
                     .map(r -> r.data.keys)
                     .onFailure(VaultClientException.class).recoverWithUni(e -> {
                         if (((VaultClientException) e).getStatus() == 404) {
@@ -106,8 +109,8 @@ public class VaultKubernetesAuthManager implements VaultKubernetesAuthReactiveSe
 
     @Override
     public Uni<Void> deleteRole(String name) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalKubernetesAuthMethod.deleteAuthRoles(token, name);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalKubernetesAuthMethod.deleteAuthRoles(vaultClient, token, name);
         });
     }
 }

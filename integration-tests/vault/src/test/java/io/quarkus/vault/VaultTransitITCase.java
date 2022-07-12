@@ -240,8 +240,9 @@ public class VaultTransitITCase {
     }
 
     private void rotate(String keyName) {
-        String clientToken = vaultAuthManager.getClientToken().await().indefinitely();
-        new TestVaultClient().rotate(clientToken, keyName).await().indefinitely();
+        TestVaultClient client = new TestVaultClient();
+        String clientToken = vaultAuthManager.getClientToken(client).await().indefinitely();
+        client.rotate(clientToken, keyName).await().indefinitely();
     }
 
     private String encrypt(int keyVersion) {

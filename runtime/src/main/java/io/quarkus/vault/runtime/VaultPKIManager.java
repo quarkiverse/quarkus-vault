@@ -42,6 +42,7 @@ import io.quarkus.vault.pki.RoleOptions;
 import io.quarkus.vault.pki.SignIntermediateCAOptions;
 import io.quarkus.vault.pki.SignedCertificate;
 import io.quarkus.vault.pki.TidyOptions;
+import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.dto.AbstractVaultDTO;
 import io.quarkus.vault.runtime.client.dto.pki.VaultPKIConfigCABody;
@@ -67,21 +68,25 @@ import io.smallrye.mutiny.Uni;
 @ApplicationScoped
 public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
+    private final VaultClient vaultClient;
     private final String mount;
     private final VaultAuthManager vaultAuthManager;
     private final VaultInternalPKISecretEngine vaultInternalPKISecretEngine;
 
     @Inject
     public VaultPKIManager(
+            VaultClient vaultClient,
             VaultAuthManager vaultAuthManager,
             VaultInternalPKISecretEngine vaultInternalPKISecretEngine) {
-        this(PKI_ENGINE_NAME, vaultAuthManager, vaultInternalPKISecretEngine);
+        this(vaultClient, PKI_ENGINE_NAME, vaultAuthManager, vaultInternalPKISecretEngine);
     }
 
     VaultPKIManager(
+            VaultClient vaultClient,
             String mount,
             VaultAuthManager vaultAuthManager,
             VaultInternalPKISecretEngine vaultInternalPKISecretEngine) {
+        this.vaultClient = vaultClient;
         this.mount = mount;
         this.vaultAuthManager = vaultAuthManager;
         this.vaultInternalPKISecretEngine = vaultInternalPKISecretEngine;
@@ -94,9 +99,9 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<CertificateData> getCertificateAuthority(DataFormat format) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
             String vaultFormat = format == DataFormat.PEM ? format.name().toLowerCase(Locale.ROOT) : null;
-            return vaultInternalPKISecretEngine.getCertificateAuthority(token, mount, vaultFormat)
+            return vaultInternalPKISecretEngine.getCertificateAuthority(vaultClient, token, mount, vaultFormat)
                     .map(data -> {
                         switch (format) {
                             case PEM:
@@ -114,8 +119,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
     public Uni<Void> configCertificateAuthority(String pemBundle) {
         VaultPKIConfigCABody body = new VaultPKIConfigCABody();
         body.pemBundle = pemBundle;
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.configCertificateAuthority(token, mount, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.configCertificateAuthority(vaultClient, token, mount, body);
         });
     }
 
@@ -126,15 +131,15 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.crlDistributionPoints = options.crlDistributionPoints;
         body.ocspServers = options.ocspServers;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.configURLs(token, mount, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.configURLs(vaultClient, token, mount, body);
         });
     }
 
     @Override
     public Uni<ConfigURLsOptions> readURLsConfig() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.readURLs(token, mount)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.readURLs(vaultClient, token, mount)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -155,15 +160,15 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.expiry = options.expiry;
         body.disable = options.disable;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.configCRL(token, mount, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.configCRL(vaultClient, token, mount, body);
         });
     }
 
     @Override
     public Uni<ConfigCRLOptions> readCRLConfig() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.readCRL(token, mount)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.readCRL(vaultClient, token, mount)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -179,8 +184,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<CAChainData.PEM> getCertificateAuthorityChain() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.getCertificateAuthorityChain(token, mount)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.getCertificateAuthorityChain(vaultClient, token, mount)
                     .map(data -> new CAChainData.PEM(data.toString(StandardCharsets.UTF_8)));
         });
     }
@@ -193,8 +198,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
     @Override
     public Uni<CRLData> getCertificateRevocationList(DataFormat format) {
         String vaultFormat = format == DataFormat.PEM ? format.name().toLowerCase(Locale.ROOT) : null;
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.getCertificateRevocationList(token, mount, vaultFormat)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.getCertificateRevocationList(vaultClient, token, mount, vaultFormat)
                     .map(data -> {
                         switch (format) {
                             case PEM:
@@ -210,8 +215,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<Boolean> rotateCertificateRevocationList() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.rotateCertificateRevocationList(token, mount)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.rotateCertificateRevocationList(vaultClient, token, mount)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -222,8 +227,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<List<String>> getCertificates() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.listCertificates(token, mount)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.listCertificates(vaultClient, token, mount)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -237,8 +242,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<CertificateData.PEM> getCertificate(String serial) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.getCertificate(token, mount, serial)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.getCertificate(vaultClient, token, mount, serial)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -260,8 +265,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.timeToLive = options.timeToLive;
         body.excludeCommonNameFromSubjectAlternativeNames = options.excludeCommonNameFromSubjectAlternativeNames;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.generateCertificate(token, mount, role, body)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.generateCertificate(vaultClient, token, mount, role, body)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -293,8 +298,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.timeToLive = options.timeToLive;
         body.excludeCommonNameFromSubjectAlternativeNames = options.excludeCommonNameFromSubjectAlternativeNames;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.signCertificate(token, mount, role, body)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.signCertificate(vaultClient, token, mount, role, body)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -315,8 +320,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         VaultPKIRevokeCertificateBody body = new VaultPKIRevokeCertificateBody();
         body.serialNumber = serialNumber;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.revokeCertificate(token, mount, body)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.revokeCertificate(vaultClient, token, mount, body)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -367,15 +372,15 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.basicConstraintsValidForNonCA = options.basicConstraintsValidForNonCA;
         body.notBeforeDuration = options.notBeforeDuration;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.updateRole(token, mount, role, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.updateRole(vaultClient, token, mount, role, body);
         });
     }
 
     @Override
     public Uni<RoleOptions> getRole(String role) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.readRole(token, mount, role)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.readRole(vaultClient, token, mount, role)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -429,8 +434,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<List<String>> getRoles() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.listRoles(token, mount)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.listRoles(vaultClient, token, mount)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -450,8 +455,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<Void> deleteRole(String role) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.deleteRole(token, mount, role);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.deleteRole(vaultClient, token, mount, role);
         });
     }
 
@@ -481,8 +486,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.subjectCountry = options.subjectCountry;
         body.subjectSerialNumber = options.subjectSerialNumber;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.generateRoot(token, mount, type, body)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.generateRoot(vaultClient, token, mount, type, body)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -502,8 +507,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<Void> deleteRoot() {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.deleteRoot(token, mount);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.deleteRoot(vaultClient, token, mount);
         });
     }
 
@@ -531,8 +536,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.subjectCountry = options.subjectCountry;
         body.subjectSerialNumber = options.subjectSerialNumber;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.signIntermediateCA(token, mount, body)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.signIntermediateCA(vaultClient, token, mount, body)
                     .map(internalResult -> {
                         checkDataValid(internalResult);
 
@@ -571,8 +576,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.subjectCountry = options.subjectCountry;
         body.subjectSerialNumber = options.subjectSerialNumber;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.generateIntermediateCSR(token, mount, type, body)
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.generateIntermediateCSR(vaultClient, token, mount, type, body)
                     .map(internalResult -> {
 
                         VaultPKIGenerateIntermediateCSRData internalResultData = internalResult.data;
@@ -592,8 +597,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         VaultPKISetSignedIntermediateCABody body = new VaultPKISetSignedIntermediateCABody();
         body.certificate = pemCert;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.setSignedIntermediateCA(token, mount, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.setSignedIntermediateCA(vaultClient, token, mount, body);
         });
     }
 
@@ -604,8 +609,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.tidyRevokedCerts = options.tidyRevokedCerts;
         body.safetyBuffer = options.safetyBuffer;
 
-        return vaultAuthManager.getClientToken().flatMap(token -> {
-            return vaultInternalPKISecretEngine.tidy(token, mount, body);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalPKISecretEngine.tidy(vaultClient, token, mount, body);
         });
     }
 
