@@ -47,7 +47,7 @@ import io.quarkus.vault.runtime.client.secretengine.VaultInternalDynamicCredenti
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalKvV1SecretEngine;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalKvV2SecretEngine;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalPKISecretEngine;
-import io.quarkus.vault.runtime.client.secretengine.VaultInternalTOPTSecretEngine;
+import io.quarkus.vault.runtime.client.secretengine.VaultInternalTOTPSecretEngine;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalTransitSecretEngine;
 import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
 import io.quarkus.vault.runtime.config.VaultBuildTimeConfig;
@@ -107,7 +107,7 @@ public class VaultProcessor {
                 .addBeanClass(VaultInternalKvV1SecretEngine.class)
                 .addBeanClass(VaultInternalKvV2SecretEngine.class)
                 .addBeanClass(VaultInternalTransitSecretEngine.class)
-                .addBeanClass(VaultInternalTOPTSecretEngine.class)
+                .addBeanClass(VaultInternalTOTPSecretEngine.class)
                 .addBeanClass(VaultInternalSystemBackend.class)
                 .addBeanClass(VaultInternalAppRoleAuthMethod.class)
                 .addBeanClass(VaultInternalKubernetesAuthMethod.class)
