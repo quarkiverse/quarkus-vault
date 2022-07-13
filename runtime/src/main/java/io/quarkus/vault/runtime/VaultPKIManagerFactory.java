@@ -5,7 +5,7 @@ import javax.inject.Inject;
 
 import io.quarkus.vault.VaultPKISecretEngine;
 import io.quarkus.vault.VaultPKISecretEngineFactory;
-import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
+import io.quarkus.vault.VaultPKISecretReactiveEngine;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalPKISecretEngine;
 
 @ApplicationScoped
@@ -17,11 +17,14 @@ public class VaultPKIManagerFactory implements VaultPKISecretEngineFactory {
     private VaultAuthManager vaultAuthManager;
     @Inject
     private VaultInternalPKISecretEngine vaultInternalPKISecretEngine;
-    @Inject
-    private VaultInternalSystemBackend vaultInternalSystemBackend;
 
     @Override
     public VaultPKISecretEngine engine(String mount) {
+        return new VaultPKISecretEngine(reactiveEngine(mount));
+    }
+
+    @Override
+    public VaultPKISecretReactiveEngine reactiveEngine(String mount) {
         return new VaultPKIManager(mount, vaultAuthManager, vaultInternalPKISecretEngine);
     }
 }

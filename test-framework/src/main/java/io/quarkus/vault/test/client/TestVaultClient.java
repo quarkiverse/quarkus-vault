@@ -10,6 +10,7 @@ import io.quarkus.vault.test.client.dto.VaultAppRoleSecretId;
 import io.quarkus.vault.test.client.dto.VaultTransitHash;
 import io.quarkus.vault.test.client.dto.VaultTransitHashBody;
 import io.quarkus.vault.test.client.dto.VaultTransitRandom;
+import io.smallrye.mutiny.Uni;
 
 public class TestVaultClient extends VertxVaultClient {
 
@@ -26,23 +27,23 @@ public class TestVaultClient extends VertxVaultClient {
         init();
     }
 
-    public VaultAppRoleSecretId generateAppRoleSecretId(String token, String roleName) {
+    public Uni<VaultAppRoleSecretId> generateAppRoleSecretId(String token, String roleName) {
         return post("auth/approle/role/" + roleName + "/secret-id", token, null, VaultAppRoleSecretId.class);
     }
 
-    public VaultAppRoleRoleId getAppRoleRoleId(String token, String role) {
+    public Uni<VaultAppRoleRoleId> getAppRoleRoleId(String token, String role) {
         return get("auth/approle/role/" + role + "/role-id", token, VaultAppRoleRoleId.class);
     }
 
-    public void rotate(String token, String keyName) {
-        post("transit/keys/" + keyName + "/rotate", token, null, null, 204);
+    public Uni<Void> rotate(String token, String keyName) {
+        return post("transit/keys/" + keyName + "/rotate", token, null, null, 204);
     }
 
-    public VaultTransitRandom generateRandom(String token, int byteCount, VaultTransitRandomBody body) {
+    public Uni<VaultTransitRandom> generateRandom(String token, int byteCount, VaultTransitRandomBody body) {
         return post("transit/random/" + byteCount, token, body, VaultTransitRandom.class);
     }
 
-    public VaultTransitHash hash(String token, String hashAlgorithm, VaultTransitHashBody body) {
+    public Uni<VaultTransitHash> hash(String token, String hashAlgorithm, VaultTransitHashBody body) {
         return post("transit/hash/" + hashAlgorithm, token, body, VaultTransitHash.class);
     }
 }

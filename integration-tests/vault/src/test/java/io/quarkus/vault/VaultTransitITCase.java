@@ -13,7 +13,6 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -241,8 +240,8 @@ public class VaultTransitITCase {
     }
 
     private void rotate(String keyName) {
-        String clientToken = vaultAuthManager.getClientToken();
-        new TestVaultClient().rotate(clientToken, keyName);
+        String clientToken = vaultAuthManager.getClientToken().await().indefinitely();
+        new TestVaultClient().rotate(clientToken, keyName).await().indefinitely();
     }
 
     private String encrypt(int keyVersion) {
@@ -355,7 +354,7 @@ public class VaultTransitITCase {
         transitSecretEngine.createKey(KEY_NAME, new KeyCreationRequestDetail().setExportable(true));
         assertTrue(transitSecretEngine.listKeys().contains(KEY_NAME));
 
-        VaultTransitKeyDetail mykey = transitSecretEngine.readKey(KEY_NAME);
+        VaultTransitKeyDetail<?> mykey = transitSecretEngine.readKey(KEY_NAME).get();
         assertEquals(KEY_NAME, mykey.getName());
         assertTrue(mykey.isExportable());
         assertFalse(mykey.isDeletionAllowed());
@@ -375,11 +374,11 @@ public class VaultTransitITCase {
         assertTrue(exportDetail.getKeys().containsKey("1"));
 
         transitSecretEngine.updateKeyConfiguration(KEY_NAME, new KeyConfigRequestDetail().setDeletionAllowed(true));
-        mykey = transitSecretEngine.readKey(KEY_NAME);
+        mykey = transitSecretEngine.readKey(KEY_NAME).get();
         assertTrue(mykey.isDeletionAllowed());
 
         transitSecretEngine.deleteKey(KEY_NAME);
-        assertNull(transitSecretEngine.readKey(KEY_NAME));
+        assertTrue(transitSecretEngine.readKey(KEY_NAME).isEmpty());
     }
 
     @Test
@@ -389,7 +388,7 @@ public class VaultTransitITCase {
         transitSecretEngine.createKey(KEY_NAME, new KeyCreationRequestDetail().setType("ecdsa-p256"));
         assertTrue(transitSecretEngine.listKeys().contains(KEY_NAME));
 
-        VaultTransitKeyDetail<?> mykey = transitSecretEngine.readKey(KEY_NAME);
+        VaultTransitKeyDetail<?> mykey = transitSecretEngine.readKey(KEY_NAME).get();
         assertTrue(mykey instanceof VaultTransitAsymmetricKeyDetail);
         assertEquals(KEY_NAME, mykey.getName());
         assertFalse(mykey.isExportable());
@@ -412,11 +411,11 @@ public class VaultTransitITCase {
         assertEquals(0, mykey.getMinEncryptionVersion());
 
         transitSecretEngine.updateKeyConfiguration(KEY_NAME, new KeyConfigRequestDetail().setDeletionAllowed(true));
-        mykey = transitSecretEngine.readKey(KEY_NAME);
+        mykey = transitSecretEngine.readKey(KEY_NAME).get();
         assertTrue(mykey.isDeletionAllowed());
 
         transitSecretEngine.deleteKey(KEY_NAME);
-        assertNull(transitSecretEngine.readKey(KEY_NAME));
+        assertTrue(transitSecretEngine.readKey(KEY_NAME).isEmpty());
     }
 
     @Test
@@ -426,7 +425,7 @@ public class VaultTransitITCase {
         transitSecretEngine.createKey(KEY_NAME, new KeyCreationRequestDetail().setType("rsa-2048"));
         assertTrue(transitSecretEngine.listKeys().contains(KEY_NAME));
 
-        VaultTransitKeyDetail<?> mykey = transitSecretEngine.readKey(KEY_NAME);
+        VaultTransitKeyDetail<?> mykey = transitSecretEngine.readKey(KEY_NAME).get();
         assertTrue(mykey instanceof VaultTransitAsymmetricKeyDetail);
         assertEquals(KEY_NAME, mykey.getName());
         assertFalse(mykey.isExportable());
@@ -449,11 +448,11 @@ public class VaultTransitITCase {
         assertEquals(0, mykey.getMinEncryptionVersion());
 
         transitSecretEngine.updateKeyConfiguration(KEY_NAME, new KeyConfigRequestDetail().setDeletionAllowed(true));
-        mykey = transitSecretEngine.readKey(KEY_NAME);
+        mykey = transitSecretEngine.readKey(KEY_NAME).get();
         assertTrue(mykey.isDeletionAllowed());
 
         transitSecretEngine.deleteKey(KEY_NAME);
-        assertNull(transitSecretEngine.readKey(KEY_NAME));
+        assertTrue(transitSecretEngine.readKey(KEY_NAME).isEmpty());
     }
 
     @Test
@@ -463,7 +462,7 @@ public class VaultTransitITCase {
         transitSecretEngine.createKey(KEY_NAME, new KeyCreationRequestDetail().setType("aes256-gcm96"));
         assertTrue(transitSecretEngine.listKeys().contains(KEY_NAME));
 
-        VaultTransitKeyDetail<?> mykey = transitSecretEngine.readKey(KEY_NAME);
+        VaultTransitKeyDetail<?> mykey = transitSecretEngine.readKey(KEY_NAME).get();
         assertTrue(mykey instanceof VaultTransitSymmetricKeyDetail);
         assertEquals(KEY_NAME, mykey.getName());
         assertFalse(mykey.isExportable());
@@ -485,11 +484,11 @@ public class VaultTransitITCase {
         assertEquals(0, mykey.getMinEncryptionVersion());
 
         transitSecretEngine.updateKeyConfiguration(KEY_NAME, new KeyConfigRequestDetail().setDeletionAllowed(true));
-        mykey = transitSecretEngine.readKey(KEY_NAME);
+        mykey = transitSecretEngine.readKey(KEY_NAME).get();
         assertTrue(mykey.isDeletionAllowed());
 
         transitSecretEngine.deleteKey(KEY_NAME);
-        assertNull(transitSecretEngine.readKey(KEY_NAME));
+        assertTrue(transitSecretEngine.readKey(KEY_NAME).isEmpty());
     }
 
 }

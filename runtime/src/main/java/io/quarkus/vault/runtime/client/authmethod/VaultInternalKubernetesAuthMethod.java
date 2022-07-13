@@ -12,6 +12,7 @@ import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthConfigResult;
 import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthListRolesResult;
 import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthReadRoleResult;
 import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthRoleData;
+import io.smallrye.mutiny.Uni;
 
 @Singleton
 public class VaultInternalKubernetesAuthMethod extends VaultInternalBase {
@@ -23,32 +24,32 @@ public class VaultInternalKubernetesAuthMethod extends VaultInternalBase {
         return vaultConfigHolder.getVaultBootstrapConfig().authentication.kubernetes.authMountPath;
     }
 
-    public VaultKubernetesAuth login(String role, String jwt) {
+    public Uni<VaultKubernetesAuth> login(String role, String jwt) {
         VaultKubernetesAuthBody body = new VaultKubernetesAuthBody(role, jwt);
         return vaultClient.post(getKubernetesAuthMountPath() + "/login", null, body, VaultKubernetesAuth.class);
     }
 
-    public void createAuthRole(String token, String name, VaultKubernetesAuthRoleData body) {
-        vaultClient.post(getKubernetesAuthMountPath() + "/role/" + name, token, body, 204);
+    public Uni<Void> createAuthRole(String token, String name, VaultKubernetesAuthRoleData body) {
+        return vaultClient.post(getKubernetesAuthMountPath() + "/role/" + name, token, body, 204);
     }
 
-    public VaultKubernetesAuthReadRoleResult getVaultAuthRole(String token, String name) {
+    public Uni<VaultKubernetesAuthReadRoleResult> getVaultAuthRole(String token, String name) {
         return vaultClient.get(getKubernetesAuthMountPath() + "/role/" + name, token, VaultKubernetesAuthReadRoleResult.class);
     }
 
-    public VaultKubernetesAuthListRolesResult listAuthRoles(String token) {
+    public Uni<VaultKubernetesAuthListRolesResult> listAuthRoles(String token) {
         return vaultClient.list(getKubernetesAuthMountPath() + "/role", token, VaultKubernetesAuthListRolesResult.class);
     }
 
-    public void deleteAuthRoles(String token, String name) {
-        vaultClient.delete(getKubernetesAuthMountPath() + "/role/" + name, token, 204);
+    public Uni<Void> deleteAuthRoles(String token, String name) {
+        return vaultClient.delete(getKubernetesAuthMountPath() + "/role/" + name, token, 204);
     }
 
-    public void configureAuth(String token, VaultKubernetesAuthConfigData config) {
-        vaultClient.post(getKubernetesAuthMountPath() + "/config", token, config, 204);
+    public Uni<Void> configureAuth(String token, VaultKubernetesAuthConfigData config) {
+        return vaultClient.post(getKubernetesAuthMountPath() + "/config", token, config, 204);
     }
 
-    public VaultKubernetesAuthConfigResult readAuthConfig(String token) {
+    public Uni<VaultKubernetesAuthConfigResult> readAuthConfig(String token) {
         return vaultClient.get(getKubernetesAuthMountPath() + "/config", token, VaultKubernetesAuthConfigResult.class);
     }
 

@@ -192,7 +192,8 @@ Possible values are:
 * low: display all secrets.
 * medium: display only usernames and lease ids (ie: passwords and tokens are masked).
 * high: hide lease ids and dynamic credentials username.
---|`low`, `medium`, `high` 
+-- a|
+`low`, `medium`, `high` 
 |`medium`
 
 

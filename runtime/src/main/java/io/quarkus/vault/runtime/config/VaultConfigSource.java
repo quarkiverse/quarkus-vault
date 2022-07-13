@@ -89,7 +89,7 @@ public class VaultConfigSource implements ConfigSource {
             }
         }
 
-        cache.set(new VaultCacheEntry(properties));
+        cache.set(new VaultCacheEntry<>(properties));
         return properties;
     }
 

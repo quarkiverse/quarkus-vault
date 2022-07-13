@@ -16,4 +16,13 @@ public interface VaultPKISecretEngineFactory {
      */
     VaultPKISecretEngine engine(String mount);
 
+    /**
+     * Get a PKI reactive engine for a specific mount.
+     *
+     * @param mount Engine mount path.
+     *
+     * @return PKI engine interface.
+     */
+    VaultPKISecretReactiveEngine reactiveEngine(String mount);
+
 }

@@ -270,12 +270,12 @@ public class VaultTestExtension {
         vaultInternalSystemBackend.setVaultClient(vaultClient);
         waitForVaultAPIToBeReady(vaultInternalSystemBackend);
 
-        VaultInitResponse vaultInit = vaultInternalSystemBackend.init(1, 1);
+        VaultInitResponse vaultInit = vaultInternalSystemBackend.init(1, 1).await().indefinitely();
         String unsealKey = vaultInit.keys.get(0);
         rootToken = vaultInit.rootToken;
 
         try {
-            vaultInternalSystemBackend.systemHealthStatus(false, false);
+            vaultInternalSystemBackend.systemHealthStatus(false, false).await().indefinitely();
         } catch (VaultClientException e) {
             // https://www.vaultproject.io/api/system/health.html
             // 503 = sealed
@@ -285,7 +285,7 @@ public class VaultTestExtension {
         // unseal
         execVault("vault operator unseal " + unsealKey);
 
-        VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus();
+        VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus().await().indefinitely();
         assertFalse(sealStatus.sealed);
 
         // userpass auth
@@ -300,14 +300,16 @@ public class VaultTestExtension {
         execVault("vault auth enable approle");
         execVault(format("vault write auth/approle/role/%s policies=%s",
                 VAULT_AUTH_APPROLE, VAULT_POLICY));
-        appRoleSecretId = vaultClient.generateAppRoleSecretId(rootToken, VAULT_AUTH_APPROLE).data.secretId;
-        appRoleRoleId = vaultClient.getAppRoleRoleId(rootToken, VAULT_AUTH_APPROLE).data.roleId;
+        appRoleSecretId = vaultClient.generateAppRoleSecretId(rootToken, VAULT_AUTH_APPROLE).await()
+                .indefinitely().data.secretId;
+        appRoleRoleId = vaultClient.getAppRoleRoleId(rootToken, VAULT_AUTH_APPROLE).await().indefinitely().data.roleId;
         log.info(
                 format("generated role_id=%s secret_id=%s for approle=%s", appRoleRoleId, appRoleSecretId, VAULT_AUTH_APPROLE));
 
         // policy
         String policyContent = readResourceContent("vault.policy");
-        vaultInternalSystemBackend.createUpdatePolicy(rootToken, VAULT_POLICY, new VaultPolicyBody(policyContent));
+        vaultInternalSystemBackend.createUpdatePolicy(rootToken, VAULT_POLICY, new VaultPolicyBody(policyContent)).await()
+                .indefinitely();
 
         // static secrets kv v1
         execVault(format("vault secrets enable -path=%s kv", SECRET_PATH_V1));
@@ -469,7 +471,7 @@ public class VaultTestExtension {
         while (Instant.now().isBefore(started.plusSeconds(20))) {
             try {
                 log.info("checking seal status");
-                VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus();
+                VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus().await().indefinitely();
                 log.info(sealStatus);
                 return;
             } catch (VaultIOException e) {

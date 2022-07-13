@@ -3,27 +3,16 @@ package io.quarkus.vault;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.smallrye.mutiny.Uni;
 
 /**
  * This service provides access to the kv secret engine, taking care of authentication,
  * and token extension or renewal, according to ttl and max-ttl.
  *
- * @implNote Wrapper for reactive engine. Request timeouts are accounted for in Vault client.
  * @see VaultBootstrapConfig
  */
-@ApplicationScoped
-public class VaultKVSecretEngine {
-
-    private final VaultKVSecretReactiveEngine engine;
-
-    @Inject
-    public VaultKVSecretEngine(VaultKVSecretReactiveEngine engine) {
-        this.engine = engine;
-    }
+public interface VaultKVSecretReactiveEngine {
 
     /**
      * Provides the values stored in the Vault kv secret engine at a particular path.
@@ -31,9 +20,7 @@ public class VaultKVSecretEngine {
      * @param path in Vault, without the kv engine mount path
      * @return list of key value pairs stored at 'path' in Vault
      */
-    public Map<String, String> readSecret(String path) {
-        return engine.readSecret(path).await().indefinitely();
-    }
+    Uni<Map<String, String>> readSecret(String path);
 
     /**
      * Writes the secret at the given path. If the path does not exist, the secret will
@@ -42,9 +29,7 @@ public class VaultKVSecretEngine {
      * @param path in Vault, without the kv engine mount path
      * @param secret to write at path
      */
-    public void writeSecret(String path, Map<String, String> secret) {
-        engine.writeSecret(path, secret).await().indefinitely();
-    }
+    Uni<Void> writeSecret(String path, Map<String, String> secret);
 
     /**
      * Deletes the secret at the given path. It has no effect if no secret is currently
@@ -52,9 +37,7 @@ public class VaultKVSecretEngine {
      *
      * @param path to delete
      */
-    public void deleteSecret(String path) {
-        engine.deleteSecret(path).await().indefinitely();
-    }
+    Uni<Void> deleteSecret(String path);
 
     /**
      * List all paths under the specified path.
@@ -62,8 +45,6 @@ public class VaultKVSecretEngine {
      * @param path to list
      * @return list of subpaths
      */
-    public List<String> listSecrets(String path) {
-        return engine.listSecrets(path).await().indefinitely();
-    }
+    Uni<List<String>> listSecrets(String path);
 
 }

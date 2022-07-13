@@ -27,6 +27,7 @@ import io.quarkus.vault.runtime.client.dto.pki.VaultPKISignCertificateRequestBod
 import io.quarkus.vault.runtime.client.dto.pki.VaultPKISignCertificateRequestResult;
 import io.quarkus.vault.runtime.client.dto.pki.VaultPKISignIntermediateCABody;
 import io.quarkus.vault.runtime.client.dto.pki.VaultPKITidyBody;
+import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.buffer.Buffer;
 
 @Singleton
@@ -36,41 +37,41 @@ public class VaultInternalPKISecretEngine extends VaultInternalBase {
         return mount + "/" + path;
     }
 
-    public Buffer getCertificateAuthority(String token, String mount, String format) {
+    public Uni<Buffer> getCertificateAuthority(String token, String mount, String format) {
         return getRaw(token, mount, "ca", format);
     }
 
-    public Buffer getCertificateRevocationList(String token, String mount, String format) {
+    public Uni<Buffer> getCertificateRevocationList(String token, String mount, String format) {
         return getRaw(token, mount, "crl", format);
     }
 
-    public Buffer getCertificateAuthorityChain(String token, String mount) {
+    public Uni<Buffer> getCertificateAuthorityChain(String token, String mount) {
         return getRaw(token, mount, "ca_chain", null);
     }
 
-    private Buffer getRaw(String token, String mount, String path, String format) {
+    private Uni<Buffer> getRaw(String token, String mount, String path, String format) {
         String suffix = format != null ? "/" + format : "";
-        Buffer result = vaultClient.get(getPath(mount, path + suffix), token);
-        return result != null ? result : Buffer.buffer();
+        return vaultClient.get(getPath(mount, path + suffix), token)
+                .replaceIfNullWith(Buffer.buffer());
     }
 
-    public VaultPKICertificateResult getCertificate(String token, String mount, String serial) {
+    public Uni<VaultPKICertificateResult> getCertificate(String token, String mount, String serial) {
         return vaultClient.get(getPath(mount, "cert/" + serial), token, VaultPKICertificateResult.class);
     }
 
-    public VaultPKICertificateListResult listCertificates(String token, String mount) {
+    public Uni<VaultPKICertificateListResult> listCertificates(String token, String mount) {
         return vaultClient.list(getPath(mount, "certs"), token, VaultPKICertificateListResult.class);
     }
 
-    public void configCertificateAuthority(String token, String mount, VaultPKIConfigCABody body) {
-        vaultClient.post(getPath(mount, "config/ca"), token, body, 204);
+    public Uni<Void> configCertificateAuthority(String token, String mount, VaultPKIConfigCABody body) {
+        return vaultClient.post(getPath(mount, "config/ca"), token, body, 204);
     }
 
-    public VaultPKICRLRotateResult rotateCertificateRevocationList(String token, String mount) {
+    public Uni<VaultPKICRLRotateResult> rotateCertificateRevocationList(String token, String mount) {
         return vaultClient.get(getPath(mount, "crl/rotate"), token, VaultPKICRLRotateResult.class);
     }
 
-    public VaultPKIGenerateCertificateResult generateCertificate(
+    public Uni<VaultPKIGenerateCertificateResult> generateCertificate(
             String token,
             String mount,
             String role,
@@ -78,7 +79,7 @@ public class VaultInternalPKISecretEngine extends VaultInternalBase {
         return vaultClient.post(getPath(mount, "issue/" + role), token, body, VaultPKIGenerateCertificateResult.class);
     }
 
-    public VaultPKISignCertificateRequestResult signCertificate(
+    public Uni<VaultPKISignCertificateRequestResult> signCertificate(
             String token,
             String mount,
             String role,
@@ -86,37 +87,37 @@ public class VaultInternalPKISecretEngine extends VaultInternalBase {
         return vaultClient.post(getPath(mount, "sign/" + role), token, body, VaultPKISignCertificateRequestResult.class);
     }
 
-    public VaultPKIRevokeCertificateResult revokeCertificate(String token, String mount,
+    public Uni<VaultPKIRevokeCertificateResult> revokeCertificate(String token, String mount,
             VaultPKIRevokeCertificateBody body) {
         return vaultClient.post(getPath(mount, "revoke"), token, body, VaultPKIRevokeCertificateResult.class);
     }
 
-    public void updateRole(String token, String mount, String role, VaultPKIRoleOptionsData body) {
-        vaultClient.post(getPath(mount, "roles/" + role), token, body, 204);
+    public Uni<Void> updateRole(String token, String mount, String role, VaultPKIRoleOptionsData body) {
+        return vaultClient.post(getPath(mount, "roles/" + role), token, body, 204);
     }
 
-    public VaultPKIRoleReadResult readRole(String token, String mount, String role) {
+    public Uni<VaultPKIRoleReadResult> readRole(String token, String mount, String role) {
         return vaultClient.get(getPath(mount, "roles/" + role), token, VaultPKIRoleReadResult.class);
     }
 
-    public VaultPKIRolesListResult listRoles(String token, String mount) {
+    public Uni<VaultPKIRolesListResult> listRoles(String token, String mount) {
         return vaultClient.list(getPath(mount, "roles"), token, VaultPKIRolesListResult.class);
     }
 
-    public void deleteRole(String token, String mount, String role) {
-        vaultClient.delete(getPath(mount, "roles/" + role), token, 204);
+    public Uni<Void> deleteRole(String token, String mount, String role) {
+        return vaultClient.delete(getPath(mount, "roles/" + role), token, 204);
     }
 
-    public VaultPKIGenerateRootResult generateRoot(String token, String mount, String type,
+    public Uni<VaultPKIGenerateRootResult> generateRoot(String token, String mount, String type,
             VaultPKIGenerateRootBody body) {
         return vaultClient.post(getPath(mount, "root/generate/" + type), token, body, VaultPKIGenerateRootResult.class);
     }
 
-    public void deleteRoot(String token, String mount) {
-        vaultClient.delete(getPath(mount, "root"), token, 204);
+    public Uni<Void> deleteRoot(String token, String mount) {
+        return vaultClient.delete(getPath(mount, "root"), token, 204);
     }
 
-    public VaultPKISignCertificateRequestResult signIntermediateCA(String token, String mount,
+    public Uni<VaultPKISignCertificateRequestResult> signIntermediateCA(String token, String mount,
             VaultPKISignIntermediateCABody body) {
         return vaultClient.post(getPath(mount, "root/sign-intermediate"),
                 token,
@@ -124,7 +125,7 @@ public class VaultInternalPKISecretEngine extends VaultInternalBase {
                 VaultPKISignCertificateRequestResult.class);
     }
 
-    public VaultPKIGenerateIntermediateCSRResult generateIntermediateCSR(String token, String mount, String type,
+    public Uni<VaultPKIGenerateIntermediateCSRResult> generateIntermediateCSR(String token, String mount, String type,
             VaultPKIGenerateIntermediateCSRBody body) {
         return vaultClient.post(getPath(mount, "intermediate/generate/" + type),
                 token,
@@ -132,27 +133,27 @@ public class VaultInternalPKISecretEngine extends VaultInternalBase {
                 VaultPKIGenerateIntermediateCSRResult.class);
     }
 
-    public void setSignedIntermediateCA(String token, String mount, VaultPKISetSignedIntermediateCABody body) {
-        vaultClient.post(getPath(mount, "intermediate/set-signed"), token, body, 204);
+    public Uni<Void> setSignedIntermediateCA(String token, String mount, VaultPKISetSignedIntermediateCABody body) {
+        return vaultClient.post(getPath(mount, "intermediate/set-signed"), token, body, 204);
     }
 
-    public void tidy(String token, String mount, VaultPKITidyBody body) {
-        vaultClient.post(getPath(mount, "tidy"), token, body, 202);
+    public Uni<Void> tidy(String token, String mount, VaultPKITidyBody body) {
+        return vaultClient.post(getPath(mount, "tidy"), token, body, 202);
     }
 
-    public void configURLs(String token, String mount, VaultPKIConfigURLsData body) {
-        vaultClient.post(getPath(mount, "config/urls"), token, body, 204);
+    public Uni<Void> configURLs(String token, String mount, VaultPKIConfigURLsData body) {
+        return vaultClient.post(getPath(mount, "config/urls"), token, body, 204);
     }
 
-    public VaultPKIConfigURLsResult readURLs(String token, String mount) {
+    public Uni<VaultPKIConfigURLsResult> readURLs(String token, String mount) {
         return vaultClient.get(getPath(mount, "config/urls"), token, VaultPKIConfigURLsResult.class);
     }
 
-    public void configCRL(String token, String mount, VaultPKIConfigCRLData body) {
-        vaultClient.post(getPath(mount, "config/crl"), token, body, 204);
+    public Uni<Void> configCRL(String token, String mount, VaultPKIConfigCRLData body) {
+        return vaultClient.post(getPath(mount, "config/crl"), token, body, 204);
     }
 
-    public VaultPKIConfigCRLResult readCRL(String token, String mount) {
+    public Uni<VaultPKIConfigCRLResult> readCRL(String token, String mount) {
         return vaultClient.get(getPath(mount, "config/crl"), token, VaultPKIConfigCRLResult.class);
     }
 }
