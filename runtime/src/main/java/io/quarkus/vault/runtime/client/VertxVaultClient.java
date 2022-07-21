@@ -1,8 +1,6 @@
 package io.quarkus.vault.runtime.client;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static io.quarkus.vault.runtime.client.MutinyVertxClientFactory.createHttpClient;
-import static io.vertx.core.spi.resolver.ResolverProvider.DISABLE_DNS_RESOLVER_PROP_NAME;
 import static java.util.Collections.emptyMap;
 
 import java.net.ConnectException;
@@ -15,159 +13,108 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
-
-import javax.annotation.PreDestroy;
-import javax.inject.Singleton;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.VaultException;
-import io.quarkus.vault.runtime.VaultConfigHolder;
 import io.quarkus.vault.runtime.VaultIOException;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.VertxException;
-import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.mutiny.core.Vertx;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
-@Singleton
-public class VertxVaultClient implements VaultClient {
+public abstract class VertxVaultClient implements VaultClient {
 
     private static final HttpMethod LIST = HttpMethod.valueOf("LIST");
 
     private static final List<String> ROOT_NAMESPACE_API = Arrays.asList("sys/init", "sys/license", "sys/leader", "sys/health",
             "sys/metrics", "sys/config/state", "sys/host-info", "sys/key-status", "sys/storage", "sys/storage/raft");
 
-    private final Vertx vertx;
     private URL baseUrl;
-    private final TlsConfig tlsConfig;
-    private final VaultConfigHolder vaultConfigHolder;
-    private WebClient webClient;
+    private Duration requestTimeout;
+    private Optional<String> namespace;
 
-    ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    public VertxVaultClient(VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
-        this.vaultConfigHolder = vaultConfigHolder;
-        this.tlsConfig = tlsConfig;
+    protected VertxVaultClient(URL baseUrl, Optional<String> namespace, Duration requestTimeout) {
+        this.baseUrl = baseUrl;
+        this.namespace = namespace;
+        this.requestTimeout = requestTimeout;
         this.mapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        this.vertx = createVertxInstance();
     }
 
-    private Vertx createVertxInstance() {
-        // We must disable the async DNS resolver as it can cause issues when resolving the Vault instance.
-        // This is done using the DISABLE_DNS_RESOLVER_PROP_NAME system property.
-        // The DNS resolver used by vert.x is configured during the (synchronous) initialization.
-        // So, we just need to disable the async resolver around the Vert.x instance creation.
-        String originalValue = System.getProperty(DISABLE_DNS_RESOLVER_PROP_NAME);
-        Vertx vertx;
-        try {
-            System.setProperty(DISABLE_DNS_RESOLVER_PROP_NAME, "true");
-            vertx = Vertx.vertx(new VertxOptions());
-        } finally {
-            // Restore the original value
-            if (originalValue == null) {
-                System.clearProperty(DISABLE_DNS_RESOLVER_PROP_NAME);
-            } else {
-                System.setProperty(DISABLE_DNS_RESOLVER_PROP_NAME, originalValue);
-            }
-        }
-        return vertx;
-    }
-
-    public void init() {
-        VaultBootstrapConfig config = vaultConfigHolder.getVaultBootstrapConfig();
-        this.webClient = createHttpClient(vertx, config, tlsConfig);
-        this.baseUrl = config.url.orElseThrow(new Supplier<VaultException>() {
-            @Override
-            public VaultException get() {
-                return new VaultException("no vault url provided");
-            }
-        });
-    }
-
-    @PreDestroy
-    @Override
-    public Uni<Void> close() {
-        try {
-            if (webClient != null) {
-                webClient.close();
-            }
-        } finally {
-            return vertx.close();
-        }
-    }
+    protected abstract WebClient getWebClient();
 
     // ---
 
-    public <T> Uni<T> put(String path, String token, Object body, int expectedCode) {
-        HttpRequest<Buffer> request = builder(path, token).method(HttpMethod.PUT);
+    public <T> Uni<T> put(String operation, String path, String token, Object body, int expectedCode) {
+        HttpRequest<Buffer> request = builder(operation, HttpMethod.PUT, path, token);
         return exec(request, body, null, expectedCode);
     }
 
-    public <T> Uni<T> list(String path, String token, Class<T> resultClass) {
-        HttpRequest<Buffer> request = builder(path, token).method(LIST);
+    public <T> Uni<T> list(String operationName, String path, String token, Class<T> resultClass) {
+        HttpRequest<Buffer> request = builder(operationName, LIST, path, token);
         return exec(request, resultClass);
     }
 
-    public <T> Uni<T> delete(String path, String token, int expectedCode) {
-        HttpRequest<Buffer> request = builder(path, token).method(HttpMethod.DELETE);
+    public <T> Uni<T> delete(String operationName, String path, String token, int expectedCode) {
+        HttpRequest<Buffer> request = builder(operationName, HttpMethod.DELETE, path, token);
         return exec(request, expectedCode);
     }
 
-    public <T> Uni<T> post(String path, String token, Object body, Class<T> resultClass, int expectedCode) {
-        HttpRequest<Buffer> request = builder(path, token).method(HttpMethod.POST);
+    public <T> Uni<T> post(String operationName, String path, String token, Object body, Class<T> resultClass,
+            int expectedCode) {
+        HttpRequest<Buffer> request = builder(operationName, HttpMethod.POST, path, token);
         return exec(request, body, resultClass, expectedCode);
     }
 
-    public <T> Uni<T> post(String path, String token, Object body, Class<T> resultClass) {
-        return post(path, token, emptyMap(), body, resultClass);
+    public <T> Uni<T> post(String operationName, String path, String token, Object body, Class<T> resultClass) {
+        return post(operationName, path, token, emptyMap(), body, resultClass);
     }
 
-    public <T> Uni<T> post(String path, String token, Map<String, String> headers, Object body, Class<T> resultClass) {
-        HttpRequest<Buffer> request = builder(path, token).method(HttpMethod.POST);
+    public <T> Uni<T> post(String operationName, String path, String token, Map<String, String> headers, Object body,
+            Class<T> resultClass) {
+        HttpRequest<Buffer> request = builder(operationName, HttpMethod.POST, path, token);
         headers.forEach(request::putHeader);
         return exec(request, body, resultClass);
     }
 
-    public <T> Uni<T> post(String path, String token, Object body, int expectedCode) {
-        HttpRequest<Buffer> request = builder(path, token).method(HttpMethod.POST);
+    public <T> Uni<T> post(String operationName, String path, String token, Object body, int expectedCode) {
+        HttpRequest<Buffer> request = builder(operationName, HttpMethod.POST, path, token);
         return exec(request, body, null, expectedCode);
     }
 
-    public <T> Uni<T> put(String path, String token, Object body, Class<T> resultClass) {
-        HttpRequest<Buffer> request = builder(path, token).method(HttpMethod.PUT);
+    public <T> Uni<T> put(String operationName, String path, String token, Object body, Class<T> resultClass) {
+        HttpRequest<Buffer> request = builder(operationName, HttpMethod.PUT, path, token);
         return exec(request, body, resultClass);
     }
 
-    public <T> Uni<T> put(String path, Object body, Class<T> resultClass) {
-        HttpRequest<Buffer> request = builder(path).method(HttpMethod.PUT);
+    public <T> Uni<T> put(String operationName, String path, Object body, Class<T> resultClass) {
+        HttpRequest<Buffer> request = builder(operationName, HttpMethod.PUT, path);
         return exec(request, body, resultClass);
     }
 
-    public <T> Uni<T> get(String path, String token, Class<T> resultClass) {
-        HttpRequest<Buffer> request = builder(path, token).method(HttpMethod.GET);
+    public <T> Uni<T> get(String operationName, String path, String token, Class<T> resultClass) {
+        HttpRequest<Buffer> request = builder(operationName, HttpMethod.GET, path, token);
         return exec(request, resultClass);
     }
 
-    public <T> Uni<T> get(String path, Map<String, String> queryParams, Class<T> resultClass) {
-        final HttpRequest<Buffer> request = builder(path, queryParams).method(HttpMethod.GET);
+    public <T> Uni<T> get(String operationName, String path, Map<String, String> queryParams, Class<T> resultClass) {
+        final HttpRequest<Buffer> request = builder(operationName, HttpMethod.GET, path, queryParams);
         return exec(request, resultClass);
     }
 
-    public Uni<Buffer> get(String path, String token) {
-        final HttpRequest<Buffer> request = builder(path, token).method(HttpMethod.GET);
+    public Uni<Buffer> get(String operationName, String path, String token) {
+        final HttpRequest<Buffer> request = builder(operationName, HttpMethod.GET, path, token);
         return request.send().ifNoItem().after(getRequestTimeout())
                 .fail().map(response -> {
                     if (response.statusCode() != 200 && response.statusCode() != 204) {
@@ -177,13 +124,13 @@ public class VertxVaultClient implements VaultClient {
                 });
     }
 
-    public Uni<Integer> head(String path) {
-        final HttpRequest<Buffer> request = builder(path).method(HttpMethod.HEAD);
+    public Uni<Integer> head(String operationName, String path) {
+        final HttpRequest<Buffer> request = builder(operationName, HttpMethod.HEAD, path);
         return exec(request);
     }
 
-    public Uni<Integer> head(String path, Map<String, String> queryParams) {
-        final HttpRequest<Buffer> request = builder(path, queryParams).method(HttpMethod.HEAD);
+    public Uni<Integer> head(String operationName, String path, Map<String, String> queryParams) {
+        final HttpRequest<Buffer> request = builder(operationName, HttpMethod.HEAD, path, queryParams);
         return exec(request);
     }
 
@@ -200,8 +147,7 @@ public class VertxVaultClient implements VaultClient {
     }
 
     private <T> Uni<T> exec(HttpRequest<Buffer> request, Object body, Class<T> resultClass, int expectedCode) {
-        Uni<HttpResponse<Buffer>> send = body == null ? request.send()
-                : request.sendBuffer(Buffer.buffer(requestBody(body)));
+        Uni<HttpResponse<Buffer>> send = body == null ? request.send() : request.sendBuffer(Buffer.buffer(requestBody(body)));
 
         return send.ifNoItem().after(getRequestTimeout()).failWith(TimeoutException::new)
                 .map(Unchecked.function(response -> {
@@ -241,7 +187,7 @@ public class VertxVaultClient implements VaultClient {
     }
 
     private Duration getRequestTimeout() {
-        return vaultConfigHolder.getVaultBootstrapConfig().readTimeout;
+        return requestTimeout;
     }
 
     private Uni<Integer> exec(HttpRequest<Buffer> request) {
@@ -260,12 +206,11 @@ public class VertxVaultClient implements VaultClient {
         throw new VaultClientException(response.statusCode(), body);
     }
 
-    private HttpRequest<Buffer> builder(String path, String token) {
-        HttpRequest<Buffer> request = builder(path);
+    private HttpRequest<Buffer> builder(String operationName, HttpMethod method, String path, String token) {
+        HttpRequest<Buffer> request = builder(operationName, method, path);
         if (token != null) {
             request.putHeader(X_VAULT_TOKEN, token);
         }
-        Optional<String> namespace = vaultConfigHolder.getVaultBootstrapConfig().enterprise.namespace;
         if (namespace.isPresent() && !isRootNamespaceAPI(path)) {
             request.putHeader(X_VAULT_NAMESPACE, namespace.get());
         }
@@ -276,12 +221,15 @@ public class VertxVaultClient implements VaultClient {
         return ROOT_NAMESPACE_API.stream().anyMatch(path::startsWith);
     }
 
-    private HttpRequest<Buffer> builder(String path) {
-        return webClient.getAbs(getUrl(path).toString());
+    private HttpRequest<Buffer> builder(String operationName, HttpMethod method, String path) {
+        RequestOptions options = new RequestOptions()
+                .setAbsoluteURI(getUrl(path))
+                .setTraceOperation(operationName);
+        return getWebClient().request(method, options);
     }
 
-    private HttpRequest<Buffer> builder(String path, Map<String, String> queryParams) {
-        HttpRequest<Buffer> request = builder(path);
+    private HttpRequest<Buffer> builder(String operationName, HttpMethod method, String path, Map<String, String> queryParams) {
+        HttpRequest<Buffer> request = builder(operationName, method, path);
         if (queryParams != null) {
             queryParams.forEach(request::addQueryParam);
         }

@@ -13,6 +13,7 @@ import javax.inject.Singleton;
 
 import org.jboss.logging.Logger;
 
+import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalDynamicCredentialsSecretEngine;
@@ -25,14 +26,17 @@ public class VaultDynamicCredentialsManager {
     private static final Logger log = Logger.getLogger(VaultDynamicCredentialsManager.class.getName());
 
     private ConcurrentHashMap<String, VaultDynamicCredentials> credentialsCache = new ConcurrentHashMap<>();
+    private VaultClient vaultClient;
     private VaultAuthManager vaultAuthManager;
     private VaultConfigHolder vaultConfigHolder;
     private VaultInternalSystemBackend vaultInternalSystemBackend;
     private VaultInternalDynamicCredentialsSecretEngine vaultInternalDynamicCredentialsSecretEngine;
 
-    public VaultDynamicCredentialsManager(VaultConfigHolder vaultConfigHolder, VaultAuthManager vaultAuthManager,
+    public VaultDynamicCredentialsManager(VaultClient vaultClient, VaultConfigHolder vaultConfigHolder,
+            VaultAuthManager vaultAuthManager,
             VaultInternalSystemBackend vaultInternalSystemBackend,
             VaultInternalDynamicCredentialsSecretEngine vaultInternalDynamicCredentialsSecretEngine) {
+        this.vaultClient = vaultClient;
         this.vaultConfigHolder = vaultConfigHolder;
         this.vaultAuthManager = vaultAuthManager;
         this.vaultInternalSystemBackend = vaultInternalSystemBackend;
@@ -60,7 +64,7 @@ public class VaultDynamicCredentialsManager {
     }
 
     public Uni<Map<String, String>> getDynamicCredentials(String mount, String requestPath, String role) {
-        return vaultAuthManager.getClientToken().flatMap(token -> {
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
             VaultDynamicCredentials currentCredentials = getCachedCredentials(mount, requestPath, role);
             return getCredentials(currentCredentials, token, mount, requestPath, role)
                     .map(credentials -> {
@@ -100,7 +104,7 @@ public class VaultDynamicCredentialsManager {
         if (credentials.isEmpty()) {
             return Uni.createFrom().item(Optional.empty());
         }
-        return vaultInternalSystemBackend.lookupLease(clientToken, credentials.get().leaseId)
+        return vaultInternalSystemBackend.lookupLease(vaultClient, clientToken, credentials.get().leaseId)
                 .map(ignored -> credentials)
                 .onFailure(VaultClientException.class).recoverWithUni(e -> {
                     if (((VaultClientException) e).getStatus() == 400) { // bad request
@@ -114,7 +118,7 @@ public class VaultDynamicCredentialsManager {
 
     private Uni<VaultDynamicCredentials> extend(VaultDynamicCredentials currentCredentials, String clientToken,
             String mount, String requestPath, String role) {
-        return vaultInternalSystemBackend.renewLease(clientToken, currentCredentials.leaseId)
+        return vaultInternalSystemBackend.renewLease(vaultClient, clientToken, currentCredentials.leaseId)
                 .map(vaultRenewLease -> {
                     LeaseBase lease = new LeaseBase(vaultRenewLease.leaseId,
                             vaultRenewLease.renewable,
@@ -129,7 +133,8 @@ public class VaultDynamicCredentialsManager {
     }
 
     private Uni<VaultDynamicCredentials> create(String clientToken, String mount, String requestPath, String role) {
-        return vaultInternalDynamicCredentialsSecretEngine.generateCredentials(clientToken, mount, requestPath, role)
+        return vaultInternalDynamicCredentialsSecretEngine
+                .generateCredentials(vaultClient, clientToken, mount, requestPath, role)
                 .map(vaultDynamicCredentials -> {
                     LeaseBase lease = new LeaseBase(vaultDynamicCredentials.leaseId, vaultDynamicCredentials.renewable,
                             vaultDynamicCredentials.leaseDurationSecs);
