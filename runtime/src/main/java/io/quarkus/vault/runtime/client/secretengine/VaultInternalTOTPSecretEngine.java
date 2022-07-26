@@ -16,7 +16,7 @@ import io.quarkus.vault.runtime.client.dto.totp.VaultTOTPValidateCodeResult;
 import io.smallrye.mutiny.Uni;
 
 @Singleton
-public class VaultInternalTOPTSecretEngine extends VaultInternalBase {
+public class VaultInternalTOTPSecretEngine extends VaultInternalBase {
 
     @Override
     protected String opNamePrefix() {
