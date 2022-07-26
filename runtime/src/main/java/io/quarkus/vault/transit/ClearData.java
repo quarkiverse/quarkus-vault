@@ -16,7 +16,7 @@ public class ClearData {
 
     /**
      * Create a {@link ClearData} from raw bytes
-     * 
+     *
      * @param value the unencrypted data to wrap
      */
     public ClearData(byte[] value) {
@@ -25,7 +25,7 @@ public class ClearData {
 
     /**
      * Create a {@link ClearData} from a {@link String}, which will be encoded using {@link StandardCharsets#UTF_8}
-     * 
+     *
      * @param value the unencrypted data to wrap
      */
     public ClearData(String value) {

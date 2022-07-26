@@ -33,7 +33,7 @@ public class VaultSystemBackendEngine {
 
     /**
      * Initializes a new Vault.
-     * 
+     *
      * @param secretShares specifies the number of shares to split the master key into.
      * @param secretThreshold specifies the number of shares required to reconstruct the master key.
      * @return Vault Init.
@@ -76,7 +76,7 @@ public class VaultSystemBackendEngine {
 
     /**
      * Get the rules for the named policy.
-     * 
+     *
      * @param name of the policy
      * @return rules of named policy
      */
@@ -105,7 +105,7 @@ public class VaultSystemBackendEngine {
 
     /**
      * List existing policies.
-     * 
+     *
      * @return a list of all policy names
      */
     public List<String> getPolicies() {
@@ -124,7 +124,7 @@ public class VaultSystemBackendEngine {
 
     /**
      * Get the info for a secret engine, including its type.
-     * 
+     *
      * @since Vault 1.10.0
      * @see https://www.vaultproject.io/api-docs/system/mounts#get-the-configuration-of-a-secret-engine
      *

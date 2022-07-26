@@ -21,7 +21,7 @@ public class TransitKeyConfig {
      * or
      * transitSecretEngine.sign("my-foo-key-with-prehashed", "my already hashed content");
      * ```
-     * 
+     *
      * @asciidoclet
      */
     @ConfigItem
@@ -32,7 +32,7 @@ public class TransitKeyConfig {
     /**
      * Set to true when the input is already hashed.
      * Applies to sign operations.
-     * 
+     *
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#prehashed">api documentation for prehashed</a>
      */
     @ConfigItem
@@ -41,7 +41,7 @@ public class TransitKeyConfig {
     /**
      * When using a RSA key, specifies the RSA signature algorithm.
      * Applies to sign operations.
-     * 
+     *
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#signature_algorithm">api documentation for
      *      signature_algorithm</a>
      */
@@ -51,7 +51,7 @@ public class TransitKeyConfig {
     /**
      * Specifies the hash algorithm to use for supporting key types.
      * Applies to sign operations.
-     * 
+     *
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#hash_algorithm">api documentation for
      *      hash_algorithm</a>
      */
@@ -63,7 +63,7 @@ public class TransitKeyConfig {
     /**
      * Specifies the type of key to create for the encrypt operation.
      * Applies to encrypt operations.
-     * 
+     *
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#type">api documentation for type</a>
      */
     @ConfigItem
@@ -72,7 +72,7 @@ public class TransitKeyConfig {
     /**
      * If enabled, the key will support convergent encryption, where the same plaintext creates the same ciphertext.
      * Applies to encrypt operations.
-     * 
+     *
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#convergent_encryption">api documentation for
      *      convergent_encryption</a>
      */

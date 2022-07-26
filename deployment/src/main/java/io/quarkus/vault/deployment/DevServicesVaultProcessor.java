@@ -143,7 +143,7 @@ public class DevServicesVaultProcessor {
                 .asCompatibleSubstituteFor(VAULT_IMAGE);
         ConfiguredVaultContainer vaultContainer = new ConfiguredVaultContainer(dockerImageName, devServicesConfig.port,
                 devServicesConfig.serviceName)
-                        .withVaultToken(DEV_SERVICE_TOKEN);
+                .withVaultToken(DEV_SERVICE_TOKEN);
 
         vaultContainer.withNetwork(Network.SHARED);
 

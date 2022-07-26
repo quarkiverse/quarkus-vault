@@ -17,7 +17,7 @@ public interface VaultTOTPSecretReactiveEngine {
 
     /**
      * Creates or updates a key definition.
-     * 
+     *
      * @param name of the key.
      * @param createKeyParameters required to create or update a key.
      * @return Barcode and/or URL of the created OTP key.
@@ -26,7 +26,7 @@ public interface VaultTOTPSecretReactiveEngine {
 
     /**
      * Queries the key definition.
-     * 
+     *
      * @param name of the key.
      * @return The key configuration.
      */
@@ -34,21 +34,21 @@ public interface VaultTOTPSecretReactiveEngine {
 
     /**
      * Returns a list of available keys. Only the key names are returned, not any values.
-     * 
+     *
      * @return List of available keys.
      */
     Uni<List<String>> listKeys();
 
     /**
      * Deletes the key definition.
-     * 
+     *
      * @param name of the key.
      */
     Uni<Void> deleteKey(String name);
 
     /**
      * Generates a new time-based one-time use password based on the named key.
-     * 
+     *
      * @param name of the key.
      * @return The Code.
      */
@@ -56,7 +56,7 @@ public interface VaultTOTPSecretReactiveEngine {
 
     /**
      * Validates a time-based one-time use password generated from the named key.
-     * 
+     *
      * @param name of the key.
      * @param code to validate.
      * @return True if valid, false otherwise.

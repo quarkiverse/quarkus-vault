@@ -6,7 +6,7 @@ import io.quarkus.vault.VaultTransitSecretEngine;
 
 /**
  * A request to decrypt a ciphertext, with an optional transit context.
- * 
+ *
  * @see VaultTransitSecretEngine#decrypt(String, List)
  */
 public class DecryptionRequest extends VaultTransitBatchItem {

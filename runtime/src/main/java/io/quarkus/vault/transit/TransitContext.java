@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 /**
  * A transit context used for key derivation, when the key supports it.
- * 
+ *
  * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#derived">derived attribute in key creation</a>
  */
 public class TransitContext {

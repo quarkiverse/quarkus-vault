@@ -6,7 +6,7 @@ import io.quarkus.vault.VaultTransitSecretEngine;
 
 /**
  * A request to verify that a signature matches an input, with optional key version and transit context.
- * 
+ *
  * @see VaultTransitSecretEngine#verifySignature(String, List)
  */
 public class VerificationRequest extends VaultTransitBatchItem {

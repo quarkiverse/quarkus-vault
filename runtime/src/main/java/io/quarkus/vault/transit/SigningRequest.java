@@ -6,7 +6,7 @@ import io.quarkus.vault.VaultTransitSecretEngine;
 
 /**
  * A request to sign some arbitrary data, with optional key version and transit context.
- * 
+ *
  * @see VaultTransitSecretEngine#sign(String, List)
  */
 public class SigningRequest extends VaultTransitBatchItem {

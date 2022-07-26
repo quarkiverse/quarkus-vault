@@ -136,7 +136,7 @@ public class VaultPKIITCase {
 
         X509CertificateHolder certificate = (X509CertificateHolder) new PEMParser(
                 new StringReader((String) result.certificate.getData()))
-                        .readObject();
+                .readObject();
 
         assertEquals(DataFormat.PEM, result.issuingCA.getFormat());
         assertNotNull(result.issuingCA.getData());
@@ -145,7 +145,7 @@ public class VaultPKIITCase {
 
         X509CertificateHolder issuingCA = (X509CertificateHolder) new PEMParser(
                 new StringReader((String) result.issuingCA.getData()))
-                        .readObject();
+                .readObject();
 
         // Check all subject name component options
         assertEquals(
@@ -328,10 +328,10 @@ public class VaultPKIITCase {
 
         X509CertificateHolder certificate = (X509CertificateHolder) new PEMParser(
                 new StringReader((String) result.certificate.getData()))
-                        .readObject();
+                .readObject();
         X509CertificateHolder issuingCA = (X509CertificateHolder) new PEMParser(
                 new StringReader((String) result.issuingCA.getData()))
-                        .readObject();
+                .readObject();
 
         // Check all subject name component options
         assertEquals(
@@ -569,7 +569,7 @@ public class VaultPKIITCase {
 
         X509CertificateHolder certificate = (X509CertificateHolder) new PEMParser(
                 new StringReader((String) result.certificate.getData()))
-                        .readObject();
+                .readObject();
 
         assertEquals(DataFormat.PEM, result.issuingCA.getFormat());
         assertNotNull(result.issuingCA.getData());
@@ -578,7 +578,7 @@ public class VaultPKIITCase {
 
         X509CertificateHolder issuingCA = (X509CertificateHolder) new PEMParser(
                 new StringReader((String) result.issuingCA.getData()))
-                        .readObject();
+                .readObject();
 
         // Check all subject name component options
         assertEquals("CN=test.example.com", certificate.getSubject().toString());
@@ -754,10 +754,10 @@ public class VaultPKIITCase {
 
         X509CertificateHolder certificate = (X509CertificateHolder) new PEMParser(
                 new StringReader((String) result.certificate.getData()))
-                        .readObject();
+                .readObject();
         X509CertificateHolder issuingCA = (X509CertificateHolder) new PEMParser(
                 new StringReader((String) result.issuingCA.getData()))
-                        .readObject();
+                .readObject();
 
         // Check all subject name component options
         assertEquals("CN=test.example.com", certificate.getSubject().toString());

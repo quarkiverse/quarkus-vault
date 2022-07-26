@@ -6,7 +6,7 @@ import io.quarkus.vault.VaultTransitSecretEngine;
 
 /**
  * A request to rewrap a cipher text, with optional key version and transit context.
- * 
+ *
  * @see VaultTransitSecretEngine#rewrap(String, List)
  */
 public class RewrappingRequest extends VaultTransitBatchItem {

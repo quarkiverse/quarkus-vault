@@ -16,7 +16,7 @@ public class SigningInput {
 
     /**
      * Create a {@link SigningInput} from a byte array
-     * 
+     *
      * @param value the wrapped data
      */
     public SigningInput(byte[] value) {
@@ -26,7 +26,7 @@ public class SigningInput {
     /**
      * Create a {@link SigningInput} from a {@link String} that will be
      * encoded using {@link java.nio.charset.StandardCharsets#UTF_8}
-     * 
+     *
      * @param value the wrapped data
      */
     public SigningInput(String value) {
@@ -35,7 +35,7 @@ public class SigningInput {
 
     /**
      * Decode the internal byte array using {@link java.nio.charset.StandardCharsets#UTF_8}
-     * 
+     *
      * @return the value as a {@link String}
      */
     public String asString() {
