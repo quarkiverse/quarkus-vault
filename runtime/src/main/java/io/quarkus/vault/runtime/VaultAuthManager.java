@@ -9,15 +9,17 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import javax.inject.Singleton;
 
 import org.jboss.logging.Logger;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.runtime.client.VaultClient;
@@ -48,7 +50,7 @@ public class VaultAuthManager {
     public static final String USERPASS_WRAPPING_TOKEN_PASSWORD_KEY = "password";
 
     private AtomicReference<VaultToken> loginCache = new AtomicReference<>(null);
-    private Map<String, Uni<String>> unwrappingCache = new ConcurrentHashMap<>();
+    private Cache<String, Uni<String>> unwrappingCache = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(1)).build();
     private VaultConfigHolder vaultConfigHolder;
     private VaultInternalSystemBackend vaultInternalSystemBackend;
     private VaultInternalAppRoleAuthMethod vaultInternalAppRoleAuthMethod;
@@ -209,7 +211,7 @@ public class VaultAuthManager {
 
     private <T> Uni<String> unwrapWrappingTokenOnce(VaultClient vaultClient, String type, String wrappingToken,
             Function<T, String> f, Class<T> clazz) {
-        return unwrappingCache.computeIfAbsent(wrappingToken, (token) -> {
+        return unwrappingCache.get(wrappingToken, (token) -> {
             return vaultInternalSystemBackend.unwrap(vaultClient, token, clazz)
                     .map(unwrap -> {
                         String wrappedValue = f.apply(unwrap);
