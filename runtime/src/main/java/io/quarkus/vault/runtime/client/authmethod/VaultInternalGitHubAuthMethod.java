@@ -13,7 +13,7 @@ public class VaultInternalGitHubAuthMethod extends VaultInternalBase {
 
     @Override
     protected String opNamePrefix() {
-        return super.opNamePrefix() + " [AUTH (user/pass)]";
+        return super.opNamePrefix() + " [AUTH (GitHub token)]";
     }
 
     public Uni<VaultUserGitHubAuth> login(VaultClient vaultClient, String token) {
