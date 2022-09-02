@@ -271,6 +271,16 @@ echo token=$token
 kubectl get secret $secret_name -o json | jq -r '.data."ca.crt"' | base64 -D > /tmp/ca.crt
 ----
 
+== GitHub Authentication
+
+The GitHub authentication rely on a token with the `admin:org->read:org` scope generated from https://github.com/settings/tokens/new.
+
+The application can be configured to login with that token using the property:
+[source, properties, subs=attributes+]
+----
+quarkus.vault.authentication.github.token=gh_token
+----
+
 === Vault
 
 The next step requires to exec interactively with the root token into the Vault container

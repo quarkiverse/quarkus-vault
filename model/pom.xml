@@ -10,7 +10,7 @@
     <!--
     This module contains all jaxrs parameter and result classes used to call Vault endpoints.
     They need to be in a separate module so that they can be indexed, without the VaultHealthCheck,
-    which is an optional dependency of the runtime moduée.
+    which is an optional dependency of the runtime module.
     All model classes should be enabled for reflection, as they will be managed by jackson.
     -->
     <artifactId>quarkus-vault-model</artifactId>
