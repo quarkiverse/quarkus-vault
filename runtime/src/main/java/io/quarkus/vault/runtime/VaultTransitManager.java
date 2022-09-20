@@ -43,7 +43,7 @@ import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerifyBody;
 import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerifyDataBatchResult;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalTransitSecretEngine;
 import io.quarkus.vault.runtime.config.TransitKeyConfig;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.quarkus.vault.runtime.transit.DecryptionResult;
 import io.quarkus.vault.runtime.transit.EncryptionResult;
 import io.quarkus.vault.runtime.transit.SigningResult;
@@ -82,14 +82,14 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
     @Inject
     VaultClient vaultClient;
     @Inject
-    private VaultAuthManager vaultAuthManager;
+    VaultAuthManager vaultAuthManager;
     @Inject
-    private VaultConfigHolder vaultConfigHolder;
+    VaultConfigHolder vaultConfigHolder;
     @Inject
-    private VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine;
+    VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine;
 
-    private VaultBootstrapConfig getConfig() {
-        return vaultConfigHolder.getVaultBootstrapConfig();
+    private VaultRuntimeConfig getConfig() {
+        return vaultConfigHolder.getVaultRuntimeConfig();
     }
 
     @Override
@@ -114,9 +114,9 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
         String configKeyName;
         if (config != null) {
-            configKeyName = config.name.orElse(keyName);
-            body.type = config.type.orElse(null);
-            body.convergentEncryption = config.convergentEncryption.orElse(null);
+            configKeyName = config.name().orElse(keyName);
+            body.type = config.type().orElse(null);
+            body.convergentEncryption = config.convergentEncryption().orElse(null);
         } else {
             configKeyName = keyName;
         }
@@ -136,7 +136,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
     }
 
     private TransitKeyConfig getTransitConfig(String keyName) {
-        return getConfig().transit.key.get(keyName);
+        return getConfig().transit().key().get(keyName);
     }
 
     @Override
@@ -164,9 +164,9 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
         String configKeyName;
         if (config != null) {
-            configKeyName = config.name.orElse(keyName);
-            body.type = config.type.orElse(null);
-            body.convergentEncryption = config.convergentEncryption.orElse(null);
+            configKeyName = config.name().orElse(keyName);
+            body.type = config.type().orElse(null);
+            body.convergentEncryption = config.convergentEncryption().orElse(null);
         } else {
             configKeyName = keyName;
         }
@@ -209,7 +209,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
         String configKeyName;
         if (config != null) {
-            configKeyName = config.name.orElse(keyName);
+            configKeyName = config.name().orElse(keyName);
         } else {
             configKeyName = keyName;
         }
@@ -255,7 +255,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
         String configKeyName;
         if (config != null) {
-            configKeyName = config.name.orElse(keyName);
+            configKeyName = config.name().orElse(keyName);
         } else {
             configKeyName = keyName;
         }
@@ -334,10 +334,10 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         final String configKeyName;
         final String configHashAlgorithm;
         if (config != null) {
-            configKeyName = config.name.orElse(keyName);
-            configHashAlgorithm = config.hashAlgorithm.orElse(null);
-            body.signatureAlgorithm = config.signatureAlgorithm.orElse(null);
-            body.prehashed = config.prehashed.orElse(null);
+            configKeyName = config.name().orElse(keyName);
+            configHashAlgorithm = config.hashAlgorithm().orElse(null);
+            body.signatureAlgorithm = config.signatureAlgorithm().orElse(null);
+            body.prehashed = config.prehashed().orElse(null);
         } else {
             configKeyName = keyName;
             configHashAlgorithm = null;
@@ -419,10 +419,10 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         final String configKeyName;
         final String configHashAlgorithm;
         if (config != null) {
-            configKeyName = config.name.orElse(keyName);
-            configHashAlgorithm = config.hashAlgorithm.orElse(null);
-            body.signatureAlgorithm = config.signatureAlgorithm.orElse(null);
-            body.prehashed = config.prehashed.orElse(null);
+            configKeyName = config.name().orElse(keyName);
+            configHashAlgorithm = config.hashAlgorithm().orElse(null);
+            body.signatureAlgorithm = config.signatureAlgorithm().orElse(null);
+            body.prehashed = config.prehashed().orElse(null);
         } else {
             configKeyName = keyName;
             configHashAlgorithm = null;

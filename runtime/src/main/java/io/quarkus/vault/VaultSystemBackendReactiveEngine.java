@@ -2,7 +2,7 @@ package io.quarkus.vault;
 
 import java.util.List;
 
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.quarkus.vault.sys.EnableEngineOptions;
 import io.quarkus.vault.sys.VaultHealth;
 import io.quarkus.vault.sys.VaultHealthStatus;
@@ -16,7 +16,7 @@ import io.smallrye.mutiny.Uni;
 /**
  * This service provides access to the system backend.
  *
- * @see VaultBootstrapConfig
+ * @see VaultRuntimeConfig
  */
 public interface VaultSystemBackendReactiveEngine {
 

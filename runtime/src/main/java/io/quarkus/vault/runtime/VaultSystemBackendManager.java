@@ -25,15 +25,14 @@ import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
 public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngine {
-
     @Inject
-    private VaultClient vaultClient;
+    VaultClient vaultClient;
     @Inject
-    private VaultBuildTimeConfig buildTimeConfig;
+    VaultBuildTimeConfig buildTimeConfig;
     @Inject
-    private VaultAuthManager vaultAuthManager;
+    VaultAuthManager vaultAuthManager;
     @Inject
-    private VaultInternalSystemBackend vaultInternalSystemBackend;
+    VaultInternalSystemBackend vaultInternalSystemBackend;
 
     @Override
     public Uni<VaultInit> init(int secretShares, int secretThreshold) {
@@ -43,16 +42,16 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
 
     @Override
     public Uni<VaultHealth> health() {
-        boolean isStandByOk = this.buildTimeConfig.health.standByOk;
-        boolean isPerfStandByOk = this.buildTimeConfig.health.performanceStandByOk;
+        boolean isStandByOk = this.buildTimeConfig.health().standByOk();
+        boolean isPerfStandByOk = this.buildTimeConfig.health().performanceStandByOk();
 
         return this.health(isStandByOk, isPerfStandByOk);
     }
 
     @Override
     public Uni<VaultHealthStatus> healthStatus() {
-        boolean isStandByOk = this.buildTimeConfig.health.standByOk;
-        boolean isPerfStandByOk = this.buildTimeConfig.health.performanceStandByOk;
+        boolean isStandByOk = this.buildTimeConfig.health().standByOk();
+        boolean isPerfStandByOk = this.buildTimeConfig.health().performanceStandByOk();
 
         return this.healthStatus(isStandByOk, isPerfStandByOk);
     }

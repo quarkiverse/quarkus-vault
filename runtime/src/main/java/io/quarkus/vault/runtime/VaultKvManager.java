@@ -13,7 +13,7 @@ import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2WriteBody;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalKvV1SecretEngine;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalKvV2SecretEngine;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
@@ -50,8 +50,8 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
         this.vaultInternalKvV2SecretEngine = vaultInternalKvV2SecretEngine;
     }
 
-    private VaultBootstrapConfig getConfig() {
-        return vaultConfigHolder.getVaultBootstrapConfig();
+    private VaultRuntimeConfig getConfig() {
+        return vaultConfigHolder.getVaultRuntimeConfig();
     }
 
     private Map<String, String> convert(Map<String, Object> map) {
@@ -67,7 +67,7 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     public Uni<Map<String, Object>> readSecretJson(String path) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
 
-            String mount = getConfig().kvSecretEngineMountPath;
+            String mount = getConfig().kvSecretEngineMountPath();
 
             if (isV1()) {
                 return vaultInternalKvV1SecretEngine.getSecretJson(vaultClient, token, mount, path).map(r -> r.data);
@@ -81,7 +81,7 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     public Uni<Void> writeSecret(String path, Map<String, String> secret) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
 
-            String mount = getConfig().kvSecretEngineMountPath;
+            String mount = getConfig().kvSecretEngineMountPath();
 
             if (isV1()) {
                 return vaultInternalKvV1SecretEngine.writeSecret(vaultClient, token, mount, path, secret);
@@ -97,7 +97,7 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     public Uni<Void> deleteSecret(String path) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
 
-            String mount = getConfig().kvSecretEngineMountPath;
+            String mount = getConfig().kvSecretEngineMountPath();
 
             if (isV1()) {
                 return vaultInternalKvV1SecretEngine.deleteSecret(vaultClient, token, mount, path);
@@ -111,7 +111,7 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     public Uni<List<String>> listSecrets(String path) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
 
-            String mount = getConfig().kvSecretEngineMountPath;
+            String mount = getConfig().kvSecretEngineMountPath();
 
             return (isV1()
                     ? vaultInternalKvV1SecretEngine.listSecrets(vaultClient, token, mount, path)
@@ -120,6 +120,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     }
 
     private boolean isV1() {
-        return getConfig().kvSecretEngineVersion == 1;
+        return getConfig().kvSecretEngineVersion() == 1;
     }
 }

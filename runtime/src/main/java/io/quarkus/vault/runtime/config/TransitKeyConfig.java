@@ -3,10 +3,9 @@ package io.quarkus.vault.runtime.config;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
 
 @ConfigGroup
-public class TransitKeyConfig {
+public interface TransitKeyConfig {
 
     /**
      * Specifies the name of the key to use. By default this will be the property key alias. Used when
@@ -24,8 +23,7 @@ public class TransitKeyConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem
-    public Optional<String> name;
+    Optional<String> name();
 
     // sign
 
@@ -35,8 +33,7 @@ public class TransitKeyConfig {
      *
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#prehashed">api documentation for prehashed</a>
      */
-    @ConfigItem
-    public Optional<Boolean> prehashed;
+    Optional<Boolean> prehashed();
 
     /**
      * When using a RSA key, specifies the RSA signature algorithm.
@@ -45,8 +42,7 @@ public class TransitKeyConfig {
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#signature_algorithm">api documentation for
      *      signature_algorithm</a>
      */
-    @ConfigItem
-    public Optional<String> signatureAlgorithm;
+    Optional<String> signatureAlgorithm();
 
     /**
      * Specifies the hash algorithm to use for supporting key types.
@@ -55,8 +51,7 @@ public class TransitKeyConfig {
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#hash_algorithm">api documentation for
      *      hash_algorithm</a>
      */
-    @ConfigItem
-    public Optional<String> hashAlgorithm;
+    Optional<String> hashAlgorithm();
 
     // encrypt
 
@@ -66,8 +61,7 @@ public class TransitKeyConfig {
      *
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#type">api documentation for type</a>
      */
-    @ConfigItem
-    public Optional<String> type;
+    Optional<String> type();
 
     /**
      * If enabled, the key will support convergent encryption, where the same plaintext creates the same ciphertext.
@@ -76,7 +70,5 @@ public class TransitKeyConfig {
      * @see <a href="https://www.vaultproject.io/api/secret/transit/index.html#convergent_encryption">api documentation for
      *      convergent_encryption</a>
      */
-    @ConfigItem
-    public Optional<String> convergentEncryption;
-
+    Optional<String> convergentEncryption();
 }

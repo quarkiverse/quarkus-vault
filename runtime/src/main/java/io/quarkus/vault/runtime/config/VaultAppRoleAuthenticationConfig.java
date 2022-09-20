@@ -1,26 +1,24 @@
 package io.quarkus.vault.runtime.config;
 
-import static io.quarkus.vault.runtime.config.VaultBootstrapConfig.DEFAULT_APPROLE_AUTH_MOUNT_PATH;
+import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.DEFAULT_APPROLE_AUTH_MOUNT_PATH;
 
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
+import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public class VaultAppRoleAuthenticationConfig {
+public interface VaultAppRoleAuthenticationConfig {
 
     /**
      * Role Id for AppRole auth method. This property is required when selecting the app-role authentication type.
      */
-    @ConfigItem
-    public Optional<String> roleId;
+    Optional<String> roleId();
 
     /**
      * Secret Id for AppRole auth method. This property is required when selecting the app-role authentication type.
      */
-    @ConfigItem
-    public Optional<String> secretId;
+    Optional<String> secretId();
 
     /**
      * Wrapping token containing a Secret Id, obtained from:
@@ -29,12 +27,11 @@ public class VaultAppRoleAuthenticationConfig {
      * <p>
      * secret-id and secret-id-wrapping-token are exclusive
      */
-    @ConfigItem
-    public Optional<String> secretIdWrappingToken;
+    Optional<String> secretIdWrappingToken();
 
     /**
      * Allows configure Approle authentication mount path.
      */
-    @ConfigItem(defaultValue = DEFAULT_APPROLE_AUTH_MOUNT_PATH)
-    public String authMountPath;
+    @WithDefault(DEFAULT_APPROLE_AUTH_MOUNT_PATH)
+    String authMountPath();
 }

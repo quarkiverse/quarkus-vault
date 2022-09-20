@@ -1,16 +1,14 @@
 package io.quarkus.vault.runtime.config;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
+import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public class DevServicesConfig {
-
+public interface DevServicesConfig {
     /**
      * If DevServices has been explicitly enabled or disabled. DevServices is generally enabled
      * by default, unless there is an existing configuration present.
@@ -18,14 +16,13 @@ public class DevServicesConfig {
      * When DevServices is enabled Quarkus will attempt to automatically configure and start
      * a vault instance when running in Dev or Test mode and when Docker is running.
      */
-    @ConfigItem(defaultValue = "true")
-    public boolean enabled;
+    @WithDefault("true")
+    boolean enabled();
 
     /**
      * The container image name to use, for container based DevServices providers.
      */
-    @ConfigItem
-    public Optional<String> imageName;
+    Optional<String> imageName();
 
     /**
      * Indicates if the Vault instance managed by Quarkus Dev Services is shared.
@@ -38,8 +35,8 @@ public class DevServicesConfig {
      * <p>
      * Container sharing is only used in dev mode.
      */
-    @ConfigItem(defaultValue = "true")
-    public boolean shared;
+    @WithDefault("true")
+    boolean shared();
 
     /**
      * The value of the {@code quarkus-dev-service-vault} label attached to the started container.
@@ -51,62 +48,33 @@ public class DevServicesConfig {
      * <p>
      * This property is used when you need multiple shared Vault instances.
      */
-    @ConfigItem(defaultValue = "vault")
-    public String serviceName;
+    @WithDefault("vault")
+    String serviceName();
 
     /**
      * Optional fixed port the dev service will listen to.
      * <p>
      * If not defined, the port will be chosen randomly.
      */
-    @ConfigItem
-    public OptionalInt port;
+    OptionalInt port();
 
     /**
      * Should the Transit secret engine be enabled
      */
-    @ConfigItem(defaultValue = "false")
-    public boolean transitEnabled;
+    @WithDefault("false")
+    boolean transitEnabled();
 
     /**
      * Should the PKI secret engine be enabled
      */
-    @ConfigItem(defaultValue = "false")
-    public boolean pkiEnabled;
+    @WithDefault("false")
+    boolean pkiEnabled();
 
     /**
      * Custom container initialization commands
      */
-    @ConfigItem
-    public Optional<List<String>> initCommands;
+    Optional<List<String>> initCommands();
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        DevServicesConfig that = (DevServicesConfig) o;
-        return enabled == that.enabled && Objects.equals(imageName,
-                that.imageName) && Objects.equals(port,
-                        that.port)
-                && Objects.equals(initCommands, that.initCommands);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(enabled, imageName, port);
-    }
-
-    @Override
-    public String toString() {
-        return "DevServicesConfig{" +
-                "enabled=" + enabled +
-                ", imageName=" + imageName +
-                ", port=" + port +
-                ", initCommands=" + initCommands +
-                '}';
-    }
+    String toString();
 }

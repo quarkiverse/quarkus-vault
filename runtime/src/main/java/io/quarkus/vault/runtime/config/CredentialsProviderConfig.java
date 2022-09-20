@@ -5,96 +5,85 @@ import static io.quarkus.credentials.CredentialsProvider.PASSWORD_PROPERTY_NAME;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
+import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public class CredentialsProviderConfig {
-
-    public static final String DATABASE_DEFAULT_MOUNT = "database";
-    public static final String RABBITMQ_DEFAULT_MOUNT = "rabbitmq";
-    public static final String DEFAULT_REQUEST_PATH = "creds";
+public interface CredentialsProviderConfig {
+    String DATABASE_DEFAULT_MOUNT = "database";
+    String RABBITMQ_DEFAULT_MOUNT = "rabbitmq";
+    String DEFAULT_REQUEST_PATH = "creds";
 
     /**
-     * Database credentials role, as defined by https://www.vaultproject.io/docs/secrets/databases/index.html
-     *
+     * Database credentials role, as defined by
+     * <a href="https://www.vaultproject.io/docs/secrets/databases/index.html">Vault Databases</a>
+     * <p>
      * Only one of `database-credentials-role`, `credentials-role` or `kv-path` can be defined.
      *
      * @deprecated Use `credentials-role` with `credentials-mount` set to `database`
      * @asciidoclet
      */
     @Deprecated(since = "2.6")
-    @ConfigItem
-    public Optional<String> databaseCredentialsRole;
+    Optional<String> databaseCredentialsRole();
 
     /**
      * Dynamic credentials' role.
-     *
+     * <p>
      * Roles are defined by the secret engine in use. For example, `database` credentials roles are defined
-     * by the database secrets engine described at https://www.vaultproject.io/docs/secrets/databases/index.html.
-     *
+     * by the database secrets engine described at
+     * <a href="https://www.vaultproject.io/docs/secrets/databases/index.html">Vault Databases</a>.
+     * <p>
      * One of `credentials-role` or `kv-path` can to be defined. not both.
      *
      * @asciidoclet
      */
-    @ConfigItem
-    public Optional<String> credentialsRole;
+    Optional<String> credentialsRole();
 
     /**
      * Mount of dynamic credentials secrets engine, for example `database` or `rabbitmq`.
-     *
+     * <p>
      * Only used when `credentials-role` is defined.
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = DATABASE_DEFAULT_MOUNT)
-    public String credentialsMount;
+    @WithDefault(DATABASE_DEFAULT_MOUNT)
+    String credentialsMount();
 
     /**
      * Path of dynamic credentials request.
-     *
+     * <p>
      * Request paths are dictated by the secret engine in use. For standard secret engines this should be
      * left as the default of `creds`.
-     *
+     * <p>
      * Only used when `credentials-role` is defined.
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = DEFAULT_REQUEST_PATH)
-    public String credentialsRequestPath;
+    @WithDefault(DEFAULT_REQUEST_PATH)
+    String credentialsRequestPath();
 
     /**
      * A path in vault kv store, where we will find the kv-key.
-     *
+     * <p>
      * One of `database-credentials-role` or `kv-path` needs to be defined. not both.
-     *
-     * see https://www.vaultproject.io/docs/secrets/kv/index.html
+     * <p>
+     * see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
      *
      * @asciidoclet
      */
-    @ConfigItem
-    public Optional<String> kvPath;
+    Optional<String> kvPath();
 
     /**
      * Key name to search in vault path `kv-path`. The value for that key is the credential.
-     *
+     * <p>
      * `kv-key` should not be defined if `kv-path` is not.
-     *
-     * see https://www.vaultproject.io/docs/secrets/kv/index.html
+     * <p>
+     * see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = PASSWORD_PROPERTY_NAME)
-    public String kvKey;
+    @WithDefault(PASSWORD_PROPERTY_NAME)
+    String kvKey();
 
     @Override
-    public String toString() {
-        return "CredentialsProviderConfig{" +
-                "databaseCredentialsRole='" + databaseCredentialsRole.get() + '\'' +
-                ", credentialsRole='" + credentialsRole.get() + '\'' +
-                ", credentialsMount='" + credentialsMount + '\'' +
-                ", credentialsRequestPath='" + credentialsRequestPath + '\'' +
-                ", kvPath='" + kvPath.get() + '\'' +
-                ", kvKey='" + kvKey + '\'' +
-                '}';
-    }
+    String toString();
 }

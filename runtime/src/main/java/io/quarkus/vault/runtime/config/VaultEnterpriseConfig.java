@@ -3,10 +3,9 @@ package io.quarkus.vault.runtime.config;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
 
 @ConfigGroup
-public class VaultEnterpriseConfig {
+public interface VaultEnterpriseConfig {
 
     /**
      * Vault Enterprise namespace
@@ -17,6 +16,5 @@ public class VaultEnterpriseConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem
-    public Optional<String> namespace;
+    Optional<String> namespace();
 }

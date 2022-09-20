@@ -6,12 +6,10 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.deployment.Feature;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.annotations.ExecutionTime;
-import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.ExtensionSslNativeSupportBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.RunTimeConfigurationSourceValueBuildItem;
+import io.quarkus.deployment.builditem.RunTimeConfigBuilderBuildItem;
 import io.quarkus.deployment.builditem.SslNativeConfigBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
@@ -33,7 +31,6 @@ import io.quarkus.vault.runtime.VaultKubernetesAuthManager;
 import io.quarkus.vault.runtime.VaultKvManager;
 import io.quarkus.vault.runtime.VaultPKIManager;
 import io.quarkus.vault.runtime.VaultPKIManagerFactory;
-import io.quarkus.vault.runtime.VaultRecorder;
 import io.quarkus.vault.runtime.VaultSystemBackendManager;
 import io.quarkus.vault.runtime.VaultTOTPManager;
 import io.quarkus.vault.runtime.VaultTransitManager;
@@ -51,8 +48,8 @@ import io.quarkus.vault.runtime.client.secretengine.VaultInternalKvV2SecretEngin
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalPKISecretEngine;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalTOTPSecretEngine;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalTransitSecretEngine;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
 import io.quarkus.vault.runtime.config.VaultBuildTimeConfig;
+import io.quarkus.vault.runtime.config.VaultConfigSourceFactoryBuilder;
 import io.quarkus.vault.runtime.health.VaultHealthCheck;
 
 public class VaultProcessor {
@@ -122,14 +119,13 @@ public class VaultProcessor {
                 .build();
     }
 
-    @Record(ExecutionTime.RUNTIME_INIT)
     @BuildStep
-    RunTimeConfigurationSourceValueBuildItem init(VaultRecorder recorder, VaultBootstrapConfig vaultBootstrapConfig) {
-        return new RunTimeConfigurationSourceValueBuildItem(recorder.configure(vaultBootstrapConfig));
+    void vaultConfigFactory(BuildProducer<RunTimeConfigBuilderBuildItem> runTimeConfigBuilder) {
+        runTimeConfigBuilder.produce(new RunTimeConfigBuilderBuildItem(VaultConfigSourceFactoryBuilder.class.getName()));
     }
 
     @BuildStep
     HealthBuildItem addHealthCheck(VaultBuildTimeConfig config) {
-        return new HealthBuildItem(VaultHealthCheck.class.getName(), config.health.enabled);
+        return new HealthBuildItem(VaultHealthCheck.class.getName(), config.health().enabled());
     }
 }

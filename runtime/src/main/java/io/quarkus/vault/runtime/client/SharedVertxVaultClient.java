@@ -37,11 +37,11 @@ public class SharedVertxVaultClient extends VertxVaultClient {
     private final AtomicReference<WebClient> webClient = new AtomicReference<>();
 
     public SharedVertxVaultClient(VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
-        super(vaultConfigHolder.getVaultBootstrapConfig().url.orElseThrow(() -> new VaultException("no vault url provided")),
-                vaultConfigHolder.getVaultBootstrapConfig().enterprise.namespace,
-                vaultConfigHolder.getVaultBootstrapConfig().readTimeout);
+        super(vaultConfigHolder.getVaultRuntimeConfig().url().orElseThrow(() -> new VaultException("no vault url provided")),
+                vaultConfigHolder.getVaultRuntimeConfig().enterprise().namespace(),
+                vaultConfigHolder.getVaultRuntimeConfig().readTimeout());
         Vertx vertx = Vertx.newInstance(VertxRecorder.getVertx());
-        this.webClient.set(createHttpClient(vertx, vaultConfigHolder.getVaultBootstrapConfig(), tlsConfig));
+        this.webClient.set(createHttpClient(vertx, vaultConfigHolder.getVaultRuntimeConfig(), tlsConfig));
     }
 
     @Override

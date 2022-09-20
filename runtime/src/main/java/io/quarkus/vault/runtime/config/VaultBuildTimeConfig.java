@@ -1,31 +1,24 @@
 package io.quarkus.vault.runtime.config;
 
-import io.quarkus.runtime.annotations.ConfigDocSection;
-import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
+import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithName;
 
-@ConfigRoot(name = "vault", phase = ConfigPhase.BUILD_AND_RUN_TIME_FIXED)
-public class VaultBuildTimeConfig {
-
+@ConfigMapping(prefix = "quarkus.vault")
+@ConfigRoot(phase = ConfigPhase.BUILD_AND_RUN_TIME_FIXED)
+public interface VaultBuildTimeConfig {
     /**
      * Health check configuration.
      */
-    @ConfigItem
-    @ConfigDocSection
-    public HealthConfig health;
+    HealthConfig health();
 
     /**
      * Dev services configuration.
      */
-    @ConfigItem
-    public DevServicesConfig devservices;
+    @WithName("devservices")
+    DevServicesConfig devServices();
 
     @Override
-    public String toString() {
-        return "VaultBuildTimeConfig{" +
-                "health=" + health +
-                ", devservices=" + devservices +
-                '}';
-    }
+    String toString();
 }

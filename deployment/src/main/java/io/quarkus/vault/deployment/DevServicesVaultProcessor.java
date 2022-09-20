@@ -52,7 +52,7 @@ public class DevServicesVaultProcessor {
             LoggingSetupBuildItem loggingSetupBuildItem,
             GlobalDevServicesConfig devServicesConfig) {
 
-        DevServicesConfig currentDevServicesConfiguration = config.devservices;
+        DevServicesConfig currentDevServicesConfiguration = config.devServices();
 
         // figure out if we need to shut down and restart any existing Vault container
         // if not and the Vault container have already started we just return
@@ -122,7 +122,7 @@ public class DevServicesVaultProcessor {
 
     private VaultInstance startContainer(DevServicesConfig devServicesConfig, LaunchModeBuildItem launchMode,
             Optional<Duration> timeout) {
-        if (!devServicesConfig.enabled) {
+        if (!devServicesConfig.enabled()) {
             // explicitly disabled
             log.debug("Not starting devservices for Vault as it has been disabled in the config");
             return null;
@@ -139,23 +139,23 @@ public class DevServicesVaultProcessor {
             return null;
         }
 
-        DockerImageName dockerImageName = DockerImageName.parse(devServicesConfig.imageName.orElse(VAULT_IMAGE))
+        DockerImageName dockerImageName = DockerImageName.parse(devServicesConfig.imageName().orElse(VAULT_IMAGE))
                 .asCompatibleSubstituteFor(VAULT_IMAGE);
-        ConfiguredVaultContainer vaultContainer = new ConfiguredVaultContainer(dockerImageName, devServicesConfig.port,
-                devServicesConfig.serviceName)
+        ConfiguredVaultContainer vaultContainer = new ConfiguredVaultContainer(dockerImageName, devServicesConfig.port(),
+                devServicesConfig.serviceName())
                 .withVaultToken(DEV_SERVICE_TOKEN);
 
         vaultContainer.withNetwork(Network.SHARED);
 
-        if (devServicesConfig.transitEnabled) {
+        if (devServicesConfig.transitEnabled()) {
             vaultContainer.withInitCommand("secrets enable transit");
         }
 
-        if (devServicesConfig.pkiEnabled) {
+        if (devServicesConfig.pkiEnabled()) {
             vaultContainer.withInitCommand("secrets enable pki");
         }
 
-        devServicesConfig.initCommands.ifPresent(initCommands -> initCommands.forEach(vaultContainer::withInitCommand));
+        devServicesConfig.initCommands().ifPresent(initCommands -> initCommands.forEach(vaultContainer::withInitCommand));
 
         final Supplier<VaultInstance> defaultVaultInstanceSupplier = () -> {
             // Starting Vault
@@ -170,7 +170,7 @@ public class DevServicesVaultProcessor {
         };
 
         return vaultContainerLocator
-                .locateContainer(devServicesConfig.serviceName, devServicesConfig.shared, launchMode.getLaunchMode())
+                .locateContainer(devServicesConfig.serviceName(), devServicesConfig.shared(), launchMode.getLaunchMode())
                 .map(containerAddress -> new VaultInstance(containerAddress.getHost(), containerAddress.getPort(),
                         DEV_SERVICE_TOKEN, null))
                 .orElseGet(defaultVaultInstanceSupplier);

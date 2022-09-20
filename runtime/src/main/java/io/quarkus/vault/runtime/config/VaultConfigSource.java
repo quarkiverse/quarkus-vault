@@ -26,21 +26,21 @@ public class VaultConfigSource implements ConfigSource {
     private static final Logger log = Logger.getLogger(VaultConfigSource.class);
 
     private AtomicReference<VaultCacheEntry<Map<String, String>>> cache = new AtomicReference<>(null);
-    private VaultBootstrapConfig vaultBootstrapConfig;
+    private VaultRuntimeConfig vaultRuntimeConfig;
     private volatile boolean firstTime = true;
 
-    public VaultConfigSource(VaultBootstrapConfig vaultBootstrapConfig) {
-        this.vaultBootstrapConfig = vaultBootstrapConfig;
+    public VaultConfigSource(VaultRuntimeConfig vaultRuntimeConfig) {
+        this.vaultRuntimeConfig = vaultRuntimeConfig;
     }
 
     @Override
     public String getName() {
-        return VaultBootstrapConfig.NAME;
+        return VaultRuntimeConfig.NAME;
     }
 
     @Override
     public int getOrdinal() {
-        return vaultBootstrapConfig.configOrdinal;
+        return vaultRuntimeConfig.configOrdinal();
     }
 
     /**
@@ -60,13 +60,13 @@ public class VaultConfigSource implements ConfigSource {
 
     @Override
     public String getValue(String propertyName) {
-        return vaultBootstrapConfig.url.isPresent() ? getSecretConfig().get(propertyName) : null;
+        return vaultRuntimeConfig.url().isPresent() ? getSecretConfig().get(propertyName) : null;
     }
 
     private Map<String, String> getSecretConfig() {
 
         VaultCacheEntry<Map<String, String>> cacheEntry = cache.get();
-        if (cacheEntry != null && cacheEntry.youngerThan(vaultBootstrapConfig.secretConfigCachePeriod)) {
+        if (cacheEntry != null && cacheEntry.youngerThan(vaultRuntimeConfig.secretConfigCachePeriod())) {
             return cacheEntry.getValue();
         }
 
@@ -78,7 +78,7 @@ public class VaultConfigSource implements ConfigSource {
         Map<String, String> properties = new HashMap<>();
 
         if (firstTime) {
-            log.debug("fetch secrets first time with attempts = " + vaultBootstrapConfig.mpConfigInitialAttempts);
+            log.debug("fetch secrets first time with attempts = " + vaultRuntimeConfig.mpConfigInitialAttempts());
             fetchSecretsFirstTime(properties);
             firstTime = false;
         } else {
@@ -96,7 +96,7 @@ public class VaultConfigSource implements ConfigSource {
 
     private void fetchSecretsFirstTime(Map<String, String> properties) {
         VaultIOException last = null;
-        for (int i = 0; i < vaultBootstrapConfig.mpConfigInitialAttempts; i++) {
+        for (int i = 0; i < vaultRuntimeConfig.mpConfigInitialAttempts(); i++) {
             try {
                 if (i > 0) {
                     log.debug("retrying to fetch secrets");
@@ -118,10 +118,10 @@ public class VaultConfigSource implements ConfigSource {
 
     private void fetchSecrets(Map<String, String> properties) {
         // default kv paths
-        vaultBootstrapConfig.secretConfigKvPath.ifPresent(strings -> fetchSecrets(strings, null, properties));
+        vaultRuntimeConfig.secretConfigKvPath().ifPresent(strings -> fetchSecrets(strings, null, properties));
 
         // prefixed kv paths
-        vaultBootstrapConfig.secretConfigKvPathPrefix.forEach((key, value) -> fetchSecrets(value.paths, key, properties));
+        vaultRuntimeConfig.secretConfigKvPathPrefix().forEach((key, value) -> fetchSecrets(value.paths(), key, properties));
     }
 
     private void fetchSecrets(List<String> paths, String prefix, Map<String, String> properties) {
