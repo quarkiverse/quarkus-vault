@@ -71,3 +71,7 @@ path "sys/*" {
 path "auth/kubernetes/*" {
   capabilities = ["read", "create", "update", "delete", "list"]
 }
+
+path "auth/approle/*" {
+  capabilities = ["read", "create", "update", "delete", "list"]
+}

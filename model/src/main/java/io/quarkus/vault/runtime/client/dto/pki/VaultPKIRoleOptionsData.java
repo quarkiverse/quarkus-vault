@@ -4,7 +4,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class VaultPKIRoleOptionsData {
+import io.quarkus.vault.runtime.client.dto.VaultModel;
+
+public class VaultPKIRoleOptionsData implements VaultModel {
 
     @JsonProperty("ttl")
     public String timeToLive;

@@ -15,6 +15,7 @@ import io.quarkus.deployment.builditem.RunTimeConfigurationSourceValueBuildItem;
 import io.quarkus.deployment.builditem.SslNativeConfigBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
+import io.quarkus.vault.VaultAppRoleAuthService;
 import io.quarkus.vault.VaultKVSecretEngine;
 import io.quarkus.vault.VaultKubernetesAuthService;
 import io.quarkus.vault.VaultPKISecretEngine;
@@ -23,6 +24,7 @@ import io.quarkus.vault.VaultTOTPSecretEngine;
 import io.quarkus.vault.VaultTransitSecretEngine;
 import io.quarkus.vault.runtime.Base64StringDeserializer;
 import io.quarkus.vault.runtime.Base64StringSerializer;
+import io.quarkus.vault.runtime.VaultAppRoleAuthManager;
 import io.quarkus.vault.runtime.VaultAuthManager;
 import io.quarkus.vault.runtime.VaultConfigHolder;
 import io.quarkus.vault.runtime.VaultCredentialsProvider;
@@ -94,6 +96,8 @@ public class VaultProcessor {
                 .addBeanClass(VaultTOTPSecretEngine.class)
                 .addBeanClass(VaultSystemBackendManager.class)
                 .addBeanClass(VaultSystemBackendEngine.class)
+                .addBeanClass(VaultAppRoleAuthManager.class)
+                .addBeanClass(VaultAppRoleAuthService.class)
                 .addBeanClass(VaultKubernetesAuthManager.class)
                 .addBeanClass(VaultKubernetesAuthService.class)
                 .addBeanClass(VaultAuthManager.class)
