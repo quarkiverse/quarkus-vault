@@ -15,9 +15,14 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 [.description]
 --
 If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present. 
- When DevServices is enabled Quarkus will attempt to automatically configure and start a vault instance when running in Dev or Test mode and when Docker is running.
+When DevServices is enabled Quarkus will attempt to automatically configure and start a vault instance when running in Dev or Test mode and when Docker is running.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |`true`
 
@@ -28,7 +33,12 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 --
 The container image name to use, for container based DevServices providers.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_DEVSERVICES_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -38,10 +48,15 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 [.description]
 --
 Indicates if the Vault instance managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Vault starts a new container. 
- The discovery uses the `quarkus-dev-service-vault` label. The value is configured using the `service-name` property. 
- Container sharing is only used in dev mode.
+The discovery uses the `quarkus-dev-service-vault` label. The value is configured using the `service-name` property. 
+Container sharing is only used in dev mode.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_DEVSERVICES_SHARED+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |`true`
 
@@ -51,9 +66,14 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 [.description]
 --
 The value of the `quarkus-dev-service-vault` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Vault looks for a container with the `quarkus-dev-service-vault` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise it starts a new container with the `quarkus-dev-service-vault` label set to the specified value. 
- This property is used when you need multiple shared Vault instances.
+This property is used when you need multiple shared Vault instances.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_SERVICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_DEVSERVICES_SERVICE_NAME+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |`vault`
 
@@ -63,9 +83,14 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 [.description]
 --
 Optional fixed port the dev service will listen to. 
- If not defined, the port will be chosen randomly.
+If not defined, the port will be chosen randomly.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
 --|int 
 |
 
@@ -76,7 +101,12 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 --
 Should the Transit secret engine be enabled
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_TRANSIT_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_DEVSERVICES_TRANSIT_ENABLED+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
 
@@ -87,7 +117,12 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 --
 Should the PKI secret engine be enabled
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_PKI_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_DEVSERVICES_PKI_ENABLED+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
 
@@ -98,7 +133,12 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 --
 Custom container initialization commands
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_INIT_COMMANDS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_DEVSERVICES_INIT_COMMANDS+++`
+endif::add-copy-button-to-env-var[]
 --|list of string 
 |
 
@@ -108,10 +148,15 @@ a| [[quarkus-vault_quarkus.vault.config-ordinal]]`link:#quarkus-vault_quarkus.va
 [.description]
 --
 Microprofile Config ordinal. 
- This is provided as an alternative to the `config_ordinal` property defined by the specification, to make it easier and more natural for applications to override the default ordinal. 
- The default value is higher than the file system or jar ordinals, but lower than env vars.
+This is provided as an alternative to the `config_ordinal` property defined by the specification, to make it easier and more natural for applications to override the default ordinal. 
+The default value is higher than the file system or jar ordinals, but lower than env vars.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CONFIG_ORDINAL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_CONFIG_ORDINAL+++`
+endif::add-copy-button-to-env-var[]
 --|int 
 |`270`
 
@@ -127,7 +172,12 @@ Example: https://localhost:8200
 See also the documentation for the `kv-secret-engine-mount-path` property for some insights on how
 the full Vault url gets built.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_URL+++`
+endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/net/URL.html[URL]
  
 |
@@ -151,7 +201,12 @@ it will be not longer possible to log in.
 This value should also be smaller than the ttl, otherwise that would mean that we would try to recreate
 leases all the time.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_RENEW_GRACE_PERIOD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_RENEW_GRACE_PERIOD+++`
+endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
 |`1H`
@@ -167,7 +222,12 @@ Properties fetched from vault as MP config will be kept in a cache, and will not
 again until the expiration of that period.
 This property is ignored if `secret-config-kv-path` is not set.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_SECRET_CONFIG_CACHE_PERIOD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_SECRET_CONFIG_CACHE_PERIOD+++`
+endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
 |`10M`
@@ -196,7 +256,12 @@ with application properties `quarkus.vault.secret-config-kv-path=base-config,mya
 See also the documentation for the `kv-secret-engine-mount-path` property for some insights on how
 the full Vault url gets built.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_SECRET_CONFIG_KV_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_SECRET_CONFIG_KV_PATH+++`
+endif::add-copy-button-to-env-var[]
 --|list of string 
 |
 
@@ -207,7 +272,12 @@ a| [[quarkus-vault_quarkus.vault.mp-config-initial-attempts]]`link:#quarkus-vaul
 --
 Maximum number of attempts when fetching MP Config properties on the initial connection.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_MP_CONFIG_INITIAL_ATTEMPTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_MP_CONFIG_INITIAL_ATTEMPTS+++`
+endif::add-copy-button-to-env-var[]
 --|int 
 |`1`
 
@@ -223,7 +293,12 @@ Possible values are:
 * medium: display only usernames and lease ids (ie: passwords and tokens are masked).
 * high: hide lease ids and dynamic credentials username.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_LOG_CONFIDENTIALITY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_LOG_CONFIDENTIALITY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
 -- a|
 `low`, `medium`, `high` 
 |`medium`
@@ -237,7 +312,12 @@ Kv secret engine version.
 <p>
 see https://www.vaultproject.io/docs/secrets/kv/index.html
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_KV_SECRET_ENGINE_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_KV_SECRET_ENGINE_VERSION+++`
+endif::add-copy-button-to-env-var[]
 --|int 
 |`2`
 
@@ -267,7 +347,12 @@ The secret properties would be fetched from Vault using a `GET` on
 <p>
 see https://www.vaultproject.io/docs/secrets/kv/index.html
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_KV_SECRET_ENGINE_MOUNT_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_KV_SECRET_ENGINE_MOUNT_PATH+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |`secret`
 
@@ -278,7 +363,12 @@ a| [[quarkus-vault_quarkus.vault.connect-timeout]]`link:#quarkus-vault_quarkus.v
 --
 Timeout to establish a connection with Vault.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
 |`5S`
@@ -290,7 +380,12 @@ a| [[quarkus-vault_quarkus.vault.read-timeout]]`link:#quarkus-vault_quarkus.vaul
 --
 Request timeout on Vault.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_READ_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_READ_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
 |`5S`
@@ -301,9 +396,14 @@ a| [[quarkus-vault_quarkus.vault.non-proxy-hosts]]`link:#quarkus-vault_quarkus.v
 [.description]
 --
 List of remote hosts that are not proxied when the client is configured to use a proxy. This list serves the same purpose as the JVM `nonProxyHosts` configuration. 
- Entries can use the _++*++_ wildcard character for pattern matching, e.g _++*++.example.com_ matches _www.example.com_.
+Entries can use the _++*++_ wildcard character for pattern matching, e.g _++*++.example.com_ matches _www.example.com_.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_NON_PROXY_HOSTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_NON_PROXY_HOSTS+++`
+endif::add-copy-button-to-env-var[]
 --|list of string 
 |
 
@@ -326,7 +426,12 @@ will win.
 See also the documentation for the `quarkus.vault.kv-secret-engine-mount-path` property for some insights on how
 the full Vault url gets built.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_SECRET_CONFIG_KV_PATH__PREFIX_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_SECRET_CONFIG_KV_PATH__PREFIX_+++`
+endif::add-copy-button-to-env-var[]
 --|list of string 
 |required icon:exclamation-circle[title=Configuration property is required]
 
@@ -342,7 +447,12 @@ by the database secrets engine described at https://www.vaultproject.io/docs/sec
 
 One of `credentials-role` or `kv-path` can to be defined. not both.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__CREDENTIALS_ROLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__CREDENTIALS_ROLE+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -355,7 +465,12 @@ Mount of dynamic credentials secrets engine, for example `database` or `rabbitmq
 
 Only used when `credentials-role` is defined.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__CREDENTIALS_MOUNT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__CREDENTIALS_MOUNT+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |`database`
 
@@ -371,7 +486,12 @@ left as the default of `creds`.
 
 Only used when `credentials-role` is defined.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__CREDENTIALS_REQUEST_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__CREDENTIALS_REQUEST_PATH+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |`creds`
 
@@ -386,7 +506,12 @@ One of `database-credentials-role` or `kv-path` needs to be defined. not both.
 
 see https://www.vaultproject.io/docs/secrets/kv/index.html
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_PATH+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -401,7 +526,12 @@ Key name to search in vault path `kv-path`. The value for that key is the creden
 
 see https://www.vaultproject.io/docs/secrets/kv/index.html
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_KEY+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |`password`
 
@@ -417,7 +547,12 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.enab
 --
 Whether or not an health check is published in case the smallrye-health extension is present.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_HEALTH_ENABLED+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
 
@@ -428,7 +563,12 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.stan
 --
 Specifies if being a standby should still return the active status code instead of the standby status code.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_STAND_BY_OK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_HEALTH_STAND_BY_OK+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
 
@@ -439,7 +579,12 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.perf
 --
 Specifies if being a performance standby should still return the active status code instead of the performance standby status code.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_PERFORMANCE_STAND_BY_OK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_HEALTH_PERFORMANCE_STAND_BY_OK+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
 
@@ -459,7 +604,12 @@ If set, this will add a `X-Vault-Namespace` header to all requests sent to the V
 <p>
 See https://www.vaultproject.io/docs/enterprise/namespaces
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_ENTERPRISE_NAMESPACE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_ENTERPRISE_NAMESPACE+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -475,7 +625,12 @@ a| [[quarkus-vault_quarkus.vault.authentication.client-token]]`link:#quarkus-vau
 --
 Vault token, bypassing Vault authentication (kubernetes, userpass or approle). This is useful in development where an authentication mode might not have been set up. In production we will usually prefer some authentication such as userpass, or preferably kubernetes, where Vault tokens get generated with a TTL and some ability to revoke them. Lease renewal does not apply.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_CLIENT_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_CLIENT_TOKEN+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -485,10 +640,15 @@ a| [[quarkus-vault_quarkus.vault.authentication.client-token-wrapping-token]]`li
 [.description]
 --
 Client token wrapped in a wrapping token, such as what is returned by: 
- vault token create -wrap-ttl=60s -policy=myapp 
- client-token and client-token-wrapping-token are exclusive. Lease renewal does not apply.
+vault token create -wrap-ttl=60s -policy=myapp 
+client-token and client-token-wrapping-token are exclusive. Lease renewal does not apply.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_CLIENT_TOKEN_WRAPPING_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_CLIENT_TOKEN_WRAPPING_TOKEN+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -499,7 +659,12 @@ a| [[quarkus-vault_quarkus.vault.authentication.app-role.role-id]]`link:#quarkus
 --
 Role Id for AppRole auth method. This property is required when selecting the app-role authentication type.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_ROLE_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_ROLE_ID+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -510,7 +675,12 @@ a| [[quarkus-vault_quarkus.vault.authentication.app-role.secret-id]]`link:#quark
 --
 Secret Id for AppRole auth method. This property is required when selecting the app-role authentication type.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_SECRET_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_SECRET_ID+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -520,10 +690,15 @@ a| [[quarkus-vault_quarkus.vault.authentication.app-role.secret-id-wrapping-toke
 [.description]
 --
 Wrapping token containing a Secret Id, obtained from: 
- vault write -wrap-ttl=60s -f auth/approle/role/myapp/secret-id 
- secret-id and secret-id-wrapping-token are exclusive
+vault write -wrap-ttl=60s -f auth/approle/role/myapp/secret-id 
+secret-id and secret-id-wrapping-token are exclusive
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_SECRET_ID_WRAPPING_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_SECRET_ID_WRAPPING_TOKEN+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -534,7 +709,12 @@ a| [[quarkus-vault_quarkus.vault.authentication.userpass.username]]`link:#quarku
 --
 User for userpass auth method. This property is required when selecting the userpass authentication type.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_USERPASS_USERNAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_USERPASS_USERNAME+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -545,7 +725,12 @@ a| [[quarkus-vault_quarkus.vault.authentication.userpass.password]]`link:#quarku
 --
 Password for userpass auth method. This property is required when selecting the userpass authentication type.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_USERPASS_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_USERPASS_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -555,12 +740,17 @@ a| [[quarkus-vault_quarkus.vault.authentication.userpass.password-wrapping-token
 [.description]
 --
 Wrapping token containing a Password, obtained from: 
- vault kv get -wrap-ttl=60s secret/ 
- The key has to be 'password', meaning the password has initially been provisioned with: 
- vault kv put secret/ password= 
- password and password-wrapping-token are exclusive
+vault kv get -wrap-ttl=60s secret/ 
+The key has to be 'password', meaning the password has initially been provisioned with: 
+vault kv put secret/ password= 
+password and password-wrapping-token are exclusive
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_USERPASS_PASSWORD_WRAPPING_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_USERPASS_PASSWORD_WRAPPING_TOKEN+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -571,7 +761,12 @@ a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.role]]`link:#quarkus-
 --
 Kubernetes authentication role that has been created in Vault to associate Vault policies, with Kubernetes service accounts and/or Kubernetes namespaces. This property is required when selecting the Kubernetes authentication type.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_KUBERNETES_ROLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_KUBERNETES_ROLE+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -582,7 +777,12 @@ a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.jwt-token-path]]`link
 --
 Location of the file containing the Kubernetes JWT token to authenticate against in Kubernetes authentication mode.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_KUBERNETES_JWT_TOKEN_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_KUBERNETES_JWT_TOKEN_PATH+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |`/var/run/secrets/kubernetes.io/serviceaccount/token`
 
@@ -593,7 +793,12 @@ a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.auth-mount-path]]`lin
 --
 Allows configure Kubernetes authentication mount path.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_KUBERNETES_AUTH_MOUNT_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_KUBERNETES_AUTH_MOUNT_PATH+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |`auth/kubernetes`
 
@@ -608,9 +813,14 @@ a| [[quarkus-vault_quarkus.vault.tls.skip-verify]]`link:#quarkus-vault_quarkus.v
 [.description]
 --
 Allows to bypass certificate validation on TLS communications. 
- If true this will allow TLS communications with Vault, without checking the validity of the certificate presented by Vault. This is discouraged in production because it allows man in the middle type of attacks.
+If true this will allow TLS communications with Vault, without checking the validity of the certificate presented by Vault. This is discouraged in production because it allows man in the middle type of attacks.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TLS_SKIP_VERIFY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TLS_SKIP_VERIFY+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |
 
@@ -620,9 +830,14 @@ a| [[quarkus-vault_quarkus.vault.tls.ca-cert]]`link:#quarkus-vault_quarkus.vault
 [.description]
 --
 Certificate bundle used to validate TLS communications with Vault. 
- The path to a pem bundle file, if TLS is required, and trusted certificates are not set through javax.net.ssl.trustStore system property.
+The path to a pem bundle file, if TLS is required, and trusted certificates are not set through javax.net.ssl.trustStore system property.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TLS_CA_CERT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TLS_CA_CERT+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -633,7 +848,12 @@ a| [[quarkus-vault_quarkus.vault.tls.use-kubernetes-ca-cert]]`link:#quarkus-vaul
 --
 If true and Vault authentication type is kubernetes, TLS will be active and the cacert path will be set to /var/run/secrets/kubernetes.io/serviceaccount/ca.crt. If set, this setting will take precedence over property quarkus.vault.tls.ca-cert. This means that if Vault authentication type is kubernetes and we want to use quarkus.vault.tls.ca-cert or system property javax.net.ssl.trustStore, then this property should be set to false.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TLS_USE_KUBERNETES_CA_CERT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TLS_USE_KUBERNETES_CA_CERT+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |`true`
 
@@ -660,7 +880,12 @@ or
 transitSecretEngine.sign("my-foo-key-with-prehashed", "my already hashed content");
 ```
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TRANSIT_KEY__KEY__NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TRANSIT_KEY__KEY__NAME+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -671,7 +896,12 @@ a| [[quarkus-vault_quarkus.vault.transit.key.-key-.prehashed]]`link:#quarkus-vau
 --
 Set to true when the input is already hashed. Applies to sign operations.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TRANSIT_KEY__KEY__PREHASHED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TRANSIT_KEY__KEY__PREHASHED+++`
+endif::add-copy-button-to-env-var[]
 --|boolean 
 |
 
@@ -682,7 +912,12 @@ a| [[quarkus-vault_quarkus.vault.transit.key.-key-.signature-algorithm]]`link:#q
 --
 When using a RSA key, specifies the RSA signature algorithm. Applies to sign operations.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TRANSIT_KEY__KEY__SIGNATURE_ALGORITHM+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TRANSIT_KEY__KEY__SIGNATURE_ALGORITHM+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -693,7 +928,12 @@ a| [[quarkus-vault_quarkus.vault.transit.key.-key-.hash-algorithm]]`link:#quarku
 --
 Specifies the hash algorithm to use for supporting key types. Applies to sign operations.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TRANSIT_KEY__KEY__HASH_ALGORITHM+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TRANSIT_KEY__KEY__HASH_ALGORITHM+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -704,7 +944,12 @@ a| [[quarkus-vault_quarkus.vault.transit.key.-key-.type]]`link:#quarkus-vault_qu
 --
 Specifies the type of key to create for the encrypt operation. Applies to encrypt operations.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TRANSIT_KEY__KEY__TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TRANSIT_KEY__KEY__TYPE+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
@@ -715,7 +960,12 @@ a| [[quarkus-vault_quarkus.vault.transit.key.-key-.convergent-encryption]]`link:
 --
 If enabled, the key will support convergent encryption, where the same plaintext creates the same ciphertext. Applies to encrypt operations.
 
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_TRANSIT_KEY__KEY__CONVERGENT_ENCRYPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_TRANSIT_KEY__KEY__CONVERGENT_ENCRYPTION+++`
+endif::add-copy-button-to-env-var[]
 --|string 
 |
 
