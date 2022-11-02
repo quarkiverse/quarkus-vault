@@ -1,6 +1,6 @@
 package io.quarkus.it.vault;
 
-import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;

@@ -703,6 +703,22 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-vault_quarkus.vault.authentication.app-role.auth-mount-path]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.auth-mount-path[quarkus.vault.authentication.app-role.auth-mount-path]`
+
+[.description]
+--
+Allows configure Approle authentication mount path.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_AUTH_MOUNT_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_AUTH_MOUNT_PATH+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`auth/approle`
+
+
 a| [[quarkus-vault_quarkus.vault.authentication.userpass.username]]`link:#quarkus-vault_quarkus.vault.authentication.userpass.username[quarkus.vault.authentication.userpass.username]`
 
 [.description]

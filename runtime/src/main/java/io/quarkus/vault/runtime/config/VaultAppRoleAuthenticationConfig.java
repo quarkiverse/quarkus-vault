@@ -1,5 +1,7 @@
 package io.quarkus.vault.runtime.config;
 
+import static io.quarkus.vault.runtime.config.VaultBootstrapConfig.DEFAULT_APPROLE_AUTH_MOUNT_PATH;
+
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -29,4 +31,10 @@ public class VaultAppRoleAuthenticationConfig {
      */
     @ConfigItem
     public Optional<String> secretIdWrappingToken;
+
+    /**
+     * Allows configure Approle authentication mount path.
+     */
+    @ConfigItem(defaultValue = DEFAULT_APPROLE_AUTH_MOUNT_PATH)
+    public String authMountPath;
 }

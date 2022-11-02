@@ -4,7 +4,9 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class VaultSecretEngineInfoData {
+import io.quarkus.vault.runtime.client.dto.VaultModel;
+
+public class VaultSecretEngineInfoData implements VaultModel {
 
     public String description;
 

@@ -36,6 +36,7 @@ public class VaultBootstrapConfig {
     public static final String DEFAULT_READ_TIMEOUT = "5S";
     public static final String DEFAULT_TLS_USE_KUBERNETES_CACERT = "true";
     public static final String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "auth/kubernetes";
+    public static final String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "auth/approle";
 
     /**
      * Microprofile Config ordinal.

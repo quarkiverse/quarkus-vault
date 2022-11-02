@@ -2,7 +2,9 @@ package io.quarkus.vault.runtime.client.dto.sys;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class VaultTuneData {
+import io.quarkus.vault.runtime.client.dto.VaultModel;
+
+public class VaultTuneData implements VaultModel {
 
     public String description;
 
