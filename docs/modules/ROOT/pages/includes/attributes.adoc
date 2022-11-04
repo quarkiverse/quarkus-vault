@@ -1,5 +1,5 @@
-:quarkus-version: 2.13.3.Final
-:quarkus-vault-version: 2.0.0
+:quarkus-version: 2.14.0.Final
+:quarkus-vault-version: 2.1.0
 :maven-version: 3.8.1+
 
 :quarkus-org-url: https://github.com/quarkusio
