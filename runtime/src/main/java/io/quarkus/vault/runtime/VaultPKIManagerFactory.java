@@ -1,7 +1,7 @@
 package io.quarkus.vault.runtime;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import io.quarkus.vault.VaultPKISecretEngine;
 import io.quarkus.vault.VaultPKISecretEngineFactory;

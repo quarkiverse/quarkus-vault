@@ -5,11 +5,11 @@ import static io.quarkus.vault.runtime.client.MutinyVertxClientFactory.createHtt
 import java.lang.annotation.Annotation;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.Produces;
-import javax.inject.Singleton;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Singleton;
 
 import io.quarkus.arc.Arc;
 import io.quarkus.runtime.TlsConfig;

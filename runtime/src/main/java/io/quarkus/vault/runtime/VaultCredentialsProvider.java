@@ -6,9 +6,9 @@ import static io.quarkus.vault.runtime.config.CredentialsProviderConfig.DEFAULT_
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import io.quarkus.credentials.CredentialsProvider;
 import io.quarkus.vault.VaultException;

@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.jboss.logging.Logger;
 

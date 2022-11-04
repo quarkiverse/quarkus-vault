@@ -1,6 +1,6 @@
 package io.quarkus.vault.runtime;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
 

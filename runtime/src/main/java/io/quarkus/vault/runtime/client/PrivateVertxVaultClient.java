@@ -5,8 +5,8 @@ import static io.vertx.core.spi.resolver.ResolverProvider.DISABLE_DNS_RESOLVER_P
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Singleton;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Singleton;
 
 import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.VaultException;

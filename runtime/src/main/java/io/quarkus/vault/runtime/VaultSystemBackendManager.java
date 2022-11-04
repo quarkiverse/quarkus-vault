@@ -2,8 +2,8 @@ package io.quarkus.vault.runtime;
 
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import io.quarkus.vault.VaultSystemBackendReactiveEngine;
 import io.quarkus.vault.runtime.client.VaultClient;
