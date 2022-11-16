@@ -15,6 +15,8 @@ It is a replacement for the `quarkus-vault` extension originally part of the Qua
 
 ## Documentation
 
+test
+
 The documentation for this extension can be found [here](https://quarkiverse.github.io/quarkiverse-docs/quarkus-vault/dev/index.html).
 
 ## Contributors ✨
