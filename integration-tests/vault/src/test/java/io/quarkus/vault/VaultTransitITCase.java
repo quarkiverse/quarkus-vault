@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;

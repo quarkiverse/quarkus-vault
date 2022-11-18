@@ -1,6 +1,6 @@
 package io.quarkus.vault.runtime.client.authmethod;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultInternalBase;

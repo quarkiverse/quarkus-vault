@@ -3,8 +3,8 @@ package io.quarkus.vault.runtime;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 
 import io.quarkus.vault.VaultKVSecretReactiveEngine;
 import io.quarkus.vault.runtime.client.Private;

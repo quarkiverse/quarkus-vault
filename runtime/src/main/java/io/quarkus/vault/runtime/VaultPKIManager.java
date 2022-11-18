@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.VaultPKISecretReactiveEngine;
