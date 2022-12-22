@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
+import org.jboss.logging.Logger;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +23,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.runtime.VaultIOException;
+import io.quarkus.vault.runtime.client.dto.AbstractVaultDTO;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.VertxException;
@@ -32,6 +35,7 @@ import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
 public abstract class VertxVaultClient implements VaultClient {
+    private static final Logger log = Logger.getLogger(VertxVaultClient.class.getName());
 
     private static final HttpMethod LIST = HttpMethod.valueOf("LIST");
 
@@ -118,7 +122,7 @@ public abstract class VertxVaultClient implements VaultClient {
         return request.send().ifNoItem().after(getRequestTimeout())
                 .fail().map(response -> {
                     if (response.statusCode() != 200 && response.statusCode() != 204) {
-                        throwVaultException(response);
+                        throwVaultException(request, response);
                     }
                     return response.body();
                 });
@@ -152,12 +156,16 @@ public abstract class VertxVaultClient implements VaultClient {
         return send.ifNoItem().after(getRequestTimeout()).failWith(TimeoutException::new)
                 .map(Unchecked.function(response -> {
                     if (response.statusCode() != expectedCode) {
-                        throwVaultException(response);
+                        if (!handleWarningResponse(response, expectedCode)) {
+                            throwVaultException(request, response);
+                        }
                     }
 
                     Buffer responseBuffer = response.body();
-                    if (responseBuffer != null) {
-                        return resultClass == null ? null : mapper.readValue(responseBuffer.toString(), resultClass);
+                    if (responseBuffer != null && resultClass != null) {
+                        var result = mapper.readValue(responseBuffer.toString(), resultClass);
+                        logResultWarnings(result);
+                        return result;
                     } else {
                         return null;
                     }
@@ -186,6 +194,27 @@ public abstract class VertxVaultClient implements VaultClient {
 
     }
 
+    private boolean handleWarningResponse(HttpResponse<?> response, int expectedCode) {
+        if (expectedCode == 204 && response.statusCode() == 200) {
+            var result = response.bodyAsJson(AbstractVaultDTO.class);
+            logResultWarnings(result);
+            return true;
+        }
+        return false;
+    }
+
+    private void logResultWarnings(Object result) {
+        if (!(result instanceof AbstractVaultDTO<?, ?>)) {
+            return;
+        }
+        var dtoResult = (AbstractVaultDTO<?, ?>) result;
+        if (dtoResult.warnings != null) {
+            for (var warning : dtoResult.warnings) {
+                log.warn(warning);
+            }
+        }
+    }
+
     private Duration getRequestTimeout() {
         return requestTimeout;
     }
@@ -196,14 +225,14 @@ public abstract class VertxVaultClient implements VaultClient {
                 .onItem().transform(HttpResponse::statusCode);
     }
 
-    private void throwVaultException(HttpResponse<Buffer> response) {
+    private void throwVaultException(HttpRequest<?> request, HttpResponse<Buffer> response) {
         String body = null;
         try {
             body = response.body().toString();
         } catch (Exception e) {
             // ignore
         }
-        throw new VaultClientException(response.statusCode(), body);
+        throw new VaultClientException(request.traceOperation(), request.uri(), response.statusCode(), body);
     }
 
     private HttpRequest<Buffer> builder(String operationName, HttpMethod method, String path, String token) {
