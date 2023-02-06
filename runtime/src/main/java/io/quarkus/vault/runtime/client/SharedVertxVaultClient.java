@@ -2,19 +2,19 @@ package io.quarkus.vault.runtime.client;
 
 import static io.quarkus.vault.runtime.client.MutinyVertxClientFactory.createHttpClient;
 
-import java.lang.annotation.Annotation;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
 import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
 import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.runtime.VaultConfigHolder;
+import io.quarkus.vertx.runtime.VertxRecorder;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
@@ -24,14 +24,17 @@ public class SharedVertxVaultClient extends VertxVaultClient {
 
     @Produces
     @Dependent
-    public static VertxVaultClient createSharedVaultClient(Instance<Vertx> vertx) {
-        Annotation clientType;
-        if (vertx.isResolvable()) {
-            clientType = Shared.Literal.INSTANCE;
+    public static VertxVaultClient createSharedVaultClient() {
+        ArcContainer container = Arc.container();
+        VaultConfigHolder vaultConfigHolder = container.select(VaultConfigHolder.class).get();
+        TlsConfig tlsConfig = container.select(TlsConfig.class).get();
+        io.vertx.core.Vertx vertx = VertxRecorder.getVertx();
+        if (vertx == null) {
+            return new PrivateVertxVaultClient(vaultConfigHolder, tlsConfig);
         } else {
-            clientType = Private.Literal.INSTANCE;
+            return new SharedVertxVaultClient(Vertx.newInstance(vertx), vaultConfigHolder, tlsConfig);
         }
-        return Arc.container().select(VertxVaultClient.class, clientType).get();
+
     }
 
     private final AtomicReference<WebClient> webClient = new AtomicReference<>();
