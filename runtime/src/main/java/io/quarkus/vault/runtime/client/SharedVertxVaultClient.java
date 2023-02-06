@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.Produces;
 import javax.inject.Singleton;
 
@@ -15,6 +14,7 @@ import io.quarkus.arc.Arc;
 import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.runtime.VaultConfigHolder;
+import io.quarkus.vertx.runtime.VertxRecorder;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
@@ -24,9 +24,9 @@ public class SharedVertxVaultClient extends VertxVaultClient {
 
     @Produces
     @Dependent
-    public static VertxVaultClient createSharedVaultClient(Instance<Vertx> vertx) {
+    public static VertxVaultClient createSharedVaultClient() {
         Annotation clientType;
-        if (vertx.isResolvable()) {
+        if (VertxRecorder.getVertx() != null) {
             clientType = Shared.Literal.INSTANCE;
         } else {
             clientType = Private.Literal.INSTANCE;
@@ -36,10 +36,11 @@ public class SharedVertxVaultClient extends VertxVaultClient {
 
     private final AtomicReference<WebClient> webClient = new AtomicReference<>();
 
-    public SharedVertxVaultClient(Vertx vertx, VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
+    public SharedVertxVaultClient(VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
         super(vaultConfigHolder.getVaultBootstrapConfig().url.orElseThrow(() -> new VaultException("no vault url provided")),
                 vaultConfigHolder.getVaultBootstrapConfig().enterprise.namespace,
                 vaultConfigHolder.getVaultBootstrapConfig().readTimeout);
+        Vertx vertx = Vertx.newInstance(VertxRecorder.getVertx());
         this.webClient.set(createHttpClient(vertx, vaultConfigHolder.getVaultBootstrapConfig(), tlsConfig));
     }
 
