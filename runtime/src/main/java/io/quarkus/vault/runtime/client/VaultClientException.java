@@ -4,12 +4,24 @@ import io.quarkus.vault.VaultException;
 
 public class VaultClientException extends VaultException {
 
+    private String operationName;
+    private String requestPath;
     private int status;
     private String body;
 
-    public VaultClientException(int status, String body) {
+    public VaultClientException(String operationName, String requestPath, int status, String body) {
+        this.operationName = operationName;
+        this.requestPath = requestPath;
         this.status = status;
         this.body = body;
+    }
+
+    public String getOperationName() {
+        return operationName;
+    }
+
+    public String getRequestPath() {
+        return requestPath;
     }
 
     public int getStatus() {
@@ -22,6 +34,11 @@ public class VaultClientException extends VaultException {
 
     @Override
     public String toString() {
-        return super.toString() + " code=" + status + " body=" + body;
+        return "VaultClientException{" +
+                "operationName='" + operationName + '\'' +
+                ", requestPath='" + requestPath + '\'' +
+                ", status=" + status +
+                ", body='" + body + '\'' +
+                '}';
     }
 }

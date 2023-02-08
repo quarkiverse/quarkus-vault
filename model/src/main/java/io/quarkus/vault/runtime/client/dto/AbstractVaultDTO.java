@@ -1,5 +1,7 @@
 package io.quarkus.vault.runtime.client.dto;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AbstractVaultDTO<DATA, AUTH> implements VaultModel {
@@ -14,7 +16,7 @@ public class AbstractVaultDTO<DATA, AUTH> implements VaultModel {
     public DATA data;
     @JsonProperty("wrap_info")
     public WrapInfo wrapInfo;
-    public Object warnings;
+    public List<String> warnings;
     public AUTH auth;
 
 }
