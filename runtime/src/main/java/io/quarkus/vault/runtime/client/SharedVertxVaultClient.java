@@ -2,6 +2,7 @@ package io.quarkus.vault.runtime.client;
 
 import static io.quarkus.vault.runtime.client.MutinyVertxClientFactory.createHttpClient;
 
+import java.lang.annotation.Annotation;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.annotation.PreDestroy;
@@ -10,7 +11,6 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
 import io.quarkus.arc.Arc;
-import io.quarkus.arc.ArcContainer;
 import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.runtime.VaultConfigHolder;
@@ -25,24 +25,22 @@ public class SharedVertxVaultClient extends VertxVaultClient {
     @Produces
     @Dependent
     public static VertxVaultClient createSharedVaultClient() {
-        ArcContainer container = Arc.container();
-        VaultConfigHolder vaultConfigHolder = container.select(VaultConfigHolder.class).get();
-        TlsConfig tlsConfig = container.select(TlsConfig.class).get();
-        io.vertx.core.Vertx vertx = VertxRecorder.getVertx();
-        if (vertx == null) {
-            return new PrivateVertxVaultClient(vaultConfigHolder, tlsConfig);
+        Annotation clientType;
+        if (VertxRecorder.getVertx() != null) {
+            clientType = Shared.Literal.INSTANCE;
         } else {
-            return new SharedVertxVaultClient(Vertx.newInstance(vertx), vaultConfigHolder, tlsConfig);
+            clientType = Private.Literal.INSTANCE;
         }
-
+        return Arc.container().select(VertxVaultClient.class, clientType).get();
     }
 
     private final AtomicReference<WebClient> webClient = new AtomicReference<>();
 
-    public SharedVertxVaultClient(Vertx vertx, VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
+    public SharedVertxVaultClient(VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
         super(vaultConfigHolder.getVaultBootstrapConfig().url.orElseThrow(() -> new VaultException("no vault url provided")),
                 vaultConfigHolder.getVaultBootstrapConfig().enterprise.namespace,
                 vaultConfigHolder.getVaultBootstrapConfig().readTimeout);
+        Vertx vertx = Vertx.newInstance(VertxRecorder.getVertx());
         this.webClient.set(createHttpClient(vertx, vaultConfigHolder.getVaultBootstrapConfig(), tlsConfig));
     }
 
