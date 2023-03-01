@@ -262,7 +262,7 @@ Then we need to give a read capability to the Quarkus application on path `datab
 ----
 cat <<EOF | vault policy write vault-quickstart-policy -
 path "secret/data/myapps/vault-quickstart/*" {
-  capabilities = ["read"]
+  capabilities = ["read", "create"]
 }
 path "database/creds/mydbrole" {
   capabilities = [ "read" ]

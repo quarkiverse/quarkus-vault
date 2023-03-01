@@ -163,7 +163,7 @@ Create a policy that gives read access to `secret/myapps/vault-quickstart` and s
 ----
 cat <<EOF | vault policy write vault-quickstart-policy -
 path "secret/data/myapps/vault-quickstart/*" {
-  capabilities = ["read"]
+  capabilities = ["read", "create"]
 }
 EOF
 ----
