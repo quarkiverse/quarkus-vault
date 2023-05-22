@@ -229,6 +229,18 @@ public class VaultBootstrapConfig {
     public Optional<List<String>> nonProxyHosts;
 
     /**
+     * The proxy host. If set the client is configured to use a proxy.
+     */
+    @ConfigItem
+    public Optional<String> proxyHost;
+
+    /**
+     * The port the proxy is listening on, 3128 by default.
+     */
+    @ConfigItem(defaultValue = "3128")
+    public Integer proxyPort;
+
+    /**
      * List of named credentials providers, such as: `quarkus.vault.credentials-provider.foo.kv-path=mypath`
      * <p>
      * This defines a credentials provider `foo` returning key `password` from vault path `mypath`.

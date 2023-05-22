@@ -185,6 +185,7 @@ public class VaultTestExtension {
         vaultBootstrapConfig.connectTimeout = Duration.ofSeconds(30);
         vaultBootstrapConfig.readTimeout = Duration.ofSeconds(5);
         vaultBootstrapConfig.nonProxyHosts = Optional.empty();
+        vaultBootstrapConfig.proxyHost = Optional.empty();
         vaultBootstrapConfig.authentication = new VaultAuthenticationConfig();
         vaultBootstrapConfig.authentication.kubernetes = new VaultKubernetesAuthenticationConfig();
         return new TestVaultClient(new VaultConfigHolder().setVaultBootstrapConfig(vaultBootstrapConfig));

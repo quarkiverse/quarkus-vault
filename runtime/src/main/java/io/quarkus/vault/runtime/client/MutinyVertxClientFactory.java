@@ -8,6 +8,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
 import io.vertx.core.net.PemTrustOptions;
+import io.vertx.core.net.ProxyOptions;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
@@ -21,6 +22,13 @@ public class MutinyVertxClientFactory {
         WebClientOptions options = new WebClientOptions()
                 .setConnectTimeout((int) vaultBootstrapConfig.connectTimeout.toMillis())
                 .setIdleTimeout((int) vaultBootstrapConfig.readTimeout.getSeconds() * 2);
+
+        if (vaultBootstrapConfig.proxyHost.isPresent()) {
+            options.setProxyOptions(
+                    new ProxyOptions()
+                            .setHost(vaultBootstrapConfig.proxyHost.get())
+                            .setPort(vaultBootstrapConfig.proxyPort));
+        }
 
         if (vaultBootstrapConfig.nonProxyHosts.isPresent()) {
             options.setNonProxyHosts(vaultBootstrapConfig.nonProxyHosts.get());
