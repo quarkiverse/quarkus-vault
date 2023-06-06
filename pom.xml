@@ -20,7 +20,7 @@
     <module>integration-tests</module>
   </modules>
   <scm>
-    <connection>:git:git@github.com:quarkiverse/quarkus-vault.git</connection>
+    <connection>scm:git:git@github.com:quarkiverse/quarkus-vault.git</connection>
     <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-vault.git</developerConnection>
     <url>https://github.com/quarkiverse/quarkus-vault</url>
   </scm>
