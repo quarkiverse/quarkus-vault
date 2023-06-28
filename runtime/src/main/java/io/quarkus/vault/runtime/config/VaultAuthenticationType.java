@@ -32,6 +32,9 @@ public enum VaultAuthenticationType {
      * <p>
      * https://www.vaultproject.io/api/auth/approle/index.html
      */
-    APPROLE
+    APPROLE,
+
+
+    AWS_IAM,
 
 }
