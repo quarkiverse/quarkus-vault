@@ -51,6 +51,9 @@ public class VaultAuthenticationConfig {
     @ConfigItem
     public VaultKubernetesAuthenticationConfig kubernetes;
 
+    @ConfigItem
+    public VaultAwsIamAuthenticationConfig awsIam;
+
     public boolean isDirectClientToken() {
         return clientToken.isPresent() || clientTokenWrappingToken.isPresent();
     }
@@ -61,6 +64,10 @@ public class VaultAuthenticationConfig {
 
     public boolean isUserpass() {
         return userpass.username.isPresent() && (userpass.password.isPresent() || userpass.passwordWrappingToken.isPresent());
+    }
+
+    public boolean isAwsIam() {
+        return awsIam.stsUrl != null && awsIam.region != null && awsIam.role != null;
     }
 
 }

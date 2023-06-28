@@ -3,6 +3,7 @@ package io.quarkus.vault.runtime.config;
 import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
 import static io.quarkus.vault.runtime.LogConfidentialityLevel.MEDIUM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.AWS_IAM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
 
@@ -37,6 +38,7 @@ public class VaultBootstrapConfig {
     public static final String DEFAULT_TLS_USE_KUBERNETES_CACERT = "true";
     public static final String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "auth/kubernetes";
     public static final String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "auth/approle";
+
 
     /**
      * Microprofile Config ordinal.
@@ -267,6 +269,8 @@ public class VaultBootstrapConfig {
             return USERPASS;
         } else if (authentication.isAppRole()) {
             return APPROLE;
+        } else if (authentication.isAwsIam()) {
+            return AWS_IAM;
         } else {
             return null;
         }
@@ -292,7 +296,11 @@ public class VaultBootstrapConfig {
                 + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretId.orElse(""), LOW) + '\'' +
                 ", appRoleSecretIdWrappingToken='"
                 + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretIdWrappingToken.orElse(""), LOW) + '\''
-                +
+                + ", awsIamRole=" + authentication.awsIam.role
+          + ", awsIamSts=" + authentication.awsIam.stsUrl
+          + ", awsIamRegion=" + authentication.awsIam.region
+          + ", awsIamVaultServerId" + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.vaultServerId.orElse(""), LOW) + '\''
+          +
                 ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +
                 ", clientTokenWrappingToken="
                 + logConfidentialityLevel.maskWithTolerance(authentication.clientTokenWrappingToken.orElse(""), LOW) +
