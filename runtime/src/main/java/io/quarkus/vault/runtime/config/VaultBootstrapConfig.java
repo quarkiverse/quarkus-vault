@@ -299,7 +299,7 @@ public class VaultBootstrapConfig {
                 + ", awsIamRole=" + authentication.awsIam.role
           + ", awsIamSts=" + authentication.awsIam.stsUrl
           + ", awsIamRegion=" + authentication.awsIam.region
-          + ", awsIamVaultServerId" + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.vaultServerId.orElse(""), LOW) + '\''
+//          + ", awsIamVaultServerId" + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.vaultServerId.orElse(""), LOW) + '\''
           +
                 ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +
                 ", clientTokenWrappingToken="

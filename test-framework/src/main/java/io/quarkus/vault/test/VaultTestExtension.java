@@ -43,7 +43,14 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.RabbitMQContainer;
+import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.output.OutputFrame;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.VaultKVSecretEngine;
@@ -77,6 +84,7 @@ public class VaultTestExtension {
     public static final String VAULT_AUTH_USERPASS_USER = "bob";
     public static final String VAULT_AUTH_USERPASS_PASSWORD = "sinclair";
     public static final String VAULT_AUTH_APPROLE = "myapprole";
+    public static final String VAULT_AUTH_AWS_IAM_ROLE = "myawsiamrole";
     public static final String SECRET_PATH_V1 = "secret-v1";
     public static final String SECRET_PATH_V2 = "secret";
     public static final String LIST_PATH = "hello";
@@ -89,6 +97,7 @@ public class VaultTestExtension {
     static final String VAULT_POLICY = "mypolicy";
     static final String POSTGRESQL_HOST = "mypostgresdb";
     static final String RABBITMQ_HOST = "myrabbitmq";
+    static final String LOCALSTACK_HOST = "mylocalstack";
     static final String VAULT_URL = (useTls() ? "https" : "http") + "://localhost:" + VAULT_PORT;
     public static final String SECRET_KEY = "secret";
     public static final String ENCRYPTION_KEY_NAME = "my-encryption-key";
@@ -107,11 +116,13 @@ public class VaultTestExtension {
     public static final String HOST_POSTGRES_TMP_CMD = "target/postgres_cmd";
     public static final String OUT_FILE = "/out";
     public static final String WRAPPING_TEST_PATH = "wrapping-test";
+    private static final String VAULT_AWS_SERVER_ID = "vault.example.com";
 
     private static String CRUD_PATH = "crud";
 
     public GenericContainer vaultContainer;
     public PostgreSQLContainer postgresContainer;
+    public LocalStackContainer localStackContainer;
     public RabbitMQContainer rabbitMQContainer;
     public String rootToken = null;
     public String appRoleSecretId = null;
@@ -126,6 +137,9 @@ public class VaultTestExtension {
 
     private String db_default_ttl = "1m";
     private String db_max_ttl = "10m";
+    public CreateAccessKeyResponse userAwsAccessKey;
+    private CreateAccessKeyResponse vaultAwsAccessKey;
+    private CreateUserResponse vaultAwsUser;
 
     public static void testDataSource(DataSource ds) throws SQLException {
         try (Connection c = ds.getConnection()) {
@@ -224,6 +238,15 @@ public class VaultTestExtension {
                 .withNetwork(network)
                 .withNetworkAliases(RABBITMQ_HOST);
 
+        Consumer<OutputFrame> localstackConsumer = outputFrame -> System.out.
+          print("AWS >> " + outputFrame.getUtf8String());
+
+        localStackContainer = new LocalStackContainer()
+          .withServices(LocalStackContainer.Service.STS, LocalStackContainer.Service.IAM)
+          .withLogConsumer(localstackConsumer)
+          .withNetwork(network)
+          .withNetworkAliases(LOCALSTACK_HOST);
+
         String configFile = useTls() ? "vault-config-tls.json" : "vault-config.json";
 
         String vaultImage = getVaultImage();
@@ -251,6 +274,9 @@ public class VaultTestExtension {
 
         rabbitMQContainer.start();
 
+        localStackContainer.start();
+        initLocalStack();
+
         Consumer<OutputFrame> consumer = outputFrame -> System.out.print("VAULT >> " + outputFrame.getUtf8String());
         vaultContainer.setLogConsumers(Arrays.asList(consumer));
         vaultContainer.start();
@@ -261,6 +287,56 @@ public class VaultTestExtension {
 
     private String getVaultImage() {
         return "vault:" + VaultVersions.VAULT_TEST_VERSION;
+    }
+
+    private void initLocalStack() throws IOException, InterruptedException {
+        String awsLocalstackUrl = localStackContainer.getEndpointOverride(LocalStackContainer.Service.STS).toString();
+        System.out.println("AWS STS URL: " + awsLocalstackUrl);
+
+        final ObjectMapper objectMapper = JsonMapper.builder()
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+          .serializationInclusion(JsonInclude.Include.NON_NULL)
+          .build();
+
+        final String outCreateUser = execLocalStack("awslocal", "iam", "create-user", "--user-name", "admin-user");
+        vaultAwsUser = objectMapper.readValue(
+          outCreateUser,
+          CreateUserResponse.class
+        );
+
+        final String outUserAccessKey = execLocalStack("awslocal", "iam", "create-access-key", "--user-name", "admin-user");
+        userAwsAccessKey = objectMapper.readValue(
+          outUserAccessKey,
+          CreateAccessKeyResponse.class
+        );
+
+        execLocalStack("awslocal", "iam", "create-user", "--user-name", "vault-user");
+
+        final String outVaultAccessKey = execLocalStack("awslocal", "iam", "create-access-key", "--user-name", "vault-user");
+        vaultAwsAccessKey = objectMapper.readValue(
+          outUserAccessKey,
+          CreateAccessKeyResponse.class
+        );
+    }
+
+    static class CreateAccessKeyResponse {
+        public AwsAccessKey accessKey;
+    }
+
+    static class AwsAccessKey {
+      public String accessKeyId;
+      public String secretAccessKey;
+    }
+
+    static class CreateUserResponse {
+      public AwsUser user;
+    }
+
+    static class AwsUser {
+      public String userName;
+      public String userId;
+      public String arn;
     }
 
     private void initVault() throws InterruptedException, IOException {
@@ -305,6 +381,24 @@ public class VaultTestExtension {
         appRoleRoleId = vaultClient.getAppRoleRoleId(rootToken, VAULT_AUTH_APPROLE).await().indefinitely().data.roleId;
         log.info(
                 format("generated role_id=%s secret_id=%s for approle=%s", appRoleRoleId, appRoleSecretId, VAULT_AUTH_APPROLE));
+
+        // aws iam auth
+        execVault("vault auth enable aws");
+        execVault(format("vault write auth/aws/config/client secret_key=%s access_key=%s",
+          vaultAwsAccessKey.accessKey.secretAccessKey, vaultAwsAccessKey.accessKey.accessKeyId));
+
+        execVault(format("vault write auth/aws/config/client iam_server_id_header_value=%s "
+            + "iam_endpoint=%s sts_endpoint=%s",
+          VAULT_AWS_SERVER_ID,
+          "http://mylocalstack:4566",
+          "http://mylocalstack:4566"
+        ));
+
+        execVault(format("vault write auth/aws/role/%s auth_type=iam "
+          + "bound_iam_principal_arn=%s policies=%s",
+          VAULT_AUTH_AWS_IAM_ROLE,
+          vaultAwsUser.user.arn.replaceAll("000000000000", "123456789012"),
+          VAULT_POLICY));
 
         // policy
         String policyContent = readResourceContent("vault.policy");
@@ -494,6 +588,10 @@ public class VaultTestExtension {
         return exec(vaultContainer, command, cmd, HOST_VAULT_TMP_CMD + OUT_FILE);
     }
 
+    private String execLocalStack(final String... command) throws IOException, InterruptedException {
+        return exec(localStackContainer, command).getStdout();
+    }
+
     private String exec(GenericContainer container, String command, String[] cmd, String outFile)
             throws IOException, InterruptedException {
         exec(container, cmd);
@@ -502,7 +600,7 @@ public class VaultTestExtension {
         return out;
     }
 
-    private static Container.ExecResult exec(GenericContainer container, String[] cmd)
+    private static Container.ExecResult exec(Container container, String[] cmd)
             throws IOException, InterruptedException {
 
         Container.ExecResult execResult = container.execInContainer(cmd);

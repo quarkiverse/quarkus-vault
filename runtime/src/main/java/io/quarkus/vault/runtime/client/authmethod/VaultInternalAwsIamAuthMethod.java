@@ -12,9 +12,11 @@ import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultInternalBase;
 import io.quarkus.vault.runtime.client.dto.auth.VaultAwsIamAuth;
 import io.quarkus.vault.runtime.client.dto.auth.VaultAwsIamAuthBody;
+import io.quarkus.vault.runtime.config.VaultAwsIamAuthenticationConfig;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.signer.Aws4Signer;
@@ -97,8 +99,14 @@ public class VaultInternalAwsIamAuthMethod extends VaultInternalBase {
   }
 
   private AwsCredentials getAwsCredentials() {
-    try (DefaultCredentialsProvider defaultCredentialsProvider = DefaultCredentialsProvider.create()) {
-      return defaultCredentialsProvider.resolveCredentials();
+    final VaultAwsIamAuthenticationConfig awsIam = vaultConfigHolder.getVaultBootstrapConfig().authentication.awsIam;
+
+    if (awsIam.awsAccessKey.isPresent() && awsIam.awsSecretKey.isPresent()) {
+      return AwsBasicCredentials.create(awsIam.awsAccessKey.get(), awsIam.awsSecretKey.get());
+    } else {
+      try (DefaultCredentialsProvider defaultCredentialsProvider = DefaultCredentialsProvider.create()) {
+        return defaultCredentialsProvider.resolveCredentials();
+      }
     }
   }
 

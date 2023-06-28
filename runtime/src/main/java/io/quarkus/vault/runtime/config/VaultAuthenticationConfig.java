@@ -51,6 +51,11 @@ public class VaultAuthenticationConfig {
     @ConfigItem
     public VaultKubernetesAuthenticationConfig kubernetes;
 
+    /**
+     * AWS IAM authentication method
+     * <p>
+     * See https://developer.hashicorp.com/vault/docs/auth/aws
+     */
     @ConfigItem
     public VaultAwsIamAuthenticationConfig awsIam;
 
