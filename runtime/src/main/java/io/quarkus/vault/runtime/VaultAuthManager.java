@@ -1,20 +1,7 @@
 package io.quarkus.vault.runtime;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import io.quarkus.vault.VaultException;
-import io.quarkus.vault.runtime.client.VaultClient;
-import io.quarkus.vault.runtime.client.VaultClientException;
-import io.quarkus.vault.runtime.client.authmethod.*;
-import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
-import io.quarkus.vault.runtime.client.dto.auth.*;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
-import io.quarkus.vault.runtime.config.VaultAuthenticationType;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
-import io.smallrye.mutiny.Uni;
-import jakarta.inject.Singleton;
-import org.jboss.logging.Logger;
+import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,8 +12,24 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
-import static io.quarkus.vault.runtime.config.VaultAuthenticationType.*;
+import io.quarkus.vault.runtime.client.authmethod.*;
+import io.quarkus.vault.runtime.client.dto.auth.*;
+import jakarta.inject.Singleton;
+
+import org.jboss.logging.Logger;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.quarkus.vault.VaultException;
+import io.quarkus.vault.runtime.client.VaultClient;
+import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
+import io.quarkus.vault.runtime.config.VaultAuthenticationType;
+import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.smallrye.mutiny.Uni;
 
 /**
  * Handles authentication. Supports revocation and renewal.

@@ -1,29 +1,17 @@
 package io.quarkus.vault.test;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import io.quarkus.vault.VaultException;
-import io.quarkus.vault.VaultKVSecretEngine;
-import io.quarkus.vault.runtime.VaultConfigHolder;
-import io.quarkus.vault.runtime.VaultIOException;
-import io.quarkus.vault.runtime.VaultVersions;
-import io.quarkus.vault.runtime.client.VaultClientException;
-import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
-import io.quarkus.vault.runtime.client.dto.sys.VaultInitResponse;
-import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
-import io.quarkus.vault.runtime.client.dto.sys.VaultSealStatusResult;
-import io.quarkus.vault.runtime.config.*;
-import io.quarkus.vault.test.client.TestVaultClient;
-import org.jboss.logging.Logger;
-import org.testcontainers.containers.*;
-import org.testcontainers.containers.localstack.LocalStackContainer;
-import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.utility.DockerImageName;
+import static io.quarkus.credentials.CredentialsProvider.PASSWORD_PROPERTY_NAME;
+import static io.quarkus.vault.runtime.VaultAuthManager.USERPASS_WRAPPING_TOKEN_PASSWORD_KEY;
+import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
+import static java.util.regex.Pattern.MULTILINE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.testcontainers.containers.BindMode.READ_ONLY;
+import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
 
-import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -38,19 +26,48 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static io.quarkus.credentials.CredentialsProvider.PASSWORD_PROPERTY_NAME;
-import static io.quarkus.vault.runtime.VaultAuthManager.USERPASS_WRAPPING_TOKEN_PASSWORD_KEY;
-import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
-import static java.util.regex.Pattern.MULTILINE;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.testcontainers.containers.BindMode.READ_ONLY;
-import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
+import javax.sql.DataSource;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import org.jboss.logging.Logger;
+import org.testcontainers.containers.Container;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
+import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.containers.output.OutputFrame;
+
+import io.quarkus.vault.VaultException;
+import io.quarkus.vault.VaultKVSecretEngine;
+import io.quarkus.vault.runtime.VaultConfigHolder;
+import io.quarkus.vault.runtime.VaultIOException;
+import io.quarkus.vault.runtime.VaultVersions;
+import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
+import io.quarkus.vault.runtime.client.dto.sys.VaultInitResponse;
+import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
+import io.quarkus.vault.runtime.client.dto.sys.VaultSealStatusResult;
+import io.quarkus.vault.runtime.config.VaultAuthenticationConfig;
+import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultEnterpriseConfig;
+import io.quarkus.vault.runtime.config.VaultKubernetesAuthenticationConfig;
+import io.quarkus.vault.runtime.config.VaultTlsConfig;
+import io.quarkus.vault.test.client.TestVaultClient;
+import org.testcontainers.utility.DockerImageName;
 
 public class VaultTestExtension {
 
