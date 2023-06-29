@@ -1,5 +1,16 @@
 package io.quarkus.vault.runtime.client.authmethod;
 
+import static java.util.stream.Collectors.joining;
+
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Map;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import io.quarkus.vault.runtime.Base64String;
 import io.quarkus.vault.runtime.StringHelper;
 import io.quarkus.vault.runtime.VaultConfigHolder;
@@ -9,8 +20,6 @@ import io.quarkus.vault.runtime.client.dto.auth.VaultAwsIamAuth;
 import io.quarkus.vault.runtime.client.dto.auth.VaultAwsIamAuthBody;
 import io.quarkus.vault.runtime.config.VaultAwsIamAuthenticationConfig;
 import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -19,14 +28,6 @@ import software.amazon.awssdk.auth.signer.params.Aws4SignerParams;
 import software.amazon.awssdk.http.SdkHttpFullRequest;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.regions.Region;
-
-import java.io.ByteArrayInputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Map;
-
-import static java.util.stream.Collectors.joining;
 
 @Singleton
 public class VaultInternalAwsIamAuthMethod extends VaultInternalBase {
@@ -57,32 +58,32 @@ public class VaultInternalAwsIamAuthMethod extends VaultInternalBase {
     }
 
     private VaultAwsIamAuthBody buildVaultRequestBody(SdkHttpFullRequest signedRequest) {
-      String headersString = headersToJsonString(signedRequest.headers());
+        String headersString = headersToJsonString(signedRequest.headers());
 
-      return new VaultAwsIamAuthBody(
-                vaultConfigHolder.getVaultBootstrapConfig().authentication.awsIam.role,
+        return new VaultAwsIamAuthBody(
+                vaultConfigHolder.getVaultBootstrapConfig().authentication.awsIam.role
+                        .orElseThrow(() -> new IllegalArgumentException("Role is required for AWS IAM authentication")),
                 "POST",
                 Base64String.from(signedRequest.getUri().toString()),
                 Base64String.from(GET_CALLER_IDENTITY_REQUEST_BODY),
-                Base64String.from(headersString)
-        );
+                Base64String.from(headersString));
     }
 
-  private static String headersToJsonString(Map<String, List<String>> headers) {
-    return "{"
-            + headers.entrySet().stream()
-            .map(entry -> "\"" + entry.getKey() + "\":["
-                    + entry.getValue().stream().map(value -> "\"" + value + "\"").collect(joining(","))
-                    + "]")
-            .collect(joining(","))
-            + "}";
-  }
+    private static String headersToJsonString(Map<String, List<String>> headers) {
+        return "{"
+                + headers.entrySet().stream()
+                        .map(entry -> "\"" + entry.getKey() + "\":["
+                                + entry.getValue().stream().map(value -> "\"" + value + "\"").collect(joining(","))
+                                + "]")
+                        .collect(joining(","))
+                + "}";
+    }
 
-  private SdkHttpFullRequest signRequest(
+    private SdkHttpFullRequest signRequest(
             SdkHttpFullRequest getCallerIdentityRequest,
-            AwsCredentials awsCredentials
-    ) {
-        Region region = Region.of(vaultConfigHolder.getVaultBootstrapConfig().authentication.awsIam.region);
+            AwsCredentials awsCredentials) {
+        Region region = Region.of(vaultConfigHolder.getVaultBootstrapConfig().authentication.awsIam.region
+                .orElseThrow(() -> new IllegalArgumentException("Region is required for AWS IAM authentication")));
         Aws4SignerParams params = Aws4SignerParams.builder()
                 .awsCredentials(awsCredentials)
                 .signingName("sts")
@@ -110,12 +111,10 @@ public class VaultInternalAwsIamAuthMethod extends VaultInternalBase {
                 .appendHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
                 .appendHeader("Content-Length", String.valueOf(GET_CALLER_IDENTITY_REQUEST_BODY.length()))
                 .contentStreamProvider(() -> new ByteArrayInputStream(
-                        StringHelper.stringToBytes(GET_CALLER_IDENTITY_REQUEST_BODY)
-                ));
+                        StringHelper.stringToBytes(GET_CALLER_IDENTITY_REQUEST_BODY)));
 
         vaultConfigHolder.getVaultBootstrapConfig().authentication.awsIam.vaultServerId.ifPresent(
-                serverId -> builder.appendHeader("X-Vault-AWS-IAM-Server-ID", serverId)
-        );
+                serverId -> builder.appendHeader("X-Vault-AWS-IAM-Server-ID", serverId));
 
         return builder.build();
     }

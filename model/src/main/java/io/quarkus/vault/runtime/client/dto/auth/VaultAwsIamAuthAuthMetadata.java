@@ -4,5 +4,4 @@ import io.quarkus.vault.runtime.client.dto.VaultModel;
 
 public class VaultAwsIamAuthAuthMetadata implements VaultModel {
 
-
 }

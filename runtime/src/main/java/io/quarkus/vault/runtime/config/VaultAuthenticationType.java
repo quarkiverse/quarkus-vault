@@ -34,7 +34,6 @@ public enum VaultAuthenticationType {
      */
     APPROLE,
 
-
     /**
      * AWS IAM vault authentication
      * <p>

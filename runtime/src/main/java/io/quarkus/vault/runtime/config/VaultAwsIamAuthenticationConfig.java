@@ -13,13 +13,13 @@ public class VaultAwsIamAuthenticationConfig {
      * ARN. This property is required when selecting the AWS IAM authentication type.
      */
     @ConfigItem
-    public String role;
+    public Optional<String> role;
 
     /**
      * The AWS region to use for AWS IAM authentication.
      */
     @ConfigItem
-    public String region;
+    public Optional<String> region;
 
     /**
      * The URL of the AWS STS endpoint to use for AWS IAM authentication.

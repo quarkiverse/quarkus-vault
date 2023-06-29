@@ -72,7 +72,7 @@ public class VaultAuthenticationConfig {
     }
 
     public boolean isAwsIam() {
-        return awsIam.stsUrl != null && awsIam.region != null && awsIam.role != null;
+        return awsIam.stsUrl != null && awsIam.region.isPresent() && awsIam.role.isPresent();
     }
 
 }

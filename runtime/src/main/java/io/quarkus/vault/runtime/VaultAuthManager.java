@@ -12,8 +12,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import io.quarkus.vault.runtime.client.authmethod.*;
-import io.quarkus.vault.runtime.client.dto.auth.*;
 import jakarta.inject.Singleton;
 
 import org.jboss.logging.Logger;
@@ -24,7 +22,9 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.runtime.client.authmethod.*;
 import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
+import io.quarkus.vault.runtime.client.dto.auth.*;
 import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
 import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
 import io.quarkus.vault.runtime.config.VaultAuthenticationType;
@@ -166,9 +166,9 @@ public class VaultAuthManager {
         } else if (type == APPROLE) {
             String roleId = getConfig().authentication.appRole.roleId.get();
             authRequest = getSecretId(vaultClient)
-              .flatMap(secretId -> vaultInternalAppRoleAuthMethod.login(vaultClient, roleId, secretId))
-              .map(r -> r.auth);
-        } else if (type == AWS_IAM){
+                    .flatMap(secretId -> vaultInternalAppRoleAuthMethod.login(vaultClient, roleId, secretId))
+                    .map(r -> r.auth);
+        } else if (type == AWS_IAM) {
             authRequest = loginAwsIam(vaultClient);
         } else {
             throw new UnsupportedOperationException("unknown authType " + getConfig().getAuthenticationType());

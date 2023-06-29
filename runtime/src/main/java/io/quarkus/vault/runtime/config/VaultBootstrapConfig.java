@@ -39,7 +39,6 @@ public class VaultBootstrapConfig {
     public static final String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "auth/kubernetes";
     public static final String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "auth/approle";
 
-
     /**
      * Microprofile Config ordinal.
      * <p>
@@ -296,9 +295,10 @@ public class VaultBootstrapConfig {
                 + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretId.orElse(""), LOW) + '\'' +
                 ", appRoleSecretIdWrappingToken='"
                 + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretIdWrappingToken.orElse(""), LOW) + '\''
-                + ", awsIamRole='" + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.role, LOW) + '\''
+                + ", awsIamRole='" + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.role.orElse(""), LOW)
+                + '\''
                 + ", awsIamSts=" + authentication.awsIam.stsUrl
-                + ", awsIamRegion=" + authentication.awsIam.region
+                + ", awsIamRegion=" + authentication.awsIam.region.orElse("")
                 + ", awsIamVaultServerId='"
                 + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.vaultServerId.orElse(""), MEDIUM) + '\''
                 + ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +

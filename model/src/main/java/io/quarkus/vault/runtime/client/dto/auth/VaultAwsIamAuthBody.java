@@ -26,8 +26,7 @@ public class VaultAwsIamAuthBody implements VaultModel {
             final String requestMethod,
             final Base64String requestUrl,
             final Base64String requestBody,
-            final Base64String requestHeaders
-    ) {
+            final Base64String requestHeaders) {
         this.role = role;
         this.requestMethod = requestMethod;
         this.requestUrl = requestUrl;
