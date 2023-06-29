@@ -35,6 +35,21 @@ public enum VaultAuthenticationType {
     APPROLE,
 
 
+    /**
+     * AWS IAM vault authentication
+     * <p>
+     * The aws auth method provides an automated mechanism to retrieve a Vault token for IAM principals
+     * and AWS EC2 instances. Unlike most Vault auth methods, this method does not require manual first-deploying,
+     * or provisioning security-sensitive credentials (tokens, username/password, client certificates, etc),
+     * by operators under many circumstances.
+     * </p>
+     * <p>
+     * With the iam method, a special AWS request signed with AWS IAM credentials is used for authentication.
+     * The IAM credentials are automatically supplied to AWS instances in IAM instance profiles, Lambda functions,
+     * and others, and it is this information already provided by AWS which Vault can use to authenticate clients.
+     * </p>
+     * see https://developer.hashicorp.com/vault/api-docs/auth/aws
+     */
     AWS_IAM,
 
 }

@@ -9,17 +9,6 @@
     <artifactId>quarkus-vault</artifactId>
     <name>Quarkus - Vault - Runtime</name>
     <description>Store your credentials securely in HashiCorp Vault</description>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>bom</artifactId>
-                <version>2.20.94</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

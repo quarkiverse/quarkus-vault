@@ -9,9 +9,8 @@ import io.quarkus.runtime.annotations.ConfigItem;
 public class VaultAwsIamAuthenticationConfig {
 
     /**
-     * Aws iam authentication role that has been created in Vault to associate Vault policies, with
-     * aws iam service accounts. This property is required when selecting
-     * the aws iam authentication type.
+     * AWS IAM authentication role that has been created in Vault to associate Vault policies, with
+     * ARN. This property is required when selecting the AWS IAM authentication type.
      */
     @ConfigItem
     public String role;

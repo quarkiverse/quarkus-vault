@@ -5,12 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.test.VaultTestLifecycleManager;
 
+@DisabledOnOs(OS.WINDOWS) // https://github.com/quarkusio/quarkus/issues/3796
 @QuarkusTestResource(VaultTestLifecycleManager.class)
 public class VaultAwsIamITCase {
 
@@ -31,8 +34,7 @@ public class VaultAwsIamITCase {
     }
 
     @Test
-    public void testAuthMountPath() {
-        System.out.println("key: " + key);
+    public void testAwsAccessKey() {
         assertNotNull(key);
     }
 

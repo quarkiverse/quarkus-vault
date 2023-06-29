@@ -22,11 +22,11 @@ public class VaultAwsIamAuthBody implements VaultModel {
     public Base64String requestHeaders;
 
     public VaultAwsIamAuthBody(
-      final String role,
-      final String requestMethod,
-      final Base64String requestUrl,
-      final Base64String requestBody,
-      final Base64String requestHeaders
+            final String role,
+            final String requestMethod,
+            final Base64String requestUrl,
+            final Base64String requestBody,
+            final Base64String requestHeaders
     ) {
         this.role = role;
         this.requestMethod = requestMethod;

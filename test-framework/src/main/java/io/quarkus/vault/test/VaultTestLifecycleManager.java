@@ -44,8 +44,8 @@ public class VaultTestLifecycleManager implements QuarkusTestResourceLifecycleMa
         sysprops.put("vault-test.password-kv-v2-wrapping-token", vaultTestExtension.passwordKvv2WrappingToken);
         sysprops.put("vault-test.another-password-kv-v2-wrapping-token", vaultTestExtension.anotherPasswordKvv2WrappingToken);
 
-        sysprops.put("vault-test.aws-user.access-key", vaultTestExtension.userAwsAccessKey.accessKey.accessKeyId);
-        sysprops.put("vault-test.aws-user.secret-key", vaultTestExtension.userAwsAccessKey.accessKey.secretAccessKey);
+        sysprops.put("vault-test.aws-user.access-key", vaultTestExtension.appAwsAccessKey.accessKey.accessKeyId);
+        sysprops.put("vault-test.aws-user.secret-key", vaultTestExtension.appAwsAccessKey.accessKey.secretAccessKey);
 
         log.info("using system properties " + sysprops);
 

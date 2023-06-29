@@ -296,12 +296,12 @@ public class VaultBootstrapConfig {
                 + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretId.orElse(""), LOW) + '\'' +
                 ", appRoleSecretIdWrappingToken='"
                 + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretIdWrappingToken.orElse(""), LOW) + '\''
-                + ", awsIamRole=" + authentication.awsIam.role
-          + ", awsIamSts=" + authentication.awsIam.stsUrl
-          + ", awsIamRegion=" + authentication.awsIam.region
-//          + ", awsIamVaultServerId" + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.vaultServerId.orElse(""), LOW) + '\''
-          +
-                ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +
+                + ", awsIamRole='" + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.role, LOW) + '\''
+                + ", awsIamSts=" + authentication.awsIam.stsUrl
+                + ", awsIamRegion=" + authentication.awsIam.region
+                + ", awsIamVaultServerId='"
+                + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.vaultServerId.orElse(""), MEDIUM) + '\''
+                + ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +
                 ", clientTokenWrappingToken="
                 + logConfidentialityLevel.maskWithTolerance(authentication.clientTokenWrappingToken.orElse(""), LOW) +
                 ", renewGracePeriod=" + renewGracePeriod +

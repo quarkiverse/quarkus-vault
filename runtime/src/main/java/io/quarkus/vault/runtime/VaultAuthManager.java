@@ -1,10 +1,20 @@
 package io.quarkus.vault.runtime;
 
-import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
-import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
-import static io.quarkus.vault.runtime.config.VaultAuthenticationType.AWS_IAM;
-import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
-import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import io.quarkus.vault.VaultException;
+import io.quarkus.vault.runtime.client.VaultClient;
+import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.runtime.client.authmethod.*;
+import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
+import io.quarkus.vault.runtime.client.dto.auth.*;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
+import io.quarkus.vault.runtime.config.VaultAuthenticationType;
+import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.smallrye.mutiny.Uni;
+import jakarta.inject.Singleton;
+import org.jboss.logging.Logger;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,31 +25,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import org.jboss.logging.Logger;
-
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-
-import io.quarkus.vault.VaultException;
-import io.quarkus.vault.runtime.client.VaultClient;
-import io.quarkus.vault.runtime.client.VaultClientException;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalAppRoleAuthMethod;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalAwsIamAuthMethod;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalKubernetesAuthMethod;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalTokenAuthMethod;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalUserpassAuthMethod;
-import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
-import io.quarkus.vault.runtime.client.dto.auth.AbstractVaultAuthAuth;
-import io.quarkus.vault.runtime.client.dto.auth.VaultAppRoleGenerateNewSecretID;
-import io.quarkus.vault.runtime.client.dto.auth.VaultAwsIamAuthAuth;
-import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthAuth;
-import io.quarkus.vault.runtime.client.dto.auth.VaultTokenCreate;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
-import io.quarkus.vault.runtime.config.VaultAuthenticationType;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
-import io.smallrye.mutiny.Uni;
-import jakarta.inject.Singleton;
+import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.*;
 
 /**
  * Handles authentication. Supports revocation and renewal.
@@ -244,7 +231,7 @@ public class VaultAuthManager {
         });
     }
 
-    private Uni<VaultAwsIamAuthAuth> loginAwsIam(final VaultClient vaultClient) {
+    private Uni<VaultAwsIamAuthAuth> loginAwsIam(VaultClient vaultClient) {
         return vaultInternalAwsIamAuthMethod.login(vaultClient).map(r -> r.auth);
     }
 
