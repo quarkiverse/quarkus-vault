@@ -32,6 +32,13 @@ public enum VaultAuthenticationType {
      * <p>
      * https://www.vaultproject.io/api/auth/approle/index.html
      */
-    APPROLE
+    APPROLE,
 
+    /**
+     * Role & secret vault authentication using GitHub method
+     * <p>
+     * <p>
+     * https://www.vaultproject.io/api-docs/auth/github
+     */
+    GITHUB
 }

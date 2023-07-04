@@ -851,6 +851,17 @@ endif::add-copy-button-to-env-var[]
 |`auth/kubernetes`
 
 
+a| [[quarkus-vault_quarkus.vault.authentication.github.token]]`link:#quarkus-vault_quarkus.vault.authentication.github.token[quarkus.vault.authentication.github.token]`
+
+[.description]
+--
+Token for GitHub auth method. This property is required when selecting the github authentication type.
+
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_GITHUB_TOKEN+++`
+--|string 
+|
+
+
 h|[[quarkus-vault_quarkus.vault.tls-tls]]link:#quarkus-vault_quarkus.vault.tls-tls[TLS]
 
 h|Type

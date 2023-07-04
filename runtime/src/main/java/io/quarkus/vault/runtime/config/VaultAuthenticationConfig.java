@@ -51,6 +51,14 @@ public class VaultAuthenticationConfig {
     @ConfigItem
     public VaultKubernetesAuthenticationConfig kubernetes;
 
+    /**
+     * GitHub authentication method
+     * <p>
+     * See https://www.vaultproject.io/api-docs/auth/github
+     */
+    @ConfigItem
+    public VaultGitHubAuthenticationConfig github;
+
     public boolean isDirectClientToken() {
         return clientToken.isPresent() || clientTokenWrappingToken.isPresent();
     }
@@ -63,4 +71,7 @@ public class VaultAuthenticationConfig {
         return userpass.username.isPresent() && (userpass.password.isPresent() || userpass.passwordWrappingToken.isPresent());
     }
 
+    public boolean isGitHub() {
+        return github.token.isPresent();
+    }
 }

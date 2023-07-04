@@ -2,6 +2,7 @@ package io.quarkus.vault.runtime;
 
 import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.GITHUB;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
 
@@ -25,6 +26,7 @@ import io.quarkus.vault.VaultException;
 import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalAppRoleAuthMethod;
+import io.quarkus.vault.runtime.client.authmethod.VaultInternalGitHubAuthMethod;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalKubernetesAuthMethod;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalTokenAuthMethod;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalUserpassAuthMethod;
@@ -57,19 +59,22 @@ public class VaultAuthManager {
     private VaultInternalKubernetesAuthMethod vaultInternalKubernetesAuthMethod;
     private VaultInternalUserpassAuthMethod vaultInternalUserpassAuthMethod;
     private VaultInternalTokenAuthMethod vaultInternalTokenAuthMethod;
+    private VaultInternalGitHubAuthMethod vaultInternalGitHubAuthMethod;
 
     VaultAuthManager(VaultConfigHolder vaultConfigHolder,
             VaultInternalSystemBackend vaultInternalSystemBackend,
             VaultInternalAppRoleAuthMethod vaultInternalAppRoleAuthMethod,
             VaultInternalKubernetesAuthMethod vaultInternalKubernetesAuthMethod,
             VaultInternalUserpassAuthMethod vaultInternalUserpassAuthMethod,
-            VaultInternalTokenAuthMethod vaultInternalTokenAuthMethod) {
+            VaultInternalTokenAuthMethod vaultInternalTokenAuthMethod,
+            VaultInternalGitHubAuthMethod vaultInternalGitHubAuthMethod) {
         this.vaultConfigHolder = vaultConfigHolder;
         this.vaultInternalSystemBackend = vaultInternalSystemBackend;
         this.vaultInternalAppRoleAuthMethod = vaultInternalAppRoleAuthMethod;
         this.vaultInternalKubernetesAuthMethod = vaultInternalKubernetesAuthMethod;
         this.vaultInternalUserpassAuthMethod = vaultInternalUserpassAuthMethod;
         this.vaultInternalTokenAuthMethod = vaultInternalTokenAuthMethod;
+        this.vaultInternalGitHubAuthMethod = vaultInternalGitHubAuthMethod;
     }
 
     private VaultBootstrapConfig getConfig() {
@@ -172,6 +177,10 @@ public class VaultAuthManager {
             String roleId = getConfig().authentication.appRole.roleId.get();
             authRequest = getSecretId(vaultClient)
                     .flatMap(secretId -> vaultInternalAppRoleAuthMethod.login(vaultClient, roleId, secretId))
+                    .map(r -> r.auth);
+        } else if (type == GITHUB) {
+            String token = getConfig().authentication.github.token.get();
+            authRequest = vaultInternalGitHubAuthMethod.login(vaultClient, token)
                     .map(r -> r.auth);
         } else {
             throw new UnsupportedOperationException("unknown authType " + getConfig().getAuthenticationType());

@@ -3,6 +3,7 @@ package io.quarkus.vault.runtime.config;
 import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
 import static io.quarkus.vault.runtime.LogConfidentialityLevel.MEDIUM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.GITHUB;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
 
@@ -267,6 +268,8 @@ public class VaultBootstrapConfig {
             return USERPASS;
         } else if (authentication.isAppRole()) {
             return APPROLE;
+        } else if (authentication.isGitHub()) {
+            return GITHUB;
         } else {
             return null;
         }
@@ -296,6 +299,8 @@ public class VaultBootstrapConfig {
                 ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +
                 ", clientTokenWrappingToken="
                 + logConfidentialityLevel.maskWithTolerance(authentication.clientTokenWrappingToken.orElse(""), LOW) +
+                ", githubToken="
+                + logConfidentialityLevel.maskWithTolerance(authentication.github.token.orElse(""), LOW) +
                 ", renewGracePeriod=" + renewGracePeriod +
                 ", cachePeriod=" + secretConfigCachePeriod +
                 ", logConfidentialityLevel=" + logConfidentialityLevel +

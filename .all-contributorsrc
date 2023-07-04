@@ -34,6 +34,15 @@
         "code",
         "maintenance"
       ]
+    },
+    {
+      "login": "r00ta",
+      "name": "Jacopo Rota",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18282531?v=4",
+      "profile": "https://github.com/r00ta",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
