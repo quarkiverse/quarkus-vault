@@ -26,10 +26,14 @@ import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.runtime.VaultAuthManager;
+import io.quarkus.vault.test.VaultTestLifecycleManager;
 import io.quarkus.vault.test.client.TestVaultClient;
 import io.quarkus.vault.transit.ClearData;
 import io.quarkus.vault.transit.DecryptionRequest;
@@ -50,6 +54,8 @@ import io.quarkus.vault.transit.VaultTransitSymmetricKeyVersion;
 import io.quarkus.vault.transit.VaultVerificationBatchException;
 import io.quarkus.vault.transit.VerificationRequest;
 
+@DisabledOnOs(OS.WINDOWS) // https://github.com/quarkusio/quarkus/issues/3796
+@QuarkusTestResource(VaultTestLifecycleManager.class)
 public class VaultTransitITCase {
 
     private static final Logger log = Logger.getLogger(VaultTransitITCase.class);

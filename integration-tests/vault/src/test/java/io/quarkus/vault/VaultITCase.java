@@ -62,9 +62,7 @@ import io.quarkus.vault.runtime.client.dto.auth.VaultLookupSelf;
 import io.quarkus.vault.runtime.client.dto.auth.VaultRenewSelf;
 import io.quarkus.vault.runtime.client.dto.auth.VaultUserPassAuth;
 import io.quarkus.vault.runtime.client.dto.dynamic.VaultDynamicCredentials;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvListSecrets;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
+import io.quarkus.vault.runtime.client.dto.kv.*;
 import io.quarkus.vault.runtime.client.dto.sys.VaultLeasesLookup;
 import io.quarkus.vault.runtime.client.dto.sys.VaultRenewLease;
 import io.quarkus.vault.runtime.client.dto.sys.VaultWrapResult;
@@ -371,6 +369,9 @@ public class VaultITCase {
                         LIST_PATH)
                 .await().indefinitely();
         assertEquals(EXPECTED_SUB_PATHS, vaultKvListSecretsV1.data.keys.toString());
+        VaultKvSecretJsonV1 fooJsonV1 = vaultInternalKvV1SecretEngine
+                .getSecretJson(vaultClient, clientToken, SECRET_PATH_V1, "foo-json").await().indefinitely();
+        assertEquals("{hello={foo=bar}}", fooJsonV1.data.toString());
 
         VaultKvSecretV2 secretV2 = vaultInternalKvV2SecretEngine
                 .getSecret(vaultClient, clientToken, SECRET_PATH_V2, APP_SECRET_PATH).await()
@@ -381,6 +382,9 @@ public class VaultITCase {
                         LIST_PATH)
                 .await().indefinitely();
         assertEquals(EXPECTED_SUB_PATHS, vaultKvListSecretsV2.data.keys.toString());
+        VaultKvSecretJsonV2 fooJsonV2 = vaultInternalKvV2SecretEngine
+                .getSecretJson(vaultClient, clientToken, SECRET_PATH_V2, "foo-json").await().indefinitely();
+        assertEquals("{hello={foo=bar}}", fooJsonV2.data.data.toString());
     }
 
     private void assertTokenUserPass(String clientToken) {
@@ -402,5 +406,4 @@ public class VaultITCase {
                 .indefinitely();
         assertEquals(VAULT_AUTH_APPROLE, vaultRenewSelf.auth.metadata.get("role_name"));
     }
-
 }

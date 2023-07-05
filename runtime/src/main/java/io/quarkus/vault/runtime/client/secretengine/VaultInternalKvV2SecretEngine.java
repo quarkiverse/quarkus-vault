@@ -4,10 +4,7 @@ import jakarta.inject.Singleton;
 
 import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultInternalBase;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvListSecrets;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2Write;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2WriteBody;
+import io.quarkus.vault.runtime.client.dto.kv.*;
 import io.smallrye.mutiny.Uni;
 
 @Singleton
@@ -20,6 +17,10 @@ public class VaultInternalKvV2SecretEngine extends VaultInternalBase {
 
     public Uni<VaultKvSecretV2> getSecret(VaultClient vaultClient, String token, String secretEnginePath, String path) {
         return vaultClient.get(opName("Get Secret"), secretEnginePath + "/data/" + path, token, VaultKvSecretV2.class);
+    }
+
+    public Uni<VaultKvSecretJsonV2> getSecretJson(VaultClient vaultClient, String token, String secretEnginePath, String path) {
+        return vaultClient.get(opName("Get Secret"), secretEnginePath + "/data/" + path, token, VaultKvSecretJsonV2.class);
     }
 
     public Uni<Void> writeSecret(VaultClient vaultClient, String token, String secretEnginePath, String path,

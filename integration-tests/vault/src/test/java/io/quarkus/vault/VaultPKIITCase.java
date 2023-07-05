@@ -28,6 +28,8 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.org.bouncycastle.asn1.ASN1Encodable;
 import org.testcontainers.shaded.org.bouncycastle.asn1.x509.BasicConstraints;
@@ -43,6 +45,7 @@ import org.testcontainers.shaded.org.bouncycastle.openssl.PEMParser;
 import org.testcontainers.shaded.org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
 import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.pki.CAChainData;
 import io.quarkus.vault.pki.CRLData;
 import io.quarkus.vault.pki.CertificateData;
@@ -62,7 +65,10 @@ import io.quarkus.vault.pki.RoleOptions;
 import io.quarkus.vault.pki.SignIntermediateCAOptions;
 import io.quarkus.vault.pki.SignedCertificate;
 import io.quarkus.vault.pki.TidyOptions;
+import io.quarkus.vault.test.VaultTestLifecycleManager;
 
+@DisabledOnOs(OS.WINDOWS) // https://github.com/quarkusio/quarkus/issues/3796
+@QuarkusTestResource(VaultTestLifecycleManager.class)
 public class VaultPKIITCase {
 
     @RegisterExtension

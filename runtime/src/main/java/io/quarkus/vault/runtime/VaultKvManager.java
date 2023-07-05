@@ -68,6 +68,20 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     }
 
     @Override
+    public Uni<Map<String, Object>> readSecretJson(String path) {
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+
+            String mount = getConfig().kvSecretEngineMountPath;
+
+            if (isV1()) {
+                return vaultInternalKvV1SecretEngine.getSecretJson(vaultClient, token, mount, path).map(r -> r.data);
+            } else {
+                return vaultInternalKvV2SecretEngine.getSecretJson(vaultClient, token, mount, path).map(r -> r.data.data);
+            }
+        });
+    }
+
+    @Override
     public Uni<Void> writeSecret(String path, Map<String, String> secret) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
 
