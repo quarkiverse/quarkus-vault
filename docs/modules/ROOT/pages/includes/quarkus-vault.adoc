@@ -14,7 +14,8 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 
 [.description]
 --
-If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present. 
+If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present.
+
 When DevServices is enabled Quarkus will attempt to automatically configure and start a vault instance when running in Dev or Test mode and when Docker is running.
 
 ifdef::add-copy-button-to-env-var[]
@@ -47,8 +48,10 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 
 [.description]
 --
-Indicates if the Vault instance managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Vault starts a new container. 
-The discovery uses the `quarkus-dev-service-vault` label. The value is configured using the `service-name` property. 
+Indicates if the Vault instance managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Vault starts a new container.
+
+The discovery uses the `quarkus-dev-service-vault` label. The value is configured using the `service-name` property.
+
 Container sharing is only used in dev mode.
 
 ifdef::add-copy-button-to-env-var[]
@@ -65,7 +68,8 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 
 [.description]
 --
-The value of the `quarkus-dev-service-vault` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Vault looks for a container with the `quarkus-dev-service-vault` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise it starts a new container with the `quarkus-dev-service-vault` label set to the specified value. 
+The value of the `quarkus-dev-service-vault` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Vault looks for a container with the `quarkus-dev-service-vault` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise it starts a new container with the `quarkus-dev-service-vault` label set to the specified value.
+
 This property is used when you need multiple shared Vault instances.
 
 ifdef::add-copy-button-to-env-var[]
@@ -82,7 +86,8 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices
 
 [.description]
 --
-Optional fixed port the dev service will listen to. 
+Optional fixed port the dev service will listen to.
+
 If not defined, the port will be chosen randomly.
 
 ifdef::add-copy-button-to-env-var[]
@@ -147,8 +152,10 @@ a| [[quarkus-vault_quarkus.vault.config-ordinal]]`link:#quarkus-vault_quarkus.va
 
 [.description]
 --
-Microprofile Config ordinal. 
-This is provided as an alternative to the `config_ordinal` property defined by the specification, to make it easier and more natural for applications to override the default ordinal. 
+Microprofile Config ordinal.
+
+This is provided as an alternative to the `config_ordinal` property defined by the specification, to make it easier and more natural for applications to override the default ordinal.
+
 The default value is higher than the file system or jar ordinals, but lower than env vars.
 
 ifdef::add-copy-button-to-env-var[]
@@ -395,7 +402,8 @@ a| [[quarkus-vault_quarkus.vault.non-proxy-hosts]]`link:#quarkus-vault_quarkus.v
 
 [.description]
 --
-List of remote hosts that are not proxied when the client is configured to use a proxy. This list serves the same purpose as the JVM `nonProxyHosts` configuration. 
+List of remote hosts that are not proxied when the client is configured to use a proxy. This list serves the same purpose as the JVM `nonProxyHosts` configuration.
+
 Entries can use the _++*++_ wildcard character for pattern matching, e.g _++*++.example.com_ matches _www.example.com_.
 
 ifdef::add-copy-button-to-env-var[]
@@ -671,8 +679,10 @@ a| [[quarkus-vault_quarkus.vault.authentication.client-token-wrapping-token]]`li
 
 [.description]
 --
-Client token wrapped in a wrapping token, such as what is returned by: 
-vault token create -wrap-ttl=60s -policy=myapp 
+Client token wrapped in a wrapping token, such as what is returned by:
+
+vault token create -wrap-ttl=60s -policy=myapp
+
 client-token and client-token-wrapping-token are exclusive. Lease renewal does not apply.
 
 ifdef::add-copy-button-to-env-var[]
@@ -721,8 +731,10 @@ a| [[quarkus-vault_quarkus.vault.authentication.app-role.secret-id-wrapping-toke
 
 [.description]
 --
-Wrapping token containing a Secret Id, obtained from: 
-vault write -wrap-ttl=60s -f auth/approle/role/myapp/secret-id 
+Wrapping token containing a Secret Id, obtained from:
+
+vault write -wrap-ttl=60s -f auth/approle/role/myapp/secret-id
+
 secret-id and secret-id-wrapping-token are exclusive
 
 ifdef::add-copy-button-to-env-var[]
@@ -787,10 +799,14 @@ a| [[quarkus-vault_quarkus.vault.authentication.userpass.password-wrapping-token
 
 [.description]
 --
-Wrapping token containing a Password, obtained from: 
-vault kv get -wrap-ttl=60s secret/ 
-The key has to be 'password', meaning the password has initially been provisioned with: 
-vault kv put secret/ password= 
+Wrapping token containing a Password, obtained from:
+
+vault kv get -wrap-ttl=60s secret/
+
+The key has to be 'password', meaning the password has initially been provisioned with:
+
+vault kv put secret/ password=
+
 password and password-wrapping-token are exclusive
 
 ifdef::add-copy-button-to-env-var[]
@@ -860,7 +876,8 @@ a| [[quarkus-vault_quarkus.vault.tls.skip-verify]]`link:#quarkus-vault_quarkus.v
 
 [.description]
 --
-Allows to bypass certificate validation on TLS communications. 
+Allows to bypass certificate validation on TLS communications.
+
 If true this will allow TLS communications with Vault, without checking the validity of the certificate presented by Vault. This is discouraged in production because it allows man in the middle type of attacks.
 
 ifdef::add-copy-button-to-env-var[]
@@ -877,7 +894,8 @@ a| [[quarkus-vault_quarkus.vault.tls.ca-cert]]`link:#quarkus-vault_quarkus.vault
 
 [.description]
 --
-Certificate bundle used to validate TLS communications with Vault. 
+Certificate bundle used to validate TLS communications with Vault.
+
 The path to a pem bundle file, if TLS is required, and trusted certificates are not set through javax.net.ssl.trustStore system property.
 
 ifdef::add-copy-button-to-env-var[]

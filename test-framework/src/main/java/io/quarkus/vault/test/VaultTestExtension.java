@@ -286,7 +286,7 @@ public class VaultTestExtension {
         execVault("vault operator unseal " + unsealKey);
 
         VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus(vaultClient).await().indefinitely();
-        assertFalse(sealStatus.sealed);
+        assertFalse(sealStatus.sealedStatus);
 
         // userpass auth
         execVault("vault auth enable userpass");

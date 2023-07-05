@@ -1,10 +1,13 @@
 package io.quarkus.vault.sys;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class VaultSealStatus {
 
     private String type;
     private boolean initialized;
-    private boolean sealed;
+    @JsonProperty("sealed")
+    private boolean sealedStatus;
     private int t;
     private int n;
     private int progress;
@@ -32,11 +35,11 @@ public class VaultSealStatus {
     }
 
     public boolean isSealed() {
-        return sealed;
+        return sealedStatus;
     }
 
-    public void setSealed(boolean sealed) {
-        this.sealed = sealed;
+    public void setSealed(boolean sealedStatus) {
+        this.sealedStatus = sealedStatus;
     }
 
     public int getT() {
@@ -115,7 +118,7 @@ public class VaultSealStatus {
     public String toString() {
         return "VaultSealStatus{" +
                 "type: '" + type + '\'' +
-                ", sealed: " + sealed +
+                ", sealed: " + sealedStatus +
                 '}';
     }
 
