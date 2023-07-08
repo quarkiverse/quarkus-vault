@@ -1,9 +1,12 @@
 package io.quarkus.vault.sys;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class VaultHealthStatus {
 
     private boolean initialized;
-    private boolean sealed;
+    @JsonProperty("sealed")
+    private boolean sealedStatus;
     private boolean standby;
     private boolean performanceStandby;
     private String replicationPerfMode;
@@ -22,11 +25,11 @@ public class VaultHealthStatus {
     }
 
     public boolean isSealed() {
-        return sealed;
+        return sealedStatus;
     }
 
-    public void setSealed(boolean sealed) {
-        this.sealed = sealed;
+    public void setSealed(boolean sealedStatus) {
+        this.sealedStatus = sealedStatus;
     }
 
     public boolean isStandby() {
@@ -95,6 +98,6 @@ public class VaultHealthStatus {
 
     @Override
     public String toString() {
-        return "VaultHealth{initialized: " + initialized + ", sealed: " + sealed + '}';
+        return "VaultHealth{initialized: " + initialized + ", sealed: " + sealedStatus + '}';
     }
 }

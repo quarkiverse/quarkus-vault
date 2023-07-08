@@ -7,7 +7,8 @@ import io.quarkus.vault.runtime.client.dto.VaultModel;
 public class VaultHealthResult implements VaultModel {
 
     public boolean initialized;
-    public boolean sealed;
+    @JsonProperty("sealed")
+    public boolean sealedStatus;
     public boolean standby;
     @JsonProperty("performance_standby")
     public boolean performanceStandby;
@@ -25,7 +26,7 @@ public class VaultHealthResult implements VaultModel {
 
     @Override
     public String toString() {
-        return "VaultHealth{initialized: " + initialized + ", sealed: " + sealed + '}';
+        return "VaultHealth{initialized: " + initialized + ", sealed: " + sealedStatus + '}';
     }
 
 }

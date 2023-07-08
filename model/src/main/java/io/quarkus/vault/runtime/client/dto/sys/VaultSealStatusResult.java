@@ -8,7 +8,8 @@ public class VaultSealStatusResult implements VaultModel {
 
     public String type;
     public boolean initialized;
-    public boolean sealed;
+    @JsonProperty("sealed")
+    public boolean sealedStatus;
     public int t;
     public int n;
     public int progress;
@@ -26,7 +27,7 @@ public class VaultSealStatusResult implements VaultModel {
     public String toString() {
         return "VaultSealStatus{" +
                 "type: '" + type + '\'' +
-                ", sealed: " + sealed +
+                ", sealed: " + sealedStatus +
                 ", initialized: " + initialized +
                 '}';
     }

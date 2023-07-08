@@ -71,7 +71,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                     vaultSealStatus.setNonce(vaultSealStatusResult.nonce);
                     vaultSealStatus.setProgress(vaultSealStatusResult.progress);
                     vaultSealStatus.setRecoverySeal(vaultSealStatusResult.recoverySeal);
-                    vaultSealStatus.setSealed(vaultSealStatusResult.sealed);
+                    vaultSealStatus.setSealed(vaultSealStatusResult.sealedStatus);
                     vaultSealStatus.setT(vaultSealStatusResult.t);
                     vaultSealStatus.setType(vaultSealStatusResult.type);
                     vaultSealStatus.setVersion(vaultSealStatusResult.version);
@@ -91,7 +91,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                     vaultHealthStatus.setPerformanceStandby(vaultHealthResult.performanceStandby);
                     vaultHealthStatus.setReplicationDrMode(vaultHealthResult.replicationDrMode);
                     vaultHealthStatus.setReplicationPerfMode(vaultHealthResult.replicationPerfMode);
-                    vaultHealthStatus.setSealed(vaultHealthResult.sealed);
+                    vaultHealthStatus.setSealed(vaultHealthResult.sealedStatus);
                     vaultHealthStatus.setServerTimeUtc(vaultHealthResult.serverTimeUtc);
                     vaultHealthStatus.setStandby(vaultHealthResult.standby);
                     vaultHealthStatus.setVersion(vaultHealthResult.version);
