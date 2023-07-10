@@ -23,6 +23,14 @@ public interface VaultKVSecretReactiveEngine {
     Uni<Map<String, String>> readSecret(String path);
 
     /**
+     * Provides the values stored in the Vault kv secret engine at a particular path.
+     *
+     * @param path in Vault, without the kv engine mount path
+     * @return list of key value pairs stored at 'path' in Vault
+     */
+    Uni<Map<String, Object>> readSecretJson(String path);
+
+    /**
      * Writes the secret at the given path. If the path does not exist, the secret will
      * be created. If not the new secret will be merged with the existing one.
      *
