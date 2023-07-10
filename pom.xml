@@ -25,7 +25,6 @@
     <url>https://github.com/quarkiverse/quarkus-vault</url>
   </scm>
   <properties>
-    <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
@@ -65,10 +64,6 @@
           <groupId>io.quarkus</groupId>
           <artifactId>quarkus-maven-plugin</artifactId>
           <version>${quarkus.version}</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>${compiler-plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>uk.co.automatictester</groupId>
