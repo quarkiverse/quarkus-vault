@@ -287,6 +287,20 @@ is not the owner. As expected this will fail. As a result, it is recommended to 
 `quarkus.hibernate-orm.database.generation=update` in this section.
 ====
 
+Finally, we need to tell our Quarkus database configuration to recycle connections before the lease TTL we
+configured in Vault. This will ensure the database connection will always use valid credentials.
+
+In this example the default TTL is set to 1 hour, so we will recycle connections every 30 minutes:
+----
+quarkus.datasource.jdbc.max-lifetime=30m
+----
+
+[NOTE]
+====
+When using a reactive datasource you will need to use the `quarkus.datasource.reactive.idle-timeout` option instead.
+====
+
+
 Recompile with `./mvnw package`, start and test the `gift-count` endpoint. You should see `0` again.
 
 Notice in the logs:
