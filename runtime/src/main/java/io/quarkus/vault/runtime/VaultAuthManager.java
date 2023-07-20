@@ -1,9 +1,7 @@
 package io.quarkus.vault.runtime;
 
 import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
-import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
-import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
-import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,15 +22,9 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalAppRoleAuthMethod;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalKubernetesAuthMethod;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalTokenAuthMethod;
-import io.quarkus.vault.runtime.client.authmethod.VaultInternalUserpassAuthMethod;
+import io.quarkus.vault.runtime.client.authmethod.*;
 import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
-import io.quarkus.vault.runtime.client.dto.auth.AbstractVaultAuthAuth;
-import io.quarkus.vault.runtime.client.dto.auth.VaultAppRoleGenerateNewSecretID;
-import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthAuth;
-import io.quarkus.vault.runtime.client.dto.auth.VaultTokenCreate;
+import io.quarkus.vault.runtime.client.dto.auth.*;
 import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
 import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
 import io.quarkus.vault.runtime.config.VaultAuthenticationType;
@@ -57,19 +49,22 @@ public class VaultAuthManager {
     private VaultInternalKubernetesAuthMethod vaultInternalKubernetesAuthMethod;
     private VaultInternalUserpassAuthMethod vaultInternalUserpassAuthMethod;
     private VaultInternalTokenAuthMethod vaultInternalTokenAuthMethod;
+    private VaultInternalAwsIamAuthMethod vaultInternalAwsIamAuthMethod;
 
     VaultAuthManager(VaultConfigHolder vaultConfigHolder,
             VaultInternalSystemBackend vaultInternalSystemBackend,
             VaultInternalAppRoleAuthMethod vaultInternalAppRoleAuthMethod,
             VaultInternalKubernetesAuthMethod vaultInternalKubernetesAuthMethod,
             VaultInternalUserpassAuthMethod vaultInternalUserpassAuthMethod,
-            VaultInternalTokenAuthMethod vaultInternalTokenAuthMethod) {
+            VaultInternalTokenAuthMethod vaultInternalTokenAuthMethod,
+            VaultInternalAwsIamAuthMethod vaultInternalAwsIamAuthMethod) {
         this.vaultConfigHolder = vaultConfigHolder;
         this.vaultInternalSystemBackend = vaultInternalSystemBackend;
         this.vaultInternalAppRoleAuthMethod = vaultInternalAppRoleAuthMethod;
         this.vaultInternalKubernetesAuthMethod = vaultInternalKubernetesAuthMethod;
         this.vaultInternalUserpassAuthMethod = vaultInternalUserpassAuthMethod;
         this.vaultInternalTokenAuthMethod = vaultInternalTokenAuthMethod;
+        this.vaultInternalAwsIamAuthMethod = vaultInternalAwsIamAuthMethod;
     }
 
     private VaultBootstrapConfig getConfig() {
@@ -173,6 +168,8 @@ public class VaultAuthManager {
             authRequest = getSecretId(vaultClient)
                     .flatMap(secretId -> vaultInternalAppRoleAuthMethod.login(vaultClient, roleId, secretId))
                     .map(r -> r.auth);
+        } else if (type == AWS_IAM) {
+            authRequest = loginAwsIam(vaultClient);
         } else {
             throw new UnsupportedOperationException("unknown authType " + getConfig().getAuthenticationType());
         }
@@ -235,6 +232,10 @@ public class VaultAuthManager {
                     })
                     .memoize().indefinitely();
         });
+    }
+
+    private Uni<VaultAwsIamAuthAuth> loginAwsIam(VaultClient vaultClient) {
+        return vaultInternalAwsIamAuthMethod.login(vaultClient).map(r -> r.auth);
     }
 
     private Uni<VaultKubernetesAuthAuth> loginKubernetes(VaultClient vaultClient) {

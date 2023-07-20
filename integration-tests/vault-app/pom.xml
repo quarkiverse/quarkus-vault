@@ -33,6 +33,23 @@
             <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
 
+        <!--
+            Temporary workaround for native tests to work.
+            Since aws auth is not used by application, the dependency on awssdk should be omitted.
+            And normal tests work fine if this dependency is only in test scope (required by vault test resource).
+            However, native tests fail if this dependency is not in compile scope.
+        -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sts</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>apache-client</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- test dependencies -->
         <dependency>
             <groupId>io.quarkus</groupId>

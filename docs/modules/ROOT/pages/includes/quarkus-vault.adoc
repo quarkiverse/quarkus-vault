@@ -867,6 +867,102 @@ endif::add-copy-button-to-env-var[]
 |`auth/kubernetes`
 
 
+a| [[quarkus-vault_quarkus.vault.authentication.aws-iam.role]]`link:#quarkus-vault_quarkus.vault.authentication.aws-iam.role[quarkus.vault.authentication.aws-iam.role]`
+
+[.description]
+--
+AWS IAM authentication role that has been created in Vault to associate Vault policies, with ARN. This property is required when selecting the AWS IAM authentication type.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_ROLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_ROLE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-vault_quarkus.vault.authentication.aws-iam.region]]`link:#quarkus-vault_quarkus.vault.authentication.aws-iam.region[quarkus.vault.authentication.aws-iam.region]`
+
+[.description]
+--
+The AWS region to use for AWS IAM authentication.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_REGION+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-vault_quarkus.vault.authentication.aws-iam.sts-url]]`link:#quarkus-vault_quarkus.vault.authentication.aws-iam.sts-url[quarkus.vault.authentication.aws-iam.sts-url]`
+
+[.description]
+--
+The URL of the AWS STS endpoint to use for AWS IAM authentication.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_STS_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_STS_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`https://sts.amazonaws.com`
+
+
+a| [[quarkus-vault_quarkus.vault.authentication.aws-iam.vault-server-id]]`link:#quarkus-vault_quarkus.vault.authentication.aws-iam.vault-server-id[quarkus.vault.authentication.aws-iam.vault-server-id]`
+
+[.description]
+--
+The Vault server ID to use for AWS IAM authentication.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_VAULT_SERVER_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_VAULT_SERVER_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-vault_quarkus.vault.authentication.aws-iam.aws-access-key]]`link:#quarkus-vault_quarkus.vault.authentication.aws-iam.aws-access-key[quarkus.vault.authentication.aws-iam.aws-access-key]`
+
+[.description]
+--
+The AWS access key ID to use for AWS IAM authentication.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_AWS_ACCESS_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_AWS_ACCESS_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-vault_quarkus.vault.authentication.aws-iam.aws-secret-key]]`link:#quarkus-vault_quarkus.vault.authentication.aws-iam.aws-secret-key[quarkus.vault.authentication.aws-iam.aws-secret-key]`
+
+[.description]
+--
+The AWS secret access key to use for AWS IAM authentication.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_AWS_SECRET_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_AWS_IAM_AWS_SECRET_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
 h|[[quarkus-vault_quarkus.vault.tls-tls]]link:#quarkus-vault_quarkus.vault.tls-tls[TLS]
 
 h|Type

@@ -3,6 +3,7 @@ package io.quarkus.vault.runtime.config;
 import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
 import static io.quarkus.vault.runtime.LogConfidentialityLevel.MEDIUM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.AWS_IAM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
 
@@ -267,6 +268,8 @@ public class VaultBootstrapConfig {
             return USERPASS;
         } else if (authentication.isAppRole()) {
             return APPROLE;
+        } else if (authentication.isAwsIam()) {
+            return AWS_IAM;
         } else {
             return null;
         }
@@ -292,8 +295,13 @@ public class VaultBootstrapConfig {
                 + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretId.orElse(""), LOW) + '\'' +
                 ", appRoleSecretIdWrappingToken='"
                 + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretIdWrappingToken.orElse(""), LOW) + '\''
-                +
-                ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +
+                + ", awsIamRole='" + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.role.orElse(""), LOW)
+                + '\''
+                + ", awsIamSts=" + authentication.awsIam.stsUrl
+                + ", awsIamRegion=" + authentication.awsIam.region.orElse("")
+                + ", awsIamVaultServerId='"
+                + logConfidentialityLevel.maskWithTolerance(authentication.awsIam.vaultServerId.orElse(""), MEDIUM) + '\''
+                + ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +
                 ", clientTokenWrappingToken="
                 + logConfidentialityLevel.maskWithTolerance(authentication.clientTokenWrappingToken.orElse(""), LOW) +
                 ", renewGracePeriod=" + renewGracePeriod +

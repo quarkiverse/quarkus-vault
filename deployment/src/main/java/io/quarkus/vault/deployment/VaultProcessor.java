@@ -40,6 +40,7 @@ import io.quarkus.vault.runtime.VaultTransitManager;
 import io.quarkus.vault.runtime.client.PrivateVertxVaultClient;
 import io.quarkus.vault.runtime.client.SharedVertxVaultClient;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalAppRoleAuthMethod;
+import io.quarkus.vault.runtime.client.authmethod.VaultInternalAwsIamAuthMethod;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalKubernetesAuthMethod;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalTokenAuthMethod;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalUserpassAuthMethod;
@@ -119,6 +120,7 @@ public class VaultProcessor {
                 .addBeanClass(VaultInternalUserpassAuthMethod.class)
                 .addBeanClass(VaultInternalDynamicCredentialsSecretEngine.class)
                 .addBeanClass(VaultInternalPKISecretEngine.class)
+                .addBeanClass(VaultInternalAwsIamAuthMethod.class)
                 .build();
     }
 
