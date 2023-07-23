@@ -33,8 +33,8 @@ import io.quarkus.vault.runtime.client.dto.auth.AbstractVaultAuthAuth;
 import io.quarkus.vault.runtime.client.dto.auth.VaultAppRoleGenerateNewSecretID;
 import io.quarkus.vault.runtime.client.dto.auth.VaultKubernetesAuthAuth;
 import io.quarkus.vault.runtime.client.dto.auth.VaultTokenCreate;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV1;
-import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretJsonV1;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretJsonV2;
 import io.quarkus.vault.runtime.config.VaultAuthenticationType;
 import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
 import io.smallrye.mutiny.Uni;
@@ -201,11 +201,12 @@ public class VaultAuthManager {
 
         String wrappingToken = getConfig().authentication.userpass.passwordWrappingToken.get();
         if (getConfig().kvSecretEngineVersion == 1) {
-            Function<VaultKvSecretV1, String> f = unwrap -> unwrap.data.get(USERPASS_WRAPPING_TOKEN_PASSWORD_KEY);
-            return unwrapWrappingTokenOnce(vaultClient, "password", wrappingToken, f, VaultKvSecretV1.class);
+            Function<VaultKvSecretJsonV1, String> f = unwrap -> (String) unwrap.data.get(USERPASS_WRAPPING_TOKEN_PASSWORD_KEY);
+            return unwrapWrappingTokenOnce(vaultClient, "password", wrappingToken, f, VaultKvSecretJsonV1.class);
         } else {
-            Function<VaultKvSecretV2, String> f = unwrap -> unwrap.data.data.get(USERPASS_WRAPPING_TOKEN_PASSWORD_KEY);
-            return unwrapWrappingTokenOnce(vaultClient, "password", wrappingToken, f, VaultKvSecretV2.class);
+            Function<VaultKvSecretJsonV2, String> f = unwrap -> (String) unwrap.data.data
+                    .get(USERPASS_WRAPPING_TOKEN_PASSWORD_KEY);
+            return unwrapWrappingTokenOnce(vaultClient, "password", wrappingToken, f, VaultKvSecretJsonV2.class);
         }
     }
 

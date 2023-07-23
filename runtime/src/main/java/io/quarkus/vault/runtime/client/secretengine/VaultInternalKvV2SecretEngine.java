@@ -15,10 +15,6 @@ public class VaultInternalKvV2SecretEngine extends VaultInternalBase {
         return super.opNamePrefix() + " [KV (v2)]";
     }
 
-    public Uni<VaultKvSecretV2> getSecret(VaultClient vaultClient, String token, String secretEnginePath, String path) {
-        return vaultClient.get(opName("Get Secret"), secretEnginePath + "/data/" + path, token, VaultKvSecretV2.class);
-    }
-
     public Uni<VaultKvSecretJsonV2> getSecretJson(VaultClient vaultClient, String token, String secretEnginePath, String path) {
         return vaultClient.get(opName("Get Secret"), secretEnginePath + "/data/" + path, token, VaultKvSecretJsonV2.class);
     }

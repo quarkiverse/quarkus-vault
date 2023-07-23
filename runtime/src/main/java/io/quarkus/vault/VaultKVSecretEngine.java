@@ -27,12 +27,23 @@ public class VaultKVSecretEngine {
 
     /**
      * Provides the values stored in the Vault kv secret engine at a particular path.
+     * This is a shortcut to `readSecretJson(String)` when the secret value is a String, which is the common case.
      *
      * @param path in Vault, without the kv engine mount path
      * @return list of key value pairs stored at 'path' in Vault
      */
     public Map<String, String> readSecret(String path) {
         return engine.readSecret(path).await().indefinitely();
+    }
+
+    /**
+     * Provides the values stored in the Vault kv secret engine at a particular path.
+     *
+     * @param path in Vault, without the kv engine mount path
+     * @return list of key value pairs stored at 'path' in Vault
+     */
+    public Map<String, Object> readSecretJson(String path) {
+        return engine.readSecretJson(path).await().indefinitely();
     }
 
     /**
