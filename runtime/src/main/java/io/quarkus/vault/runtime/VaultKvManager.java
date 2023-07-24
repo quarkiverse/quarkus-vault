@@ -2,6 +2,7 @@ package io.quarkus.vault.runtime;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
@@ -53,18 +54,13 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
         return vaultConfigHolder.getVaultBootstrapConfig();
     }
 
+    private Map<String, String> convert(Map<String, Object> map) {
+        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> (String) entry.getValue()));
+    }
+
     @Override
     public Uni<Map<String, String>> readSecret(String path) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-
-            String mount = getConfig().kvSecretEngineMountPath;
-
-            if (isV1()) {
-                return vaultInternalKvV1SecretEngine.getSecret(vaultClient, token, mount, path).map(r -> r.data);
-            } else {
-                return vaultInternalKvV2SecretEngine.getSecret(vaultClient, token, mount, path).map(r -> r.data.data);
-            }
-        });
+        return readSecretJson(path).map(this::convert);
     }
 
     @Override

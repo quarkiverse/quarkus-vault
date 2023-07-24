@@ -16,6 +16,7 @@ public interface VaultKVSecretReactiveEngine {
 
     /**
      * Provides the values stored in the Vault kv secret engine at a particular path.
+     * This is a shortcut to `readSecretJson(String)` when the secret value is a String, which is the common case.
      *
      * @param path in Vault, without the kv engine mount path
      * @return list of key value pairs stored at 'path' in Vault

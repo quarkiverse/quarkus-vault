@@ -194,12 +194,14 @@ public class VaultITCase {
 
         String anotherWrappingToken = ConfigProviderResolver.instance().getConfig()
                 .getValue("vault-test.another-password-kv-v2-wrapping-token", String.class);
-        VaultKvSecretV2 unwrap = vaultInternalSystemBackend.unwrap(vaultClient, anotherWrappingToken, VaultKvSecretV2.class)
+        VaultKvSecretJsonV2 unwrap = vaultInternalSystemBackend
+                .unwrap(vaultClient, anotherWrappingToken, VaultKvSecretJsonV2.class)
                 .await()
                 .indefinitely();
         assertEquals(VAULT_AUTH_USERPASS_PASSWORD, unwrap.data.data.get(USERPASS_WRAPPING_TOKEN_PASSWORD_KEY));
         try {
-            vaultInternalSystemBackend.unwrap(vaultClient, anotherWrappingToken, VaultKvSecretV2.class).await().indefinitely();
+            vaultInternalSystemBackend.unwrap(vaultClient, anotherWrappingToken, VaultKvSecretJsonV2.class).await()
+                    .indefinitely();
             fail("expected error 400: wrapping token is not valid or does not exist");
         } catch (VaultClientException e) {
             // fails on second unwrap attempt
@@ -360,8 +362,8 @@ public class VaultITCase {
     }
 
     private void assertKvSecrets(String clientToken) {
-        VaultKvSecretV1 secretV1 = vaultInternalKvV1SecretEngine
-                .getSecret(vaultClient, clientToken, SECRET_PATH_V1, APP_SECRET_PATH).await()
+        VaultKvSecretJsonV1 secretV1 = vaultInternalKvV1SecretEngine
+                .getSecretJson(vaultClient, clientToken, SECRET_PATH_V1, APP_SECRET_PATH).await()
                 .indefinitely();
         assertEquals(SECRET_VALUE, secretV1.data.get(SECRET_KEY));
         VaultKvListSecrets vaultKvListSecretsV1 = vaultInternalKvV1SecretEngine
@@ -373,8 +375,8 @@ public class VaultITCase {
                 .getSecretJson(vaultClient, clientToken, SECRET_PATH_V1, "foo-json").await().indefinitely();
         assertEquals("{hello={foo=bar}}", fooJsonV1.data.toString());
 
-        VaultKvSecretV2 secretV2 = vaultInternalKvV2SecretEngine
-                .getSecret(vaultClient, clientToken, SECRET_PATH_V2, APP_SECRET_PATH).await()
+        VaultKvSecretJsonV2 secretV2 = vaultInternalKvV2SecretEngine
+                .getSecretJson(vaultClient, clientToken, SECRET_PATH_V2, APP_SECRET_PATH).await()
                 .indefinitely();
         assertEquals(SECRET_VALUE, secretV2.data.data.get(SECRET_KEY));
         VaultKvListSecrets vaultKvListSecretsV2 = vaultInternalKvV2SecretEngine
