@@ -17,7 +17,7 @@ import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
 import io.quarkus.vault.runtime.client.secretengine.VaultInternalDynamicCredentialsSecretEngine;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.smallrye.mutiny.Uni;
 
 @Singleton
@@ -59,8 +59,8 @@ public class VaultDynamicCredentialsManager {
         credentialsCache.put(getCredentialsCacheKey(mount, requestPath, role), credentials);
     }
 
-    private VaultBootstrapConfig getConfig() {
-        return vaultConfigHolder.getVaultBootstrapConfig();
+    private VaultRuntimeConfig getConfig() {
+        return vaultConfigHolder.getVaultRuntimeConfig();
     }
 
     public Uni<Map<String, String>> getDynamicCredentials(String mount, String requestPath, String role) {
@@ -85,7 +85,7 @@ public class VaultDynamicCredentialsManager {
                 .flatMap(credentials -> validate(credentials, clientToken))
                 // extend lease if necessary
                 .flatMap(credentials -> {
-                    if (credentials.isPresent() && credentials.get().shouldExtend(getConfig().renewGracePeriod)) {
+                    if (credentials.isPresent() && credentials.get().shouldExtend(getConfig().renewGracePeriod())) {
                         return extend(credentials.get(), clientToken, mount, requestPath, role).map(Optional::of);
                     }
                     return Uni.createFrom().item(credentials);
@@ -93,7 +93,7 @@ public class VaultDynamicCredentialsManager {
                 // create lease if necessary
                 .flatMap(credentials -> {
                     if (credentials.isEmpty() || credentials.get().isExpired()
-                            || credentials.get().expiresSoon(getConfig().renewGracePeriod)) {
+                            || credentials.get().expiresSoon(getConfig().renewGracePeriod())) {
                         return create(clientToken, mount, requestPath, role);
                     }
                     return Uni.createFrom().item(credentials.get());
@@ -127,7 +127,7 @@ public class VaultDynamicCredentialsManager {
                             currentCredentials.password);
                     sanityCheck(credentials, mount, requestPath, role);
                     log.debug("extended " + role + "(" + getCredentialsPath(mount, requestPath) + ") credentials:"
-                            + credentials.getConfidentialInfo(getConfig().logConfidentialityLevel));
+                            + credentials.getConfidentialInfo(getConfig().logConfidentialityLevel()));
                     return credentials;
                 });
     }
@@ -142,7 +142,7 @@ public class VaultDynamicCredentialsManager {
                             vaultDynamicCredentials.data.username,
                             vaultDynamicCredentials.data.password);
                     log.debug("generated " + role + "(" + getCredentialsPath(mount, requestPath) + ") credentials:"
-                            + credentials.getConfidentialInfo(getConfig().logConfidentialityLevel));
+                            + credentials.getConfidentialInfo(getConfig().logConfidentialityLevel()));
                     sanityCheck(credentials, mount, requestPath, role);
                     return credentials;
                 });
@@ -150,6 +150,6 @@ public class VaultDynamicCredentialsManager {
 
     private void sanityCheck(VaultDynamicCredentials credentials, String mount, String requestPath, String role) {
         credentials.leaseDurationSanityCheck(role + " (" + getCredentialsPath(mount, requestPath) + ")",
-                getConfig().renewGracePeriod);
+                getConfig().renewGracePeriod());
     }
 }

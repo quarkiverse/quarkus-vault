@@ -1,12 +1,12 @@
 package io.quarkus.vault.runtime.client;
 
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
-import static io.quarkus.vault.runtime.config.VaultBootstrapConfig.KUBERNETES_CACERT;
+import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.KUBERNETES_CACERT;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.TlsConfig;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.net.ProxyOptions;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -17,30 +17,30 @@ public class MutinyVertxClientFactory {
 
     private static final Logger log = Logger.getLogger(MutinyVertxClientFactory.class.getName());
 
-    public static WebClient createHttpClient(Vertx vertx, VaultBootstrapConfig vaultBootstrapConfig, TlsConfig tlsConfig) {
+    public static WebClient createHttpClient(Vertx vertx, VaultRuntimeConfig vaultRuntimeConfig, TlsConfig tlsConfig) {
 
         WebClientOptions options = new WebClientOptions()
-                .setConnectTimeout((int) vaultBootstrapConfig.connectTimeout.toMillis())
-                .setIdleTimeout((int) vaultBootstrapConfig.readTimeout.getSeconds() * 2);
+                .setConnectTimeout((int) vaultRuntimeConfig.connectTimeout().toMillis())
+                .setIdleTimeout((int) vaultRuntimeConfig.readTimeout().getSeconds() * 2);
 
-        if (vaultBootstrapConfig.proxyHost.isPresent()) {
+        if (vaultRuntimeConfig.proxyHost().isPresent()) {
             options.setProxyOptions(
                     new ProxyOptions()
-                            .setHost(vaultBootstrapConfig.proxyHost.get())
-                            .setPort(vaultBootstrapConfig.proxyPort));
+                            .setHost(vaultRuntimeConfig.proxyHost().get())
+                            .setPort(vaultRuntimeConfig.proxyPort()));
         }
 
-        if (vaultBootstrapConfig.nonProxyHosts.isPresent()) {
-            options.setNonProxyHosts(vaultBootstrapConfig.nonProxyHosts.get());
+        if (vaultRuntimeConfig.nonProxyHosts().isPresent()) {
+            options.setNonProxyHosts(vaultRuntimeConfig.nonProxyHosts().get());
         }
 
-        boolean trustAll = vaultBootstrapConfig.tls.skipVerify.orElseGet(() -> tlsConfig.trustAll);
+        boolean trustAll = vaultRuntimeConfig.tls().skipVerify().orElseGet(() -> tlsConfig.trustAll);
         if (trustAll) {
             skipVerify(options);
-        } else if (vaultBootstrapConfig.tls.caCert.isPresent()) {
-            cacert(options, vaultBootstrapConfig.tls.caCert.get());
-        } else if (vaultBootstrapConfig.getAuthenticationType() == KUBERNETES
-                && vaultBootstrapConfig.tls.useKubernetesCaCert) {
+        } else if (vaultRuntimeConfig.tls().caCert().isPresent()) {
+            cacert(options, vaultRuntimeConfig.tls().caCert().get());
+        } else if (vaultRuntimeConfig.getAuthenticationType() == KUBERNETES
+                && vaultRuntimeConfig.tls().useKubernetesCaCert()) {
             cacert(options, KUBERNETES_CACERT);
         }
 

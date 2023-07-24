@@ -1,14 +1,14 @@
 package io.quarkus.vault.runtime.config;
 
-import static io.quarkus.vault.runtime.config.VaultBootstrapConfig.DEFAULT_TLS_USE_KUBERNETES_CACERT;
+import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.DEFAULT_TLS_USE_KUBERNETES_CACERT;
 
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
+import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public class VaultTlsConfig {
+public interface VaultTlsConfig {
 
     /**
      * Allows to bypass certificate validation on TLS communications.
@@ -17,8 +17,7 @@ public class VaultTlsConfig {
      * certificate presented by Vault. This is discouraged in production because it allows man in the middle
      * type of attacks.
      */
-    @ConfigItem
-    public Optional<Boolean> skipVerify = Optional.empty();
+    Optional<Boolean> skipVerify();
 
     /**
      * Certificate bundle used to validate TLS communications with Vault.
@@ -26,8 +25,7 @@ public class VaultTlsConfig {
      * The path to a pem bundle file, if TLS is required, and trusted certificates are not set through
      * javax.net.ssl.trustStore system property.
      */
-    @ConfigItem
-    public Optional<String> caCert;
+    Optional<String> caCert();
 
     /**
      * If true and Vault authentication type is kubernetes, TLS will be active and the cacert path will
@@ -36,7 +34,6 @@ public class VaultTlsConfig {
      * and we want to use quarkus.vault.tls.ca-cert or system property javax.net.ssl.trustStore, then this
      * property should be set to false.
      */
-    @ConfigItem(defaultValue = DEFAULT_TLS_USE_KUBERNETES_CACERT)
-    public boolean useKubernetesCaCert;
-
+    @WithDefault(DEFAULT_TLS_USE_KUBERNETES_CACERT)
+    boolean useKubernetesCaCert();
 }

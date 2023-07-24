@@ -3,10 +3,9 @@ package io.quarkus.vault.runtime.config;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
 
 @ConfigGroup
-public class VaultAuthenticationConfig {
+public interface VaultAuthenticationConfig {
 
     /**
      * Vault token, bypassing Vault authentication (kubernetes, userpass or approle). This is useful in development
@@ -14,8 +13,7 @@ public class VaultAuthenticationConfig {
      * authentication such as userpass, or preferably kubernetes, where Vault tokens get generated with a TTL
      * and some ability to revoke them. Lease renewal does not apply.
      */
-    @ConfigItem
-    public Optional<String> clientToken;
+    Optional<String> clientToken();
 
     /**
      * Client token wrapped in a wrapping token, such as what is returned by:
@@ -24,43 +22,40 @@ public class VaultAuthenticationConfig {
      * <p>
      * client-token and client-token-wrapping-token are exclusive. Lease renewal does not apply.
      */
-    @ConfigItem
-    public Optional<String> clientTokenWrappingToken;
+    Optional<String> clientTokenWrappingToken();
 
     /**
      * AppRole authentication method
      * <p>
-     * See https://www.vaultproject.io/api/auth/approle/index.html
+     * See <a href="https://www.vaultproject.io/api/auth/approle/index.html">AppRole Auth Method</a>
      */
-    @ConfigItem
-    public VaultAppRoleAuthenticationConfig appRole;
+    VaultAppRoleAuthenticationConfig appRole();
 
     /**
      * Userpass authentication method
      * <p>
-     * See https://www.vaultproject.io/api/auth/userpass/index.html
+     * See <a href="https://www.vaultproject.io/api/auth/userpass/index.html">Userpass Auth Role</a>
      */
-    @ConfigItem
-    public VaultUserpassAuthenticationConfig userpass;
+    VaultUserpassAuthenticationConfig userpass();
 
     /**
      * Kubernetes authentication method
      * <p>
-     * See https://www.vaultproject.io/docs/auth/kubernetes.html
+     * See <a href="https://www.vaultproject.io/docs/auth/kubernetes.html">Kubernetes Auth Method</a>
      */
-    @ConfigItem
-    public VaultKubernetesAuthenticationConfig kubernetes;
+    VaultKubernetesAuthenticationConfig kubernetes();
 
-    public boolean isDirectClientToken() {
-        return clientToken.isPresent() || clientTokenWrappingToken.isPresent();
+    default boolean isDirectClientToken() {
+        return clientToken().isPresent() || clientTokenWrappingToken().isPresent();
     }
 
-    public boolean isAppRole() {
-        return appRole.roleId.isPresent() && (appRole.secretId.isPresent() || appRole.secretIdWrappingToken.isPresent());
+    default boolean isAppRole() {
+        return appRole().roleId().isPresent()
+                && (appRole().secretId().isPresent() || appRole().secretIdWrappingToken().isPresent());
     }
 
-    public boolean isUserpass() {
-        return userpass.username.isPresent() && (userpass.password.isPresent() || userpass.passwordWrappingToken.isPresent());
+    default boolean isUserpass() {
+        return userpass().username().isPresent()
+                && (userpass().password().isPresent() || userpass().passwordWrappingToken().isPresent());
     }
-
 }

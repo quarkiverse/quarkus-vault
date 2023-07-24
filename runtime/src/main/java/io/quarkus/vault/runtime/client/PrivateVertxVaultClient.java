@@ -25,9 +25,9 @@ public class PrivateVertxVaultClient extends VertxVaultClient {
     private final VaultConfigHolder vaultConfigHolder;
 
     public PrivateVertxVaultClient(VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
-        super(vaultConfigHolder.getVaultBootstrapConfig().url.orElseThrow(() -> new VaultException("no vault url provided")),
-                vaultConfigHolder.getVaultBootstrapConfig().enterprise.namespace,
-                vaultConfigHolder.getVaultBootstrapConfig().readTimeout);
+        super(vaultConfigHolder.getVaultRuntimeConfig().url().orElseThrow(() -> new VaultException("no vault url provided")),
+                vaultConfigHolder.getVaultRuntimeConfig().enterprise().namespace(),
+                vaultConfigHolder.getVaultRuntimeConfig().readTimeout());
         this.vaultConfigHolder = vaultConfigHolder;
         this.tlsConfig = tlsConfig;
     }
@@ -36,7 +36,7 @@ public class PrivateVertxVaultClient extends VertxVaultClient {
     protected WebClient getWebClient() {
         WebClient webClient = this.webClient.get();
         if (webClient == null) {
-            webClient = createHttpClient(getVertx(), vaultConfigHolder.getVaultBootstrapConfig(), tlsConfig);
+            webClient = createHttpClient(getVertx(), vaultConfigHolder.getVaultRuntimeConfig(), tlsConfig);
             if (!this.webClient.compareAndSet(null, webClient)) {
                 webClient.close();
                 return this.webClient.get();

@@ -8,7 +8,6 @@ import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,27 +15,32 @@ import java.util.Optional;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
+import io.quarkus.runtime.configuration.DurationConverter;
 import io.quarkus.vault.runtime.LogConfidentialityLevel;
+import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithConverter;
+import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
+import io.smallrye.config.WithParentName;
 
-@ConfigRoot(name = VaultBootstrapConfig.NAME, phase = ConfigPhase.BOOTSTRAP)
-public class VaultBootstrapConfig {
-
-    public static final String NAME = "vault";
-    public static final String DEFAULT_CONFIG_ORDINAL = "270";
-    public static final String DEFAULT_KUBERNETES_JWT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
-    public static final String DEFAULT_KV_SECRET_ENGINE_MOUNT_PATH = "secret";
-    public static final String KV_SECRET_ENGINE_VERSION_V2 = "2";
-    public static final String DEFAULT_RENEW_GRACE_PERIOD = "1H";
-    public static final String DEFAULT_SECRET_CONFIG_CACHE_PERIOD = "10M";
-    public static final String KUBERNETES_CACERT = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
-    public static final String DEFAULT_CONNECT_TIMEOUT = "5S";
-    public static final String DEFAULT_READ_TIMEOUT = "5S";
-    public static final String DEFAULT_TLS_USE_KUBERNETES_CACERT = "true";
-    public static final String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "auth/kubernetes";
-    public static final String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "auth/approle";
+@ConfigMapping(prefix = "quarkus.vault")
+@ConfigRoot(phase = ConfigPhase.RUN_TIME)
+public interface VaultRuntimeConfig {
+    String NAME = "vault";
+    String DEFAULT_CONFIG_ORDINAL = "270";
+    String DEFAULT_KUBERNETES_JWT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+    String DEFAULT_KV_SECRET_ENGINE_MOUNT_PATH = "secret";
+    String KV_SECRET_ENGINE_VERSION_V2 = "2";
+    String DEFAULT_RENEW_GRACE_PERIOD = "1H";
+    String DEFAULT_SECRET_CONFIG_CACHE_PERIOD = "10M";
+    String KUBERNETES_CACERT = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
+    String DEFAULT_CONNECT_TIMEOUT = "5S";
+    String DEFAULT_READ_TIMEOUT = "5S";
+    String DEFAULT_TLS_USE_KUBERNETES_CACERT = "true";
+    String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "auth/kubernetes";
+    String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "auth/approle";
 
     /**
      * Microprofile Config ordinal.
@@ -46,8 +50,8 @@ public class VaultBootstrapConfig {
      * <p>
      * The default value is higher than the file system or jar ordinals, but lower than env vars.
      */
-    @ConfigItem(defaultValue = DEFAULT_CONFIG_ORDINAL)
-    public int configOrdinal;
+    @WithDefault(DEFAULT_CONFIG_ORDINAL)
+    int configOrdinal();
 
     /**
      * Vault server url.
@@ -59,22 +63,19 @@ public class VaultBootstrapConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem
-    public Optional<URL> url;
+    Optional<URL> url();
 
     /**
      * Vault Enterprise
      */
-    @ConfigItem
     @ConfigDocSection
-    public VaultEnterpriseConfig enterprise;
+    VaultEnterpriseConfig enterprise();
 
     /**
      * Authentication
      */
-    @ConfigItem
     @ConfigDocSection
-    public VaultAuthenticationConfig authentication;
+    VaultAuthenticationConfig authentication();
 
     /**
      * Renew grace period duration.
@@ -93,8 +94,9 @@ public class VaultBootstrapConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = DEFAULT_RENEW_GRACE_PERIOD)
-    public Duration renewGracePeriod;
+    @WithDefault(DEFAULT_RENEW_GRACE_PERIOD)
+    @WithConverter(DurationConverter.class)
+    Duration renewGracePeriod();
 
     /**
      * Vault config source cache period.
@@ -105,8 +107,9 @@ public class VaultBootstrapConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = DEFAULT_SECRET_CONFIG_CACHE_PERIOD)
-    public Duration secretConfigCachePeriod;
+    @WithDefault(DEFAULT_SECRET_CONFIG_CACHE_PERIOD)
+    @WithConverter(DurationConverter.class)
+    Duration secretConfigCachePeriod();
 
     // @formatter:off
     /**
@@ -132,21 +135,20 @@ public class VaultBootstrapConfig {
      * @asciidoclet
      */
     // @formatter:on
-    @ConfigItem
-    public Optional<List<String>> secretConfigKvPath;
+    Optional<List<String>> secretConfigKvPath();
 
     /**
      * KV store paths configuration.
      */
-    @ConfigItem(name = "secret-config-kv-path")
+    @WithName("secret-config-kv-path")
     @ConfigDocMapKey("prefix")
-    public Map<String, KvPathConfig> secretConfigKvPathPrefix;
+    Map<String, KvPathConfig> secretConfigKvPathPrefix();
 
     /**
      * Maximum number of attempts when fetching MP Config properties on the initial connection.
      */
-    @ConfigItem(defaultValue = "1")
-    public int mpConfigInitialAttempts;
+    @WithDefault("1")
+    int mpConfigInitialAttempts();
 
     /**
      * Used to hide confidential infos, for logging in particular.
@@ -158,8 +160,8 @@ public class VaultBootstrapConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = "medium")
-    public LogConfidentialityLevel logConfidentialityLevel;
+    @WithDefault("medium")
+    LogConfidentialityLevel logConfidentialityLevel();
 
     /**
      * Kv secret engine version.
@@ -168,8 +170,8 @@ public class VaultBootstrapConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = KV_SECRET_ENGINE_VERSION_V2)
-    public int kvSecretEngineVersion;
+    @WithDefault(KV_SECRET_ENGINE_VERSION_V2)
+    int kvSecretEngineVersion();
 
     /**
      * KV secret engine path.
@@ -195,27 +197,28 @@ public class VaultBootstrapConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem(defaultValue = DEFAULT_KV_SECRET_ENGINE_MOUNT_PATH)
-    public String kvSecretEngineMountPath;
+    @WithDefault(DEFAULT_KV_SECRET_ENGINE_MOUNT_PATH)
+    String kvSecretEngineMountPath();
 
     /**
      * TLS
      */
-    @ConfigItem
     @ConfigDocSection
-    public VaultTlsConfig tls;
+    VaultTlsConfig tls();
 
     /**
      * Timeout to establish a connection with Vault.
      */
-    @ConfigItem(defaultValue = DEFAULT_CONNECT_TIMEOUT)
-    public Duration connectTimeout;
+    @WithDefault(DEFAULT_CONNECT_TIMEOUT)
+    @WithConverter(DurationConverter.class)
+    Duration connectTimeout();
 
     /**
      * Request timeout on Vault.
      */
-    @ConfigItem(defaultValue = DEFAULT_READ_TIMEOUT)
-    public Duration readTimeout;
+    @WithDefault(DEFAULT_READ_TIMEOUT)
+    @WithConverter(DurationConverter.class)
+    Duration readTimeout();
 
     /**
      * List of remote hosts that are not proxied when the client is configured to use a proxy. This
@@ -225,20 +228,18 @@ public class VaultBootstrapConfig {
      * Entries can use the <i>*</i> wildcard character for pattern matching, e.g <i>*.example.com</i> matches
      * <i>www.example.com</i>.
      */
-    @ConfigItem
-    public Optional<List<String>> nonProxyHosts;
+    Optional<List<String>> nonProxyHosts();
 
     /**
      * The proxy host. If set the client is configured to use a proxy.
      */
-    @ConfigItem
-    public Optional<String> proxyHost;
+    Optional<String> proxyHost();
 
     /**
      * The port the proxy is listening on, 3128 by default.
      */
-    @ConfigItem(defaultValue = "3128")
-    public Integer proxyPort;
+    @WithDefault("3128")
+    Integer proxyPort();
 
     /**
      * List of named credentials providers, such as: `quarkus.vault.credentials-provider.foo.kv-path=mypath`
@@ -250,66 +251,76 @@ public class VaultBootstrapConfig {
      *
      * @asciidoclet
      */
-    @ConfigItem
-    public Map<String, CredentialsProviderConfig> credentialsProvider;
+    Map<String, CredentialsProviderConfig> credentialsProvider();
 
     /**
      * Transit Engine
      */
-    @ConfigItem
     @ConfigDocSection
-    public VaultTransitConfig transit;
+    VaultTransitConfig transit();
 
-    public VaultAuthenticationType getAuthenticationType() {
-        if (authentication.kubernetes.role.isPresent()) {
+    /**
+     * Deprecated.
+     */
+    @Deprecated
+    @WithName("devservices")
+    Map<String, String> devServices();
+
+    /**
+     * Deprecated.
+     */
+    @Deprecated
+    Map<String, String> health();
+
+    default VaultAuthenticationType getAuthenticationType() {
+        if (authentication().kubernetes().role().isPresent()) {
             return KUBERNETES;
-        } else if (authentication.isUserpass()) {
+        } else if (authentication().isUserpass()) {
             return USERPASS;
-        } else if (authentication.isAppRole()) {
+        } else if (authentication().isAppRole()) {
             return APPROLE;
         } else {
             return null;
         }
     }
 
-    @Override
-    public String toString() {
+    default String toStringConfidential() {
         return "VaultRuntimeConfig{" +
-                "url=" + url +
-                ", kubernetesAuthenticationMountPath=" + authentication.kubernetes.authMountPath +
+                "url=" + url() +
+                ", kubernetesAuthenticationMountPath=" + authentication().kubernetes().authMountPath() +
                 ", kubernetesAuthenticationRole="
-                + logConfidentialityLevel.maskWithTolerance(authentication.kubernetes.role.orElse(""), MEDIUM) +
-                ", kubernetesJwtTokenPath='" + authentication.kubernetes.jwtTokenPath + '\'' +
+                + logConfidentialityLevel().maskWithTolerance(authentication().kubernetes().role().orElse(""), MEDIUM) +
+                ", kubernetesJwtTokenPath='" + authentication().kubernetes().jwtTokenPath() + '\'' +
                 ", userpassUsername='"
-                + logConfidentialityLevel.maskWithTolerance(authentication.userpass.username.orElse(""), MEDIUM)
-                + '\'' +
+                + logConfidentialityLevel().maskWithTolerance(authentication().userpass().username().orElse(""), MEDIUM) + '\''
+                +
                 ", userpassPassword='"
-                + logConfidentialityLevel.maskWithTolerance(authentication.userpass.password.orElse(""), LOW) + '\''
-                +
+                + logConfidentialityLevel().maskWithTolerance(authentication().userpass().password().orElse(""), LOW) + '\'' +
                 ", appRoleRoleId='"
-                + logConfidentialityLevel.maskWithTolerance(authentication.appRole.roleId.orElse(""), MEDIUM) + '\'' +
+                + logConfidentialityLevel().maskWithTolerance(authentication().appRole().roleId().orElse(""), MEDIUM) + '\'' +
                 ", appRoleSecretId='"
-                + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretId.orElse(""), LOW) + '\'' +
+                + logConfidentialityLevel().maskWithTolerance(authentication().appRole().secretId().orElse(""), LOW) + '\'' +
                 ", appRoleSecretIdWrappingToken='"
-                + logConfidentialityLevel.maskWithTolerance(authentication.appRole.secretIdWrappingToken.orElse(""), LOW) + '\''
-                +
-                ", clientToken=" + logConfidentialityLevel.maskWithTolerance(authentication.clientToken.orElse(""), LOW) +
+                + logConfidentialityLevel().maskWithTolerance(authentication().appRole().secretIdWrappingToken().orElse(""),
+                        LOW)
+                + '\'' +
+                ", clientToken=" + logConfidentialityLevel().maskWithTolerance(authentication().clientToken().orElse(""), LOW) +
                 ", clientTokenWrappingToken="
-                + logConfidentialityLevel.maskWithTolerance(authentication.clientTokenWrappingToken.orElse(""), LOW) +
-                ", renewGracePeriod=" + renewGracePeriod +
-                ", cachePeriod=" + secretConfigCachePeriod +
-                ", logConfidentialityLevel=" + logConfidentialityLevel +
-                ", kvSecretEngineVersion=" + kvSecretEngineVersion +
-                ", kvSecretEngineMountPath='" + kvSecretEngineMountPath + '\'' +
-                ", tlsSkipVerify=" + tls.skipVerify +
-                ", tlsCaCert=" + tls.caCert +
-                ", connectTimeout=" + connectTimeout +
-                ", readTimeout=" + readTimeout +
+                + logConfidentialityLevel().maskWithTolerance(authentication().clientTokenWrappingToken().orElse(""), LOW) +
+                ", renewGracePeriod=" + renewGracePeriod() +
+                ", cachePeriod=" + secretConfigCachePeriod() +
+                ", logConfidentialityLevel=" + logConfidentialityLevel() +
+                ", kvSecretEngineVersion=" + kvSecretEngineVersion() +
+                ", kvSecretEngineMountPath='" + kvSecretEngineMountPath() + '\'' +
+                ", tlsSkipVerify=" + tls().skipVerify() +
+                ", tlsCaCert=" + tls().caCert() +
+                ", connectTimeout=" + connectTimeout() +
+                ", readTimeout=" + readTimeout() +
                 '}';
     }
 
     @ConfigGroup
-    public static class KvPathConfig {
+    interface KvPathConfig {
         // @formatter:off
         /**
          * List of comma separated vault paths in kv store,
@@ -329,22 +340,10 @@ public class VaultBootstrapConfig {
          * @asciidoclet
          */
         // @formatter:on
-        @ConfigItem(name = ConfigItem.PARENT)
-        List<String> paths;
-
-        public KvPathConfig(List<String> paths) {
-            this.paths = paths;
-        }
-
-        public KvPathConfig() {
-            paths = Collections.emptyList();
-        }
+        @WithParentName
+        List<String> paths();
 
         @Override
-        public String toString() {
-            return "SecretConfigKvPathConfig{" +
-                    "paths=" + paths +
-                    '}';
-        }
+        String toString();
     }
 }

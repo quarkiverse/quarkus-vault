@@ -19,10 +19,10 @@ import io.smallrye.mutiny.Uni;
 public class VaultInternalKubernetesAuthMethod extends VaultInternalBase {
 
     @Inject
-    private VaultConfigHolder vaultConfigHolder;
+    VaultConfigHolder vaultConfigHolder;
 
     private String getKubernetesAuthMountPath() {
-        return vaultConfigHolder.getVaultBootstrapConfig().authentication.kubernetes.authMountPath;
+        return vaultConfigHolder.getVaultRuntimeConfig().authentication().kubernetes().authMountPath();
     }
 
     @Override

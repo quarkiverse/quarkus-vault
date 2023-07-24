@@ -26,7 +26,7 @@ import io.smallrye.mutiny.Uni;
 @Singleton
 public class VaultInternalAppRoleAuthMethod extends VaultInternalBase {
     @Inject
-    private VaultConfigHolder vaultConfigHolder;
+    VaultConfigHolder vaultConfigHolder;
 
     @Override
     protected String opNamePrefix() {
@@ -43,7 +43,7 @@ public class VaultInternalAppRoleAuthMethod extends VaultInternalBase {
     }
 
     private String getAppRoleAuthMountPath() {
-        return vaultConfigHolder.getVaultBootstrapConfig().authentication.appRole.authMountPath;
+        return vaultConfigHolder.getVaultRuntimeConfig().authentication().appRole().authMountPath();
     }
 
     public Uni<VaultAppRoleAuthReadRoleResult> getVaultAuthRole(VaultClient vaultClient, String token, String name) {

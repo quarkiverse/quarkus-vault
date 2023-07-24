@@ -1,36 +1,30 @@
 package io.quarkus.vault.runtime.config;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
+import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public class HealthConfig {
-
+public interface HealthConfig {
     /**
      * Whether or not an health check is published in case the smallrye-health extension is present.
      */
-    @ConfigItem
-    public boolean enabled;
+    @WithDefault("false")
+    boolean enabled();
 
     /**
      * Specifies if being a standby should still return the active status code instead of the standby status code.
      */
-    @ConfigItem
-    public boolean standByOk;
+    @WithDefault("false")
+    boolean standByOk();
 
     /**
-     * Specifies if being a performance standby should still return the active status code instead of the performance standby
+     * Specifies if being a performance standby should still return the active status code instead of the performance
+     * standby
      * status code.
      */
-    @ConfigItem
-    public boolean performanceStandByOk;
+    @WithDefault("false")
+    boolean performanceStandByOk();
 
     @Override
-    public String toString() {
-        return "HealthConfig{" +
-                "enabled=" + enabled +
-                ", standByOk=" + standByOk +
-                ", performanceStandByOk=" + performanceStandByOk +
-                '}';
-    }
+    String toString();
 }

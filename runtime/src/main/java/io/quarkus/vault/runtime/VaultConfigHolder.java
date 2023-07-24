@@ -2,19 +2,18 @@ package io.quarkus.vault.runtime;
 
 import jakarta.inject.Singleton;
 
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 
 @Singleton
 public class VaultConfigHolder {
+    VaultRuntimeConfig vaultRuntimeConfig;
 
-    private VaultBootstrapConfig vaultBootstrapConfig;
-
-    public VaultBootstrapConfig getVaultBootstrapConfig() {
-        return vaultBootstrapConfig;
+    public VaultRuntimeConfig getVaultRuntimeConfig() {
+        return vaultRuntimeConfig;
     }
 
-    public VaultConfigHolder setVaultBootstrapConfig(VaultBootstrapConfig vaultBootstrapConfig) {
-        this.vaultBootstrapConfig = vaultBootstrapConfig;
+    public VaultConfigHolder setVaultRuntimeConfig(VaultRuntimeConfig vaultRuntimeConfig) {
+        this.vaultRuntimeConfig = vaultRuntimeConfig;
         return this;
     }
 }

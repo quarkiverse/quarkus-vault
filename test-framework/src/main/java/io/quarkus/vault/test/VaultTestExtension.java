@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.testcontainers.containers.BindMode.READ_ONLY;
 import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
 
@@ -47,6 +49,7 @@ import org.testcontainers.containers.output.OutputFrame;
 
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.VaultKVSecretEngine;
+import io.quarkus.vault.runtime.LogConfidentialityLevel;
 import io.quarkus.vault.runtime.VaultConfigHolder;
 import io.quarkus.vault.runtime.VaultIOException;
 import io.quarkus.vault.runtime.VaultVersions;
@@ -56,9 +59,9 @@ import io.quarkus.vault.runtime.client.dto.sys.VaultInitResponse;
 import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultSealStatusResult;
 import io.quarkus.vault.runtime.config.VaultAuthenticationConfig;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
 import io.quarkus.vault.runtime.config.VaultEnterpriseConfig;
 import io.quarkus.vault.runtime.config.VaultKubernetesAuthenticationConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.quarkus.vault.runtime.config.VaultTlsConfig;
 import io.quarkus.vault.test.client.TestVaultClient;
 
@@ -175,20 +178,40 @@ public class VaultTestExtension {
     }
 
     private TestVaultClient createVaultClient() {
-        VaultBootstrapConfig vaultBootstrapConfig = new VaultBootstrapConfig();
-        vaultBootstrapConfig.tls = new VaultTlsConfig();
-        vaultBootstrapConfig.url = getVaultUrl();
-        vaultBootstrapConfig.enterprise = new VaultEnterpriseConfig();
-        vaultBootstrapConfig.enterprise.namespace = Optional.empty();
-        vaultBootstrapConfig.tls.skipVerify = Optional.of(true);
-        vaultBootstrapConfig.tls.caCert = Optional.empty();
-        vaultBootstrapConfig.connectTimeout = Duration.ofSeconds(30);
-        vaultBootstrapConfig.readTimeout = Duration.ofSeconds(5);
-        vaultBootstrapConfig.nonProxyHosts = Optional.empty();
-        vaultBootstrapConfig.proxyHost = Optional.empty();
-        vaultBootstrapConfig.authentication = new VaultAuthenticationConfig();
-        vaultBootstrapConfig.authentication.kubernetes = new VaultKubernetesAuthenticationConfig();
-        return new TestVaultClient(new VaultConfigHolder().setVaultBootstrapConfig(vaultBootstrapConfig));
+        VaultRuntimeConfig config = mock(VaultRuntimeConfig.class);
+        when(config.url()).thenReturn(getVaultUrl());
+        when(config.renewGracePeriod()).thenReturn(Duration.ofHours(1));
+        when(config.secretConfigCachePeriod()).thenReturn(Duration.ofMinutes(10));
+        when(config.secretConfigKvPath()).thenReturn(Optional.empty());
+        when(config.secretConfigKvPathPrefix()).thenReturn(Map.of());
+        when(config.mpConfigInitialAttempts()).thenReturn(1);
+        when(config.logConfidentialityLevel()).thenReturn(LogConfidentialityLevel.MEDIUM);
+        when(config.kvSecretEngineVersion()).thenReturn(2);
+        when(config.kvSecretEngineMountPath()).thenReturn("secret");
+        when(config.connectTimeout()).thenReturn(Duration.ofSeconds(30));
+        when(config.readTimeout()).thenReturn(Duration.ofSeconds(5));
+        when(config.nonProxyHosts()).thenReturn(Optional.empty());
+        when(config.proxyHost()).thenReturn(Optional.empty());
+        when(config.proxyPort()).thenReturn(3128);
+        when(config.credentialsProvider()).thenReturn(Map.of());
+
+        VaultTlsConfig tls = mock(VaultTlsConfig.class);
+        when(config.tls()).thenReturn(tls);
+        when(tls.skipVerify()).thenReturn(Optional.of(true));
+        when(tls.caCert()).thenReturn(Optional.empty());
+        when(tls.useKubernetesCaCert()).thenReturn(true);
+
+        VaultEnterpriseConfig enterprise = mock(VaultEnterpriseConfig.class);
+        when(config.enterprise()).thenReturn(enterprise);
+        when(enterprise.namespace()).thenReturn(Optional.empty());
+
+        VaultAuthenticationConfig authentication = mock(VaultAuthenticationConfig.class);
+        when(config.authentication()).thenReturn(authentication);
+
+        VaultKubernetesAuthenticationConfig kubernetesAuthentication = mock(VaultKubernetesAuthenticationConfig.class);
+        when(authentication.kubernetes()).thenReturn(kubernetesAuthentication);
+
+        return new TestVaultClient(new VaultConfigHolder().setVaultRuntimeConfig(config));
     }
 
     private static Optional<URL> getVaultUrl() {

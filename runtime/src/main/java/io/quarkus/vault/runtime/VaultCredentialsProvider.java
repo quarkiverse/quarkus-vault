@@ -14,47 +14,49 @@ import io.quarkus.credentials.CredentialsProvider;
 import io.quarkus.vault.VaultException;
 import io.quarkus.vault.VaultKVSecretEngine;
 import io.quarkus.vault.runtime.config.CredentialsProviderConfig;
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 
 @ApplicationScoped
 @Named("vault-credentials-provider")
 public class VaultCredentialsProvider implements CredentialsProvider {
 
     @Inject
-    private VaultKVSecretEngine vaultKVSecretEngine;
+    VaultKVSecretEngine vaultKVSecretEngine;
     @Inject
-    private VaultDynamicCredentialsManager vaultDynamicCredentialsManager;
+    VaultDynamicCredentialsManager vaultDynamicCredentialsManager;
     @Inject
-    private VaultConfigHolder vaultConfigHolder;
+    VaultConfigHolder vaultConfigHolder;
 
     @SuppressWarnings("deprecation")
     @Override
     public Map<String, String> getCredentials(String credentialsProviderName) {
 
-        VaultBootstrapConfig vaultConfig = getConfig();
+        VaultRuntimeConfig vaultConfig = getConfig();
         if (vaultConfig == null) {
             throw new VaultException(
                     "missing Vault configuration required for credentials providers with name " + credentialsProviderName);
         }
 
-        CredentialsProviderConfig config = vaultConfig.credentialsProvider.get(credentialsProviderName);
+        CredentialsProviderConfig config = vaultConfig.credentialsProvider().get(credentialsProviderName);
 
         if (config == null) {
             throw new VaultException("unknown credentials provider with name " + credentialsProviderName);
         }
 
-        if (config.databaseCredentialsRole.isPresent()) {
+        if (config.databaseCredentialsRole().isPresent()) {
             return vaultDynamicCredentialsManager.getDynamicCredentials(DATABASE_DEFAULT_MOUNT, DEFAULT_REQUEST_PATH,
-                    config.databaseCredentialsRole.get()).await().indefinitely();
+                    config.databaseCredentialsRole().get()).await().indefinitely();
         }
 
-        if (config.credentialsRole.isPresent()) {
-            return vaultDynamicCredentialsManager.getDynamicCredentials(config.credentialsMount, config.credentialsRequestPath,
-                    config.credentialsRole.get()).await().indefinitely();
+        if (config.credentialsRole().isPresent()) {
+            return vaultDynamicCredentialsManager
+                    .getDynamicCredentials(config.credentialsMount(), config.credentialsRequestPath(),
+                            config.credentialsRole().get())
+                    .await().indefinitely();
         }
 
-        if (config.kvPath.isPresent()) {
-            String password = vaultKVSecretEngine.readSecret(config.kvPath.get()).get(config.kvKey);
+        if (config.kvPath().isPresent()) {
+            String password = vaultKVSecretEngine.readSecret(config.kvPath().get()).get(config.kvKey());
             Map<String, String> result = new HashMap<>();
             result.put(PASSWORD_PROPERTY_NAME, password);
             return result;
@@ -64,7 +66,7 @@ public class VaultCredentialsProvider implements CredentialsProvider {
                 "one of database-credentials-role or kv-path is required on credentials provider " + credentialsProviderName);
     }
 
-    private VaultBootstrapConfig getConfig() {
-        return vaultConfigHolder.getVaultBootstrapConfig();
+    private VaultRuntimeConfig getConfig() {
+        return vaultConfigHolder.getVaultRuntimeConfig();
     }
 }

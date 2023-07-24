@@ -6,14 +6,14 @@ import java.util.Map;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 
 /**
  * This service provides access to the kv secret engine, taking care of authentication,
  * and token extension or renewal, according to ttl and max-ttl.
  *
  * @implNote Wrapper for reactive engine. Request timeouts are accounted for in Vault client.
- * @see VaultBootstrapConfig
+ * @see VaultRuntimeConfig
  */
 @ApplicationScoped
 public class VaultKVSecretEngine {

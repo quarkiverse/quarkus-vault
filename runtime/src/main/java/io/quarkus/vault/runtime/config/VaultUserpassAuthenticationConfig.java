@@ -3,22 +3,19 @@ package io.quarkus.vault.runtime.config;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
 
 @ConfigGroup
-public class VaultUserpassAuthenticationConfig {
+public interface VaultUserpassAuthenticationConfig {
 
     /**
      * User for userpass auth method. This property is required when selecting the userpass authentication type.
      */
-    @ConfigItem
-    public Optional<String> username;
+    Optional<String> username();
 
     /**
      * Password for userpass auth method. This property is required when selecting the userpass authentication type.
      */
-    @ConfigItem
-    public Optional<String> password;
+    Optional<String> password();
 
     /**
      * Wrapping token containing a Password, obtained from:
@@ -31,7 +28,5 @@ public class VaultUserpassAuthenticationConfig {
      * <p>
      * password and password-wrapping-token are exclusive
      */
-    @ConfigItem
-    public Optional<String> passwordWrappingToken;
-
+    Optional<String> passwordWrappingToken();
 }

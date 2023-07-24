@@ -10,6 +10,54 @@ h|[[quarkus-vault_configuration]]link:#quarkus-vault_configuration[Configuration
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.enabled]]`link:#quarkus-vault_quarkus.vault.health.enabled[quarkus.vault.health.enabled]`
+
+[.description]
+--
+Whether or not an health check is published in case the smallrye-health extension is present.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_HEALTH_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.stand-by-ok]]`link:#quarkus-vault_quarkus.vault.health.stand-by-ok[quarkus.vault.health.stand-by-ok]`
+
+[.description]
+--
+Specifies if being a standby should still return the active status code instead of the standby status code.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_STAND_BY_OK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_HEALTH_STAND_BY_OK+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.performance-stand-by-ok]]`link:#quarkus-vault_quarkus.vault.health.performance-stand-by-ok[quarkus.vault.health.performance-stand-by-ok]`
+
+[.description]
+--
+Specifies if being a performance standby should still return the active status code instead of the performance standby status code.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_PERFORMANCE_STAND_BY_OK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_HEALTH_PERFORMANCE_STAND_BY_OK+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.enabled]]`link:#quarkus-vault_quarkus.vault.devservices.enabled[quarkus.vault.devservices.enabled]`
 
 [.description]
@@ -481,10 +529,11 @@ a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.cre
 [.description]
 --
 Dynamic credentials' role.
-
+<p>
 Roles are defined by the secret engine in use. For example, `database` credentials roles are defined
-by the database secrets engine described at https://www.vaultproject.io/docs/secrets/databases/index.html.
-
+by the database secrets engine described at
+<a href="https://www.vaultproject.io/docs/secrets/databases/index.html">Vault Databases</a>.
+<p>
 One of `credentials-role` or `kv-path` can to be defined. not both.
 
 ifdef::add-copy-button-to-env-var[]
@@ -502,7 +551,7 @@ a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.cre
 [.description]
 --
 Mount of dynamic credentials secrets engine, for example `database` or `rabbitmq`.
-
+<p>
 Only used when `credentials-role` is defined.
 
 ifdef::add-copy-button-to-env-var[]
@@ -520,10 +569,10 @@ a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.cre
 [.description]
 --
 Path of dynamic credentials request.
-
+<p>
 Request paths are dictated by the secret engine in use. For standard secret engines this should be
 left as the default of `creds`.
-
+<p>
 Only used when `credentials-role` is defined.
 
 ifdef::add-copy-button-to-env-var[]
@@ -541,10 +590,10 @@ a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-
 [.description]
 --
 A path in vault kv store, where we will find the kv-key.
-
+<p>
 One of `database-credentials-role` or `kv-path` needs to be defined. not both.
-
-see https://www.vaultproject.io/docs/secrets/kv/index.html
+<p>
+see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_PATH+++[]
@@ -561,10 +610,10 @@ a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-
 [.description]
 --
 Key name to search in vault path `kv-path`. The value for that key is the credential.
-
+<p>
 `kv-key` should not be defined if `kv-path` is not.
-
-see https://www.vaultproject.io/docs/secrets/kv/index.html
+<p>
+see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_KEY+++[]
@@ -574,59 +623,6 @@ Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVID
 endif::add-copy-button-to-env-var[]
 --|string 
 |`password`
-
-
-h|[[quarkus-vault_quarkus.vault.health-health-check-configuration]]link:#quarkus-vault_quarkus.vault.health-health-check-configuration[Health check configuration]
-
-h|Type
-h|Default
-
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.enabled]]`link:#quarkus-vault_quarkus.vault.health.enabled[quarkus.vault.health.enabled]`
-
-[.description]
---
-Whether or not an health check is published in case the smallrye-health extension is present.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_ENABLED+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_VAULT_HEALTH_ENABLED+++`
-endif::add-copy-button-to-env-var[]
---|boolean 
-|`false`
-
-
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.stand-by-ok]]`link:#quarkus-vault_quarkus.vault.health.stand-by-ok[quarkus.vault.health.stand-by-ok]`
-
-[.description]
---
-Specifies if being a standby should still return the active status code instead of the standby status code.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_STAND_BY_OK+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_VAULT_HEALTH_STAND_BY_OK+++`
-endif::add-copy-button-to-env-var[]
---|boolean 
-|`false`
-
-
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.performance-stand-by-ok]]`link:#quarkus-vault_quarkus.vault.health.performance-stand-by-ok[quarkus.vault.health.performance-stand-by-ok]`
-
-[.description]
---
-Specifies if being a performance standby should still return the active status code instead of the performance standby status code.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_HEALTH_PERFORMANCE_STAND_BY_OK+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_VAULT_HEALTH_PERFORMANCE_STAND_BY_OK+++`
-endif::add-copy-button-to-env-var[]
---|boolean 
-|`false`
 
 
 h|[[quarkus-vault_quarkus.vault.enterprise-vault-enterprise]]link:#quarkus-vault_quarkus.vault.enterprise-vault-enterprise[Vault Enterprise]

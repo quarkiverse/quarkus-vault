@@ -3,14 +3,14 @@ package io.quarkus.vault;
 import java.util.List;
 import java.util.Map;
 
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.smallrye.mutiny.Uni;
 
 /**
  * This service provides access to the kv secret engine, taking care of authentication,
  * and token extension or renewal, according to ttl and max-ttl.
  *
- * @see VaultBootstrapConfig
+ * @see VaultRuntimeConfig
  */
 public interface VaultKVSecretReactiveEngine {
 

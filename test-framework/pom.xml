@@ -15,11 +15,14 @@
     </properties>
 
     <dependencies>
-
         <dependency>
             <groupId>io.quarkiverse.vault</groupId>
             <artifactId>quarkus-vault</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

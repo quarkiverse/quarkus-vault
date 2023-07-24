@@ -5,7 +5,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.quarkus.vault.runtime.config.VaultBootstrapConfig;
+import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.quarkus.vault.sys.EnableEngineOptions;
 import io.quarkus.vault.sys.VaultHealth;
 import io.quarkus.vault.sys.VaultHealthStatus;
@@ -19,7 +19,7 @@ import io.quarkus.vault.sys.VaultTuneInfo;
  * This service provides access to the system backend.
  *
  * @implNote Wrapper for reactive engine. Request timeouts are accounted for in Vault client.
- * @see VaultBootstrapConfig
+ * @see VaultRuntimeConfig
  */
 @ApplicationScoped
 public class VaultSystemBackendEngine {
