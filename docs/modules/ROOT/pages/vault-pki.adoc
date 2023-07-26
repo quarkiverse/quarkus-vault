@@ -4,7 +4,7 @@ include::./includes/attributes.adoc[]
 :root-token: s.5VUS8pte13RqekCB2fmMT3u2
 :client-token: s.s93BVzJPzBiIGuYJHBTkG8Uw
 :config-file: application.properties
-:base-guide: xref:vault.adoc[Vault guide]
+:base-guide: xref:index.adoc[Vault guide]
 
 Vault's PKI Secret Engine generates dynamic X.509 certificates. It allows services to get certificates without
 manually generating a private key and CSR, submitting to a CA, and waiting for signed certificate. The PKI secret

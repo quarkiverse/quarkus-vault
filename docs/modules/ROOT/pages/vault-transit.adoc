@@ -4,7 +4,7 @@ include::./includes/attributes.adoc[]
 :root-token: s.5VUS8pte13RqekCB2fmMT3u2
 :client-token: s.s93BVzJPzBiIGuYJHBTkG8Uw
 :config-file: application.properties
-:base-guide: xref:vault.adoc[Vault guide]
+:base-guide: xref:index.adoc[Vault guide]
 
 Vault's Transit Secret Engine offers an "encryption as a service" functionality. It allows to store encryption
 keys into Vault, and provides services to encrypt/decrypt and sign/verify arbitrary pieces of data. This brings
