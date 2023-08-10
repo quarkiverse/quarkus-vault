@@ -1,7 +1,7 @@
 = Using HashiCorp Vault with Databases
 
 include::./includes/attributes.adoc[]
-:base-guide: xref:vault.adoc[Vault guide]
+:base-guide: xref:index.adoc[Vault guide]
 :root-token: s.5VUS8pte13RqekCB2fmMT3u2
 :config-file: application.properties
 
@@ -226,7 +226,7 @@ of databases are supported, such as https://www.vaultproject.io/docs/secrets/dat
 First we need to enable the `database` secret engine, configure the `postgresql-database-plugin` and create
 the database role `mydbrole` (replace `10.0.0.3` by the actual host that is running the PostgreSQL container;
 for simplicity we disabled _TLS_ between Vault and the PostgreSQL database):
-[source,bash, subs=attributes+]
+[source,bash]
 ----
 vault secrets enable database
 

@@ -1,7 +1,7 @@
 = Working with HashiCorp Vault’s Authentication
 
 include::./includes/attributes.adoc[]
-:base-guide: xref:vault.adoc[Vault guide]
+:base-guide: xref:index.adoc[Vault guide]
 :root-token: s.5VUS8pte13RqekCB2fmMT3u2
 :client-token: s.s93BVzJPzBiIGuYJHBTkG8Uw
 :private-key: 123456
