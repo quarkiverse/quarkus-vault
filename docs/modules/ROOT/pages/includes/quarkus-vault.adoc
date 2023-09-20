@@ -12,6 +12,7 @@ h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.enabled]]`link:#quarkus-vault_quarkus.vault.health.enabled[quarkus.vault.health.enabled]`
 
+
 [.description]
 --
 Whether or not an health check is published in case the smallrye-health extension is present.
@@ -27,6 +28,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.stand-by-ok]]`link:#quarkus-vault_quarkus.vault.health.stand-by-ok[quarkus.vault.health.stand-by-ok]`
+
 
 [.description]
 --
@@ -44,6 +46,7 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.performance-stand-by-ok]]`link:#quarkus-vault_quarkus.vault.health.performance-stand-by-ok[quarkus.vault.health.performance-stand-by-ok]`
 
+
 [.description]
 --
 Specifies if being a performance standby should still return the active status code instead of the performance standby status code.
@@ -59,6 +62,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.enabled]]`link:#quarkus-vault_quarkus.vault.devservices.enabled[quarkus.vault.devservices.enabled]`
+
 
 [.description]
 --
@@ -78,6 +82,7 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.image-name]]`link:#quarkus-vault_quarkus.vault.devservices.image-name[quarkus.vault.devservices.image-name]`
 
+
 [.description]
 --
 The container image name to use, for container based DevServices providers.
@@ -93,6 +98,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.shared]]`link:#quarkus-vault_quarkus.vault.devservices.shared[quarkus.vault.devservices.shared]`
+
 
 [.description]
 --
@@ -114,6 +120,7 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.service-name]]`link:#quarkus-vault_quarkus.vault.devservices.service-name[quarkus.vault.devservices.service-name]`
 
+
 [.description]
 --
 The value of the `quarkus-dev-service-vault` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Vault looks for a container with the `quarkus-dev-service-vault` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise it starts a new container with the `quarkus-dev-service-vault` label set to the specified value.
@@ -131,6 +138,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.port]]`link:#quarkus-vault_quarkus.vault.devservices.port[quarkus.vault.devservices.port]`
+
 
 [.description]
 --
@@ -150,6 +158,7 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.transit-enabled]]`link:#quarkus-vault_quarkus.vault.devservices.transit-enabled[quarkus.vault.devservices.transit-enabled]`
 
+
 [.description]
 --
 Should the Transit secret engine be enabled
@@ -165,6 +174,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.pki-enabled]]`link:#quarkus-vault_quarkus.vault.devservices.pki-enabled[quarkus.vault.devservices.pki-enabled]`
+
 
 [.description]
 --
@@ -182,6 +192,7 @@ endif::add-copy-button-to-env-var[]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.init-commands]]`link:#quarkus-vault_quarkus.vault.devservices.init-commands[quarkus.vault.devservices.init-commands]`
 
+
 [.description]
 --
 Custom container initialization commands
@@ -197,6 +208,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.config-ordinal]]`link:#quarkus-vault_quarkus.vault.config-ordinal[quarkus.vault.config-ordinal]`
+
 
 [.description]
 --
@@ -217,6 +229,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.url]]`link:#quarkus-vault_quarkus.vault.url[quarkus.vault.url]`
+
 
 [.description]
 --
@@ -239,6 +252,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.renew-grace-period]]`link:#quarkus-vault_quarkus.vault.renew-grace-period[quarkus.vault.renew-grace-period]`
+
 
 [.description]
 --
@@ -269,6 +283,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.secret-config-cache-period]]`link:#quarkus-vault_quarkus.vault.secret-config-cache-period[quarkus.vault.secret-config-cache-period]`
 
+
 [.description]
 --
 Vault config source cache period.
@@ -289,6 +304,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.secret-config-kv-path]]`link:#quarkus-vault_quarkus.vault.secret-config-kv-path[quarkus.vault.secret-config-kv-path]`
+
 
 [.description]
 --
@@ -323,6 +339,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.mp-config-initial-attempts]]`link:#quarkus-vault_quarkus.vault.mp-config-initial-attempts[quarkus.vault.mp-config-initial-attempts]`
 
+
 [.description]
 --
 Maximum number of attempts when fetching MP Config properties on the initial connection.
@@ -338,6 +355,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.log-confidentiality-level]]`link:#quarkus-vault_quarkus.vault.log-confidentiality-level[quarkus.vault.log-confidentiality-level]`
+
 
 [.description]
 --
@@ -361,6 +379,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.kv-secret-engine-version]]`link:#quarkus-vault_quarkus.vault.kv-secret-engine-version[quarkus.vault.kv-secret-engine-version]`
 
+
 [.description]
 --
 Kv secret engine version.
@@ -378,6 +397,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.kv-secret-engine-mount-path]]`link:#quarkus-vault_quarkus.vault.kv-secret-engine-mount-path[quarkus.vault.kv-secret-engine-mount-path]`
+
 
 [.description]
 --
@@ -414,6 +434,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.connect-timeout]]`link:#quarkus-vault_quarkus.vault.connect-timeout[quarkus.vault.connect-timeout]`
 
+
 [.description]
 --
 Timeout to establish a connection with Vault.
@@ -431,6 +452,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.read-timeout]]`link:#quarkus-vault_quarkus.vault.read-timeout[quarkus.vault.read-timeout]`
 
+
 [.description]
 --
 Request timeout on Vault.
@@ -447,6 +469,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.non-proxy-hosts]]`link:#quarkus-vault_quarkus.vault.non-proxy-hosts[quarkus.vault.non-proxy-hosts]`
+
 
 [.description]
 --
@@ -466,6 +489,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.proxy-host]]`link:#quarkus-vault_quarkus.vault.proxy-host[quarkus.vault.proxy-host]`
 
+
 [.description]
 --
 The proxy host. If set the client is configured to use a proxy.
@@ -482,6 +506,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.proxy-port]]`link:#quarkus-vault_quarkus.vault.proxy-port[quarkus.vault.proxy-port]`
 
+
 [.description]
 --
 The port the proxy is listening on, 3128 by default.
@@ -497,6 +522,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.secret-config-kv-path.-prefix]]`link:#quarkus-vault_quarkus.vault.secret-config-kv-path.-prefix[quarkus.vault.secret-config-kv-path."prefix"]`
+
 
 [.description]
 --
@@ -526,6 +552,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-role]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-role[quarkus.vault.credentials-provider."credentials-provider".credentials-role]`
 
+
 [.description]
 --
 Dynamic credentials' role.
@@ -548,6 +575,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-mount]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-mount[quarkus.vault.credentials-provider."credentials-provider".credentials-mount]`
 
+
 [.description]
 --
 Mount of dynamic credentials secrets engine, for example `database` or `rabbitmq`.
@@ -565,6 +593,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-request-path]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-request-path[quarkus.vault.credentials-provider."credentials-provider".credentials-request-path]`
+
 
 [.description]
 --
@@ -587,6 +616,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-path]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-path[quarkus.vault.credentials-provider."credentials-provider".kv-path]`
 
+
 [.description]
 --
 A path in vault kv store, where we will find the kv-key.
@@ -606,6 +636,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-key]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-key[quarkus.vault.credentials-provider."credentials-provider".kv-key]`
+
 
 [.description]
 --
@@ -632,6 +663,7 @@ h|Default
 
 a| [[quarkus-vault_quarkus.vault.enterprise.namespace]]`link:#quarkus-vault_quarkus.vault.enterprise.namespace[quarkus.vault.enterprise.namespace]`
 
+
 [.description]
 --
 Vault Enterprise namespace
@@ -657,6 +689,7 @@ h|Default
 
 a| [[quarkus-vault_quarkus.vault.authentication.client-token]]`link:#quarkus-vault_quarkus.vault.authentication.client-token[quarkus.vault.authentication.client-token]`
 
+
 [.description]
 --
 Vault token, bypassing Vault authentication (kubernetes, userpass or approle). This is useful in development where an authentication mode might not have been set up. In production we will usually prefer some authentication such as userpass, or preferably kubernetes, where Vault tokens get generated with a TTL and some ability to revoke them. Lease renewal does not apply.
@@ -672,6 +705,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.authentication.client-token-wrapping-token]]`link:#quarkus-vault_quarkus.vault.authentication.client-token-wrapping-token[quarkus.vault.authentication.client-token-wrapping-token]`
+
 
 [.description]
 --
@@ -693,6 +727,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.authentication.app-role.role-id]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.role-id[quarkus.vault.authentication.app-role.role-id]`
 
+
 [.description]
 --
 Role Id for AppRole auth method. This property is required when selecting the app-role authentication type.
@@ -709,6 +744,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.authentication.app-role.secret-id]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.secret-id[quarkus.vault.authentication.app-role.secret-id]`
 
+
 [.description]
 --
 Secret Id for AppRole auth method. This property is required when selecting the app-role authentication type.
@@ -724,6 +760,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.authentication.app-role.secret-id-wrapping-token]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.secret-id-wrapping-token[quarkus.vault.authentication.app-role.secret-id-wrapping-token]`
+
 
 [.description]
 --
@@ -745,6 +782,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.authentication.app-role.auth-mount-path]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.auth-mount-path[quarkus.vault.authentication.app-role.auth-mount-path]`
 
+
 [.description]
 --
 Allows configure Approle authentication mount path.
@@ -760,6 +798,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.authentication.userpass.username]]`link:#quarkus-vault_quarkus.vault.authentication.userpass.username[quarkus.vault.authentication.userpass.username]`
+
 
 [.description]
 --
@@ -777,6 +816,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.authentication.userpass.password]]`link:#quarkus-vault_quarkus.vault.authentication.userpass.password[quarkus.vault.authentication.userpass.password]`
 
+
 [.description]
 --
 Password for userpass auth method. This property is required when selecting the userpass authentication type.
@@ -792,6 +832,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.authentication.userpass.password-wrapping-token]]`link:#quarkus-vault_quarkus.vault.authentication.userpass.password-wrapping-token[quarkus.vault.authentication.userpass.password-wrapping-token]`
+
 
 [.description]
 --
@@ -817,6 +858,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.role]]`link:#quarkus-vault_quarkus.vault.authentication.kubernetes.role[quarkus.vault.authentication.kubernetes.role]`
 
+
 [.description]
 --
 Kubernetes authentication role that has been created in Vault to associate Vault policies, with Kubernetes service accounts and/or Kubernetes namespaces. This property is required when selecting the Kubernetes authentication type.
@@ -833,6 +875,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.jwt-token-path]]`link:#quarkus-vault_quarkus.vault.authentication.kubernetes.jwt-token-path[quarkus.vault.authentication.kubernetes.jwt-token-path]`
 
+
 [.description]
 --
 Location of the file containing the Kubernetes JWT token to authenticate against in Kubernetes authentication mode.
@@ -848,6 +891,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.auth-mount-path]]`link:#quarkus-vault_quarkus.vault.authentication.kubernetes.auth-mount-path[quarkus.vault.authentication.kubernetes.auth-mount-path]`
+
 
 [.description]
 --
@@ -870,6 +914,7 @@ h|Default
 
 a| [[quarkus-vault_quarkus.vault.tls.skip-verify]]`link:#quarkus-vault_quarkus.vault.tls.skip-verify[quarkus.vault.tls.skip-verify]`
 
+
 [.description]
 --
 Allows to bypass certificate validation on TLS communications.
@@ -888,6 +933,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.tls.ca-cert]]`link:#quarkus-vault_quarkus.vault.tls.ca-cert[quarkus.vault.tls.ca-cert]`
 
+
 [.description]
 --
 Certificate bundle used to validate TLS communications with Vault.
@@ -905,6 +951,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.tls.use-kubernetes-ca-cert]]`link:#quarkus-vault_quarkus.vault.tls.use-kubernetes-ca-cert[quarkus.vault.tls.use-kubernetes-ca-cert]`
+
 
 [.description]
 --
@@ -926,6 +973,7 @@ h|Type
 h|Default
 
 a| [[quarkus-vault_quarkus.vault.transit.key.-key-.name]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.name[quarkus.vault.transit.key."key".name]`
+
 
 [.description]
 --
@@ -954,6 +1002,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.transit.key.-key-.prehashed]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.prehashed[quarkus.vault.transit.key."key".prehashed]`
 
+
 [.description]
 --
 Set to true when the input is already hashed. Applies to sign operations.
@@ -969,6 +1018,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.transit.key.-key-.signature-algorithm]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.signature-algorithm[quarkus.vault.transit.key."key".signature-algorithm]`
+
 
 [.description]
 --
@@ -986,6 +1036,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.transit.key.-key-.hash-algorithm]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.hash-algorithm[quarkus.vault.transit.key."key".hash-algorithm]`
 
+
 [.description]
 --
 Specifies the hash algorithm to use for supporting key types. Applies to sign operations.
@@ -1002,6 +1053,7 @@ endif::add-copy-button-to-env-var[]
 
 a| [[quarkus-vault_quarkus.vault.transit.key.-key-.type]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.type[quarkus.vault.transit.key."key".type]`
 
+
 [.description]
 --
 Specifies the type of key to create for the encrypt operation. Applies to encrypt operations.
@@ -1017,6 +1069,7 @@ endif::add-copy-button-to-env-var[]
 
 
 a| [[quarkus-vault_quarkus.vault.transit.key.-key-.convergent-encryption]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.convergent-encryption[quarkus.vault.transit.key."key".convergent-encryption]`
+
 
 [.description]
 --
@@ -1037,11 +1090,17 @@ ifndef::no-duration-note[]
 [id='duration-note-anchor-{summaryTableId}']
 .About the Duration format
 ====
-The format for durations uses the standard `java.time.Duration` format.
-You can learn more about it in the link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-[Duration#parse() javadoc].
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() javadoc] for more information.
 
-You can also provide duration values starting with a number.
-In this case, if the value consists only of a number, the converter treats the value as seconds.
-Otherwise, `PT` is implicitly prepended to the value to obtain a standard `java.time.Duration` format.
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
 ====
 endif::no-duration-note[]
