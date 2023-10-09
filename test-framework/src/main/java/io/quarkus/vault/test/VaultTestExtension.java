@@ -111,7 +111,7 @@ public class VaultTestExtension {
     public static final String OUT_FILE = "/out";
     public static final String WRAPPING_TEST_PATH = "wrapping-test";
 
-    private static String CRUD_PATH = "crud";
+    private static final String CRUD_PATH = "crud";
 
     public GenericContainer vaultContainer;
     public PostgreSQLContainer postgresContainer;
@@ -284,7 +284,7 @@ public class VaultTestExtension {
     }
 
     private String getVaultImage() {
-        return "vault:" + VaultVersions.VAULT_TEST_VERSION;
+        return "hashicorp/vault:" + VaultVersions.VAULT_TEST_VERSION;
     }
 
     private void initVault() throws InterruptedException, IOException {

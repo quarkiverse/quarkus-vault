@@ -17,6 +17,7 @@ import static org.testcontainers.shaded.org.bouncycastle.asn1.x509.Extension.sub
 
 import java.io.StringReader;
 import java.math.BigInteger;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
@@ -914,15 +915,15 @@ public class VaultPKIITCase {
     }
 
     @Test
-    public void testGetCAChain() throws Exception {
+    public void testGetCAChain() throws CertificateException {
         // Generate root CA in "pki"
         GenerateRootOptions genRootOptions = new GenerateRootOptions();
         genRootOptions.subjectCommonName = "root.example.com";
         GeneratedRootCertificate generatedRootCertificate = pkiSecretEngine.generateRoot(genRootOptions);
         assertNotNull(generatedRootCertificate.certificate);
 
-        // Ensure root CA's returns empty CA chain
-        assertTrue(pkiSecretEngine.getCertificateAuthorityChain().getCertificates().isEmpty());
+        // Ensure root CA's is not empty
+        assertFalse(pkiSecretEngine.getCertificateAuthorityChain().getCertificates().isEmpty());
 
         // Generate intermediate CA CSR in "pki2"
         VaultPKISecretEngine pkiSecretEngine2 = pkiSecretEngineFactory.engine("pki2");
