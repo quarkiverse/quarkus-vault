@@ -4,11 +4,11 @@ import java.util.Objects;
 
 public class KeyConfiguration {
 
-    private String accountName;
-    private String algorithm;
-    private int digits;
-    private String issuer;
-    private int period;
+    private final String accountName;
+    private final String algorithm;
+    private final int digits;
+    private final String issuer;
+    private final int period;
 
     public KeyConfiguration(String accountName, String algorithm, int digits, String issuer, int period) {
         this.accountName = accountName;
