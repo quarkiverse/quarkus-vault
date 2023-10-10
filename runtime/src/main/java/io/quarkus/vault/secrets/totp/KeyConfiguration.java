@@ -59,13 +59,11 @@ public class KeyConfiguration {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("KeyConfiguration{");
-        sb.append("accountName='").append(accountName).append('\'');
-        sb.append(", algorithm='").append(algorithm).append('\'');
-        sb.append(", digits=").append(digits);
-        sb.append(", issuer='").append(issuer).append('\'');
-        sb.append(", period=").append(period);
-        sb.append('}');
-        return sb.toString();
+        return "KeyConfiguration{" + "accountName='" + accountName + '\'' +
+                ", algorithm='" + algorithm + '\'' +
+                ", digits=" + digits +
+                ", issuer='" + issuer + '\'' +
+                ", period=" + period +
+                '}';
     }
 }
