@@ -11,7 +11,7 @@ import io.quarkus.vault.VaultTransitSecretEngine;
  */
 public class DecryptionRequest extends VaultTransitBatchItem {
 
-    private String ciphertext;
+    private final String ciphertext;
 
     public DecryptionRequest(String ciphertext) {
         this(ciphertext, null);

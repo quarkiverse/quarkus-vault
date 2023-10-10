@@ -163,26 +163,24 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         body.expiry = options.expiry;
         body.disable = options.disable;
 
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalPKISecretEngine.configCRL(vaultClient, token, mount, body);
-        });
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> vaultInternalPKISecretEngine
+                .configCRL(vaultClient, token, mount, body));
     }
 
     @Override
     public Uni<ConfigCRLOptions> readCRLConfig() {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalPKISecretEngine.readCRL(vaultClient, token, mount)
-                    .map(internalResult -> {
-                        checkDataValid(internalResult);
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> vaultInternalPKISecretEngine
+                .readCRL(vaultClient, token, mount)
+                .map(internalResult -> {
+                    checkDataValid(internalResult);
 
-                        VaultPKIConfigCRLData internalResultData = internalResult.data;
+                    VaultPKIConfigCRLData internalResultData = internalResult.data;
 
-                        ConfigCRLOptions result = new ConfigCRLOptions();
-                        result.expiry = internalResultData.expiry;
-                        result.disable = internalResultData.disable;
-                        return result;
-                    });
-        });
+                    ConfigCRLOptions result = new ConfigCRLOptions();
+                    result.expiry = internalResultData.expiry;
+                    result.disable = internalResultData.disable;
+                    return result;
+                }));
     }
 
     @Override
@@ -527,26 +525,26 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
     @Override
     public Uni<SignedCertificate> signIntermediateCA(String pemSigningRequest, SignIntermediateCAOptions options) {
         VaultPKISignIntermediateCABody body = new VaultPKISignIntermediateCABody();
-        body.format = dataFormatToFormat(options.format);
+        body.format = dataFormatToFormat(options.format());
         body.csr = pemSigningRequest;
-        body.subjectCommonName = options.subjectCommonName;
-        body.subjectAlternativeNames = stringListToCommaString(options.subjectAlternativeNames);
-        body.ipSubjectAlternativeNames = stringListToCommaString(options.ipSubjectAlternativeNames);
-        body.uriSubjectAlternativeNames = stringListToCommaString(options.uriSubjectAlternativeNames);
-        body.otherSubjectAlternativeNames = options.otherSubjectAlternativeNames;
-        body.timeToLive = options.timeToLive;
-        body.maxPathLength = options.maxPathLength;
-        body.excludeCommonNameFromSubjectAlternativeNames = options.excludeCommonNameFromSubjectAlternativeNames;
-        body.useCSRValues = options.useCSRValues;
-        body.permittedDnsDomains = options.permittedDnsDomains;
-        body.subjectOrganization = options.subjectOrganization;
-        body.subjectOrganizationalUnit = options.subjectOrganizationalUnit;
-        body.subjectStreetAddress = options.subjectStreetAddress;
-        body.subjectPostalCode = options.subjectPostalCode;
-        body.subjectLocality = options.subjectLocality;
-        body.subjectProvince = options.subjectProvince;
-        body.subjectCountry = options.subjectCountry;
-        body.subjectSerialNumber = options.subjectSerialNumber;
+        body.subjectCommonName = options.subjectCommonName();
+        body.subjectAlternativeNames = stringListToCommaString(options.subjectAlternativeNames());
+        body.ipSubjectAlternativeNames = stringListToCommaString(options.ipSubjectAlternativeNames());
+        body.uriSubjectAlternativeNames = stringListToCommaString(options.uriSubjectAlternativeNames());
+        body.otherSubjectAlternativeNames = options.otherSubjectAlternativeNames();
+        body.timeToLive = options.timeToLive();
+        body.maxPathLength = options.maxPathLength();
+        body.excludeCommonNameFromSubjectAlternativeNames = options.excludeCommonNameFromSubjectAlternativeNames();
+        body.useCSRValues = options.useCSRValues();
+        body.permittedDnsDomains = options.permittedDnsDomains();
+        body.subjectOrganization = options.subjectOrganization();
+        body.subjectOrganizationalUnit = options.subjectOrganizationalUnit();
+        body.subjectStreetAddress = options.subjectStreetAddress();
+        body.subjectPostalCode = options.subjectPostalCode();
+        body.subjectLocality = options.subjectLocality();
+        body.subjectProvince = options.subjectProvince();
+        body.subjectCountry = options.subjectCountry();
+        body.subjectSerialNumber = options.subjectSerialNumber();
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> vaultInternalPKISecretEngine
                 .signIntermediateCA(vaultClient, token, mount, body)

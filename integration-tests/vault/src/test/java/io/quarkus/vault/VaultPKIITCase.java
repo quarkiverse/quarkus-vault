@@ -307,24 +307,24 @@ public class VaultPKIITCase {
 
         // Sign the intermediate CA using "pki"
         SignIntermediateCAOptions options = new SignIntermediateCAOptions();
-        options.subjectCommonName = "test.example.com";
-        options.subjectOrganization = "Test Org";
-        options.subjectOrganizationalUnit = "Test Unit";
-        options.subjectStreetAddress = "123 Main Street";
-        options.subjectLocality = "New York";
-        options.subjectProvince = "NY";
-        options.subjectCountry = "USA";
-        options.subjectPostalCode = "10030";
-        options.subjectSerialNumber = "9876543210";
-        options.subjectAlternativeNames = singletonList("alt.example.com");
-        options.ipSubjectAlternativeNames = singletonList("1.2.3.4");
-        options.uriSubjectAlternativeNames = singletonList("ex:12345");
-        //options.otherSubjectAlternativeNames = singletonList("1.3.6.1.4.1.311.20.2.3;UTF8:test");
-        options.excludeCommonNameFromSubjectAlternativeNames = true;
-        options.timeToLive = "8760h";
-        options.maxPathLength = 3;
-        options.permittedDnsDomains = asList("subs1.example.com", "subs2.example.com");
-        options.useCSRValues = false;
+        options.subjectCommonName("test.example.com");
+        options.subjectOrganization("Test Org");
+        options.subjectOrganizationalUnit("Test Unit");
+        options.subjectStreetAddress("123 Main Street");
+        options.subjectLocality("New York");
+        options.subjectProvince("NY");
+        options.subjectCountry("USA");
+        options.subjectPostalCode("10030");
+        options.subjectSerialNumber("9876543210");
+        options.subjectAlternativeNames(singletonList("alt.example.com"));
+        options.ipSubjectAlternativeNames(singletonList("1.2.3.4"));
+        options.uriSubjectAlternativeNames(singletonList("ex:12345"));
+        //options.otherSubjectAlternativeNames(singletonList("1.3.6.1.4.1.311.20.2.3;UTF8:test"));
+        options.excludeCommonNameFromSubjectAlternativeNames(true);
+        options.timeToLive("8760h");
+        options.maxPathLength(3);
+        options.permittedDnsDomains(asList("subs1.example.com", "subs2.example.com"));
+        options.useCSRValues(false);
 
         SignedCertificate result = pkiSecretEngine.signIntermediateCA((String) csrResult.csr.getData(), options);
 
