@@ -10,7 +10,7 @@ import jakarta.inject.Qualifier;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Private {
 
-    class Literal extends AnnotationLiteral<Private> implements Private {
+    class Literal extends AnnotationLiteral<Private> {
         public static final Literal INSTANCE = new Literal();
 
         private Literal() {
