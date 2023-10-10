@@ -82,13 +82,13 @@ public interface VaultRuntimeConfig {
      * <p>
      * This value if used to extend a lease before it expires its ttl, or recreate a new lease before the current
      * lease reaches its max_ttl.
-     * By default Vault leaseDuration is equal to 7 days (ie: 168h or 604800s).
+     * By default, Vault leaseDuration is equal to 7 days (ie: 168h or 604800s).
      * If a connection pool maxLifetime is set, it is reasonable to set the renewGracePeriod to be greater
      * than the maxLifetime, so that we are sure we get a chance to renew leases before we reach the ttl.
      * In any case you need to make sure there will be attempts to fetch secrets within the renewGracePeriod,
      * because that is when the renewals will happen. This is particularly important for db dynamic secrets
      * because if the lease reaches its ttl or max_ttl, the password of the db user will become invalid and
-     * it will be not longer possible to log in.
+     * it will be no longer possible to log in.
      * This value should also be smaller than the ttl, otherwise that would mean that we would try to recreate
      * leases all the time.
      *
@@ -166,7 +166,7 @@ public interface VaultRuntimeConfig {
     /**
      * Kv secret engine version.
      * <p>
-     * see https://www.vaultproject.io/docs/secrets/kv/index.html
+     * see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV secrets engine</a>
      *
      * @asciidoclet
      */
@@ -193,7 +193,7 @@ public interface VaultRuntimeConfig {
      * `https://localhost:8200/v1/secret/data/config/myapp` for a KV secret engine v2 (or
      * `https://localhost:8200/v1/secret/config/myapp` for a KV secret engine v1).
      * <p>
-     * see https://www.vaultproject.io/docs/secrets/kv/index.html
+     * see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV secrets engine</a>
      *
      * @asciidoclet
      */

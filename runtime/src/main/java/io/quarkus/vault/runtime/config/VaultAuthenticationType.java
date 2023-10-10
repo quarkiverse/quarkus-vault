@@ -10,7 +10,7 @@ public enum VaultAuthenticationType {
      * associating one or more vault policies, with one or more service accounts and one or more namespaces.
      * When selecting the kubernetes authentication type, specify the vault authentication role to use.
      * <p>
-     * see https://www.vaultproject.io/api/auth/kubernetes/index.html
+     * see <a href="https://www.vaultproject.io/api/auth/kubernetes/index.html">Kubernetes auth method (API)</a>
      */
     KUBERNETES,
 

@@ -89,7 +89,9 @@ public interface VaultSystemBackendReactiveEngine {
      * Get the info for a secret engine, including its type.
      *
      * @since Vault 1.10.0
-     * @see https://www.vaultproject.io/api-docs/system/mounts#get-the-configuration-of-a-secret-engine
+     * @see <a href="https://www.vaultproject.io/api-docs/system/mounts#get-the-configuration-of-a-secret-engine">
+     *      Get the configuration of a secret engine
+     *      </a>
      *
      * @param mount Name of the secret engine
      * @return current secret engine info

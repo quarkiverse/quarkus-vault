@@ -12,7 +12,7 @@ public interface VaultEnterpriseConfig {
      * <p>
      * If set, this will add a `X-Vault-Namespace` header to all requests sent to the Vault server.
      * <p>
-     * See https://www.vaultproject.io/docs/enterprise/namespaces
+     * See <a href="https://www.vaultproject.io/docs/enterprise/namespaces">Vault Enterprise namespaces</a>
      *
      * @asciidoclet
      */
