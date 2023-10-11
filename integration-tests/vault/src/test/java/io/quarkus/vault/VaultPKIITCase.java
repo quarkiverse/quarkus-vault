@@ -4,16 +4,16 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers.pkcs_9_at_extensionRequest;
+import static org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers.rsaEncryption;
+import static org.bouncycastle.asn1.x509.Extension.nameConstraints;
+import static org.bouncycastle.asn1.x509.Extension.subjectAlternativeName;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.testcontainers.shaded.org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers.pkcs_9_at_extensionRequest;
-import static org.testcontainers.shaded.org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers.rsaEncryption;
-import static org.testcontainers.shaded.org.bouncycastle.asn1.x509.Extension.nameConstraints;
-import static org.testcontainers.shaded.org.bouncycastle.asn1.x509.Extension.subjectAlternativeName;
 
 import java.io.StringReader;
 import java.math.BigInteger;
@@ -27,23 +27,23 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.Extensions;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.GeneralSubtree;
+import org.bouncycastle.asn1.x509.NameConstraints;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.org.bouncycastle.asn1.ASN1Encodable;
-import org.testcontainers.shaded.org.bouncycastle.asn1.x509.BasicConstraints;
-import org.testcontainers.shaded.org.bouncycastle.asn1.x509.Extensions;
-import org.testcontainers.shaded.org.bouncycastle.asn1.x509.GeneralName;
-import org.testcontainers.shaded.org.bouncycastle.asn1.x509.GeneralNames;
-import org.testcontainers.shaded.org.bouncycastle.asn1.x509.GeneralSubtree;
-import org.testcontainers.shaded.org.bouncycastle.asn1.x509.NameConstraints;
-import org.testcontainers.shaded.org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.testcontainers.shaded.org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
-import org.testcontainers.shaded.org.bouncycastle.cert.X509CertificateHolder;
-import org.testcontainers.shaded.org.bouncycastle.openssl.PEMParser;
-import org.testcontainers.shaded.org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
 import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -168,7 +168,7 @@ public class VaultPKIITCase {
                 .map(GeneralName::getName)
                 .map(ASN1Encodable::toString)
                 .collect(toList());
-        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [0]test]", "alt.example.com", "#01020304", "ex:12345"),
+        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [CONTEXT 0]test]", "alt.example.com", "#01020304", "ex:12345"),
                 subjectAlternativeNames);
 
         // Check timeToLive option
@@ -268,7 +268,7 @@ public class VaultPKIITCase {
                 .map(GeneralName::getName)
                 .map(ASN1Encodable::toString)
                 .collect(toList());
-        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [0]test]", "alt.example.com", "#01020304", "ex:12345"),
+        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [CONTEXT 0]test]", "alt.example.com", "#01020304", "ex:12345"),
                 subjectAlternativeNames);
 
         // Check keyType option
@@ -598,7 +598,7 @@ public class VaultPKIITCase {
                 .map(GeneralName::getName)
                 .map(ASN1Encodable::toString)
                 .collect(toList());
-        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [0]test]", "alt.example.com", "#01020304", "ex:12345"),
+        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [CONTEXT 0]test]", "alt.example.com", "#01020304", "ex:12345"),
                 subjectAlternativeNames);
 
         // Check timeToLive option
@@ -678,7 +678,7 @@ public class VaultPKIITCase {
                 .map(GeneralName::getName)
                 .map(ASN1Encodable::toString)
                 .collect(toList());
-        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [0]test]", "alt.example.com", "#01020304", "ex:12345"),
+        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [CONTEXT 0]test]", "alt.example.com", "#01020304", "ex:12345"),
                 subjectAlternativeNames);
 
         // Check timeToLive option
@@ -777,7 +777,7 @@ public class VaultPKIITCase {
                 .map(GeneralName::getName)
                 .map(ASN1Encodable::toString)
                 .collect(toList());
-        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [0]test]", "alt.example.com", "#01020304", "ex:12345"),
+        assertEquals(asList("[1.3.6.1.4.1.311.20.2.3, [CONTEXT 0]test]", "alt.example.com", "#01020304", "ex:12345"),
                 subjectAlternativeNames);
 
         // Check timeToLive option
