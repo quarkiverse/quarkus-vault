@@ -30,20 +30,46 @@ public class VaultKVSecretEngine {
      * This is a shortcut to `readSecretJson(String)` when the secret value is a String, which is the common case.
      *
      * @param path in Vault, without the kv engine mount path
-     * @return list of key value pairs stored at 'path' in Vault
+     * @return Map of key value pairs stored at 'path' in Vault
      */
     public Map<String, String> readSecret(String path) {
         return engine.readSecret(path).await().indefinitely();
     }
 
     /**
+     * Provides the values stored in the Vault kv secret engine at a particular path and a mount.
+     * This is a shortcut to `readSecretJson(String, String)` when the secret value is a String,
+     * which is the common case.
+     *
+     * @param mount a specific Vault kv mount (it can also be the default configured one)
+     * @param path in Vault, without the kv engine mount path
+     * @return Map of key value pairs stored at 'path' in Vault
+     */
+    public Map<String, String> readSecret(String mount, String path) {
+        return engine.readSecret(mount, path).await().indefinitely();
+    }
+
+    /**
      * Provides the values stored in the Vault kv secret engine at a particular path.
      *
      * @param path in Vault, without the kv engine mount path
-     * @return list of key value pairs stored at 'path' in Vault
+     * @return Map of key value pairs stored at 'path' in Vault
      */
     public Map<String, Object> readSecretJson(String path) {
         return engine.readSecretJson(path).await().indefinitely();
+    }
+
+    /**
+     * Provides the values stored in the Vault kv secret engine at a particular path and a mount.
+     * This is a shortcut to `readSecretJson(String, String)` when the secret value is a String,
+     * which is the common case.
+     *
+     * @param mount a specific Vault kv mount (it can also be the default configured one)
+     * @param path in Vault, without the kv engine mount path
+     * @return Map of key value pairs stored at 'path' in Vault
+     */
+    public Map<String, Object> readSecretJson(String mount, String path) {
+        return engine.readSecretJson(mount, path).await().indefinitely();
     }
 
     /**
@@ -71,7 +97,7 @@ public class VaultKVSecretEngine {
      * List all paths under the specified path.
      *
      * @param path to list
-     * @return list of subpaths
+     * @return list of sub-paths
      */
     public List<String> listSecrets(String path) {
         return engine.listSecrets(path).await().indefinitely();
