@@ -145,8 +145,6 @@ public class VaultTestExtension {
 
         assertDeleteSecret(kvSecretEngine);
 
-        assertDeleteSecret(kvSecretEngine);
-
         Map<String, String> newsecrets = new HashMap<>();
         newsecrets.put("first", "one");
         newsecrets.put("second", "two");

@@ -4,10 +4,10 @@ import io.quarkus.vault.VaultException;
 
 public class VaultClientException extends VaultException {
 
-    private String operationName;
-    private String requestPath;
-    private int status;
-    private String body;
+    private final String operationName;
+    private final String requestPath;
+    private final int status;
+    private final String body;
 
     public VaultClientException(String operationName, String requestPath, int status, String body) {
         this.operationName = operationName;

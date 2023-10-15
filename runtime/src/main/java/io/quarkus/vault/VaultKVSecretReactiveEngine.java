@@ -24,7 +24,7 @@ public interface VaultKVSecretReactiveEngine {
     Uni<Map<String, String>> readSecret(String path);
 
     /**
-     * Provides the values stored in the Vault kv secret engine at a particular path and a mount.
+     * Provides the values stored in the Vault kv secret engine at a particular mount and path.
      * This is a shortcut to `readSecretJson(String, String)` when the secret value is a String,
      * which is the common case.
      *
