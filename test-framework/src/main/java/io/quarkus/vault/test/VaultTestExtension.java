@@ -566,7 +566,5 @@ public class VaultTestExtension {
         if (rabbitMQContainer != null && rabbitMQContainer.isRunning()) {
             rabbitMQContainer.stop();
         }
-
-        // VaultManager.getInstance().reset();
     }
 }
