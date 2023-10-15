@@ -1,9 +1,11 @@
-{"backend":
-{"file":
-{"path": "/tmp/vault/file"}
-},
+{
+  "backend": {
+    "file": {
+      "path": "/tmp/vault/file"
+    }
+  },
   "default_lease_ttl": "1m",
-  "max_lease_ttl": "10m" ,
+  "max_lease_ttl": "10m",
   "disable_mlock": true,
   "listener":
   { "tcp":
