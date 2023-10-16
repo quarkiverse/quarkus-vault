@@ -15,11 +15,11 @@ public class VaultPKIManagerFactory implements VaultPKISecretEngineFactory {
     static final String PKI_ENGINE_NAME = "pki";
 
     @Inject
-    private VaultClient vaultClient;
+    VaultClient vaultClient;
     @Inject
-    private VaultAuthManager vaultAuthManager;
+    VaultAuthManager vaultAuthManager;
     @Inject
-    private VaultInternalPKISecretEngine vaultInternalPKISecretEngine;
+    VaultInternalPKISecretEngine vaultInternalPKISecretEngine;
 
     @Override
     public VaultPKISecretEngine engine(String mount) {

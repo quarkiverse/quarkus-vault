@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.vault.runtime.VaultPKIManagerFactory;
 import io.quarkus.vault.test.VaultTestLifecycleManager;
 
 @DisabledOnOs(OS.WINDOWS) // https://github.com/quarkusio/quarkus/issues/3796
@@ -29,6 +30,9 @@ public class VaultUserpassKvv1WrapITCase {
 
     @Inject
     VaultKVSecretEngine kvSecretEngine;
+
+    @Inject
+    VaultPKIManagerFactory vaultPKIManagerFactory;
 
     @Test
     public void secretV2() {

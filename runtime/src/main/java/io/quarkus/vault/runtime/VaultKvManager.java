@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 
 import io.quarkus.vault.VaultKVSecretReactiveEngine;
 import io.quarkus.vault.runtime.client.Private;
@@ -19,22 +20,31 @@ import io.smallrye.mutiny.Uni;
 @ApplicationScoped
 public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
-    @Produces
-    @Private
-    public static VaultKvManager privateClientManager(@Private VaultClient vaultClient, VaultAuthManager vaultAuthManager,
-            VaultConfigHolder vaultConfigHolder, VaultInternalKvV1SecretEngine vaultInternalKvV1SecretEngine,
-            VaultInternalKvV2SecretEngine vaultInternalKvV2SecretEngine) {
-        return new VaultKvManager(vaultClient, vaultAuthManager, vaultConfigHolder, vaultInternalKvV1SecretEngine,
-                vaultInternalKvV2SecretEngine);
-    }
-
+    private final String mount;
     private final VaultClient vaultClient;
     private final VaultAuthManager vaultAuthManager;
     private final VaultConfigHolder vaultConfigHolder;
     private final VaultInternalKvV1SecretEngine vaultInternalKvV1SecretEngine;
     private final VaultInternalKvV2SecretEngine vaultInternalKvV2SecretEngine;
 
-    public VaultKvManager(VaultClient vaultClient, VaultAuthManager vaultAuthManager, VaultConfigHolder vaultConfigHolder,
+    @Produces
+    @Private
+    public static VaultKvManager privateClientManager(@Private VaultClient vaultClient,
+            VaultAuthManager vaultAuthManager,
+            VaultConfigHolder vaultConfigHolder,
+            VaultInternalKvV1SecretEngine vaultInternalKvV1SecretEngine,
+            VaultInternalKvV2SecretEngine vaultInternalKvV2SecretEngine) {
+        return new VaultKvManager(vaultClient,
+                vaultAuthManager,
+                vaultConfigHolder,
+                vaultInternalKvV1SecretEngine,
+                vaultInternalKvV2SecretEngine);
+    }
+
+    @Inject
+    public VaultKvManager(VaultClient vaultClient,
+            VaultAuthManager vaultAuthManager,
+            VaultConfigHolder vaultConfigHolder,
             VaultInternalKvV1SecretEngine vaultInternalKvV1SecretEngine,
             VaultInternalKvV2SecretEngine vaultInternalKvV2SecretEngine) {
         this.vaultClient = vaultClient;
@@ -42,6 +52,35 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
         this.vaultConfigHolder = vaultConfigHolder;
         this.vaultInternalKvV1SecretEngine = vaultInternalKvV1SecretEngine;
         this.vaultInternalKvV2SecretEngine = vaultInternalKvV2SecretEngine;
+        this.mount = this.vaultConfigHolder.getVaultRuntimeConfig().kvSecretEngineMountPath();
+    }
+
+    public VaultKvManager(String mount,
+            VaultClient vaultClient,
+            VaultAuthManager vaultAuthManager,
+            VaultConfigHolder vaultConfigHolder,
+            VaultInternalKvV1SecretEngine vaultInternalKvV1SecretEngine,
+            VaultInternalKvV2SecretEngine vaultInternalKvV2SecretEngine) {
+        this.mount = mount;
+        this.vaultClient = vaultClient;
+        this.vaultAuthManager = vaultAuthManager;
+        this.vaultConfigHolder = vaultConfigHolder;
+        this.vaultInternalKvV1SecretEngine = vaultInternalKvV1SecretEngine;
+        this.vaultInternalKvV2SecretEngine = vaultInternalKvV2SecretEngine;
+    }
+
+    public static VaultKvManager of(String mount,
+            VaultClient vaultClient,
+            VaultAuthManager vaultAuthManager,
+            VaultConfigHolder vaultConfigHolder,
+            VaultInternalKvV1SecretEngine vaultInternalKvV1SecretEngine,
+            VaultInternalKvV2SecretEngine vaultInternalKvV2SecretEngine) {
+        return new VaultKvManager(mount,
+                vaultClient,
+                vaultAuthManager,
+                vaultConfigHolder,
+                vaultInternalKvV1SecretEngine,
+                vaultInternalKvV2SecretEngine);
     }
 
     private VaultRuntimeConfig getConfig() {
@@ -54,7 +93,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
     @Override
     public Uni<Map<String, String>> readSecret(String path) {
-        final String mount = getConfig().kvSecretEngineMountPath();
         return readValues(mount, path).map(this::convert);
     }
 
@@ -65,7 +103,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
     @Override
     public Uni<Map<String, Object>> readSecretJson(String path) {
-        final String mount = getConfig().kvSecretEngineMountPath();
         return readValues(mount, path);
     }
 
@@ -98,7 +135,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
     @Override
     public Uni<Void> writeSecret(String path, Map<String, String> secret) {
-        String mount = getConfig().kvSecretEngineMountPath();
         return writeValues(mount, path, secret);
     }
 
@@ -109,7 +145,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
     @Override
     public Uni<Void> deleteSecret(String path) {
-        final String mount = getConfig().kvSecretEngineMountPath();
         return deleteValues(mount, path);
     }
 
@@ -137,7 +172,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
     @Override
     public Uni<List<String>> listSecrets(String path) {
-        final String mount = getConfig().kvSecretEngineMountPath();
         return listSecrets(mount, path);
     }
 

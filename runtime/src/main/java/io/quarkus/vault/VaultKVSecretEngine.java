@@ -18,7 +18,8 @@ import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 @ApplicationScoped
 public class VaultKVSecretEngine {
 
-    private final VaultKVSecretReactiveEngine engine;
+    @Inject
+    VaultKVSecretReactiveEngine engine;
 
     @Inject
     public VaultKVSecretEngine(VaultKVSecretReactiveEngine engine) {
