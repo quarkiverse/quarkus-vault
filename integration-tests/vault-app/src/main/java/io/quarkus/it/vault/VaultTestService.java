@@ -89,24 +89,6 @@ public class VaultTestService {
             }
         }
 
-        // crud with customizable mount
-        kv.writeSecret("secret", "crud", secrets);
-        secrets = kv.readSecret("secret", "crud");
-        if (!expectedSecrets.equals(secrets.toString())) {
-            return "/crud=" + secrets + "; expected: " + expectedSecrets;
-        }
-
-        kv.deleteSecret("secret", "crud");
-
-        try {
-            secrets = kv.readSecret("crud");
-            return "/crud=" + secrets + "; expected 404";
-        } catch (VaultClientException e) {
-            if (e.getStatus() != 404) {
-                return "http response code=" + e.getStatus() + "; expected: 404";
-            }
-        }
-
         try {
             List gifts = entityManager.createQuery("select g from Gift g").getResultList();
             int count = gifts.size();

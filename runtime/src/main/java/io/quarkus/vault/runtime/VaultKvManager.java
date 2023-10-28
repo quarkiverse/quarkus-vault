@@ -97,17 +97,7 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     }
 
     @Override
-    public Uni<Map<String, String>> readSecret(String mount, String path) {
-        return readValues(mount, path).map(this::convert);
-    }
-
-    @Override
     public Uni<Map<String, Object>> readSecretJson(String path) {
-        return readValues(mount, path);
-    }
-
-    @Override
-    public Uni<Map<String, Object>> readSecretJson(String mount, String path) {
         return readValues(mount, path);
     }
 
@@ -139,11 +129,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     }
 
     @Override
-    public Uni<Void> writeSecret(String mount, String path, Map<String, String> secret) {
-        return writeValues(mount, path, secret);
-    }
-
-    @Override
     public Uni<Void> deleteSecret(String path) {
         return deleteValues(mount, path);
     }
@@ -159,11 +144,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
         });
     }
 
-    @Override
-    public Uni<Void> deleteSecret(String mount, String path) {
-        return deleteValues(mount, path);
-    }
-
     private Uni<List<String>> listValues(String mount, String path) {
         return vaultAuthManager.getClientToken(vaultClient)
                 .flatMap(token -> (isV1() ? vaultInternalKvV1SecretEngine.listSecrets(vaultClient, token, mount, path)
@@ -172,11 +152,6 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
     @Override
     public Uni<List<String>> listSecrets(String path) {
-        return listSecrets(mount, path);
-    }
-
-    @Override
-    public Uni<List<String>> listSecrets(String mount, String path) {
         return listValues(mount, path);
     }
 
