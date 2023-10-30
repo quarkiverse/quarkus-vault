@@ -30,6 +30,20 @@ public class WiremockVault implements QuarkusTestResourceLifecycleManager {
                         .withBody(
                                 "{\"request_id\":\"bf5245f4-f194-2b13-80b7-6cad145b8135\",\"lease_id\":\"\",\"renewable\":false,\"lease_duration\":2764800,\"wrap_info\":null,\"warnings\":null,\"auth\":null,"
                                         + "\"data\":{\"hello\":\"world\"}}")));
+        server.stubFor(get(urlEqualTo("/v1/secret/withBoolean"))
+                .withHeader("X-Vault-Namespace", equalTo("accounting"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(
+                                "{\"request_id\":\"bf5245f4-f194-2b13-80b7-6cad145b8135\",\"lease_id\":\"\",\"renewable\":false,\"lease_duration\":2764800,\"wrap_info\":null,\"warnings\":null,\"auth\":null,"
+                                        + "\"data\":{\"isTrue\":true}}")));
+        server.stubFor(get(urlEqualTo("/v1/secret/withNull"))
+                .withHeader("X-Vault-Namespace", equalTo("accounting"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(
+                                "{\"request_id\":\"bf5245f4-f194-2b13-80b7-6cad145b8135\",\"lease_id\":\"\",\"renewable\":false,\"lease_duration\":2764800,\"wrap_info\":null,\"warnings\":null,\"auth\":null,"
+                                        + "\"data\":{\"foo\":null}}")));
 
         return Collections.emptyMap();
     }

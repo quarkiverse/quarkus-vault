@@ -55,7 +55,7 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     }
 
     private Map<String, String> convert(Map<String, Object> map) {
-        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> (String) entry.getValue()));
+        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue() != null ? String.valueOf(entry.getValue()) : null));
     }
 
     @Override

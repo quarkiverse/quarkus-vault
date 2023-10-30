@@ -38,6 +38,8 @@ class VaultProxyITCase {
         assertEquals(PROXY_HOST, host);
         assertEquals(PROXY_PORT, port);
         assertEquals("{hello=world}", kvSecretEngine.readSecret("foo").toString());
+        assertEquals("true", kvSecretEngine.readSecret("withBoolean").get("isTrue"));
+        assertNull(kvSecretEngine.readSecret("withNull").get("foo"));
     }
 
 }
