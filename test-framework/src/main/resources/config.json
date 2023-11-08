@@ -1,0 +1,13 @@
+{
+  "isEnabled": true,
+  "nullFoo": null,
+  "fooList": [
+    "foo1",
+    "foo2",
+    "foo3"
+  ],
+  "fooMap": {
+    "key1": "value1",
+    "key2": "value2"
+  }
+}

@@ -174,6 +174,15 @@ public class VaultITCase {
     }
 
     @Test
+    public void configPropertyScalar() {
+        Config config = ConfigProviderResolver.instance().getConfig();
+        assertTrue(config.getValue("my-enabled", Boolean.class));
+        assertTrue(config.getOptionalValue("my-foo", String.class).isEmpty());
+        assertTrue(config.getOptionalValue("my-fooList", String.class).isEmpty());
+        assertTrue(config.getOptionalValue("my-fooMap", String.class).isEmpty());
+    }
+
+    @Test
     public void secret() {
         Map<String, String> secrets = kvSecretEngine.readSecret(APP_SECRET_PATH);
         assertEquals("{" + SECRET_KEY + "=" + SECRET_VALUE + "}", secrets.toString());
@@ -374,6 +383,9 @@ public class VaultITCase {
         VaultKvSecretJsonV1 fooJsonV1 = vaultInternalKvV1SecretEngine
                 .getSecretJson(vaultClient, clientToken, SECRET_PATH_V1, "foo-json").await().indefinitely();
         assertEquals("{hello={foo=bar}}", fooJsonV1.data.toString());
+        VaultKvSecretJsonV1 configJsonV1 = vaultInternalKvV1SecretEngine
+                .getSecretJson(vaultClient, clientToken, SECRET_PATH_V1, "config-json").await().indefinitely();
+        assertTrue((boolean) configJsonV1.data.get("isEnabled"));
 
         VaultKvSecretJsonV2 secretV2 = vaultInternalKvV2SecretEngine
                 .getSecretJson(vaultClient, clientToken, SECRET_PATH_V2, APP_SECRET_PATH).await()
@@ -387,6 +399,9 @@ public class VaultITCase {
         VaultKvSecretJsonV2 fooJsonV2 = vaultInternalKvV2SecretEngine
                 .getSecretJson(vaultClient, clientToken, SECRET_PATH_V2, "foo-json").await().indefinitely();
         assertEquals("{hello={foo=bar}}", fooJsonV2.data.data.toString());
+        VaultKvSecretJsonV2 configJsonV2 = vaultInternalKvV2SecretEngine
+                .getSecretJson(vaultClient, clientToken, SECRET_PATH_V2, "config-json").await().indefinitely();
+        assertTrue((boolean) configJsonV2.data.data.get("isEnabled"));
     }
 
     private void assertTokenUserPass(String clientToken) {
