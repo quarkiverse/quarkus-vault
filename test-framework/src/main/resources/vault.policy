@@ -11,6 +11,10 @@ path "secret/data/config" {
   capabilities = ["read"]
 }
 
+path "secret/data/config-json" {
+  capabilities = ["read"]
+}
+
 # vault config source kv engine v2 with multi paths
 path "secret/data/multi/*" {
   capabilities = ["read"]
@@ -33,6 +37,10 @@ path "secret-v1/foo-json" {
 
 # vault config source kv engine v1
 path "secret-v1/config" {
+  capabilities = ["read"]
+}
+
+path "secret-v1/config-json" {
   capabilities = ["read"]
 }
 

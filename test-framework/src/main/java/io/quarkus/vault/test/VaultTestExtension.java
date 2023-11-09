@@ -266,6 +266,7 @@ public class VaultTestExtension {
                 .withClasspathResourceMapping("vault-tls.crt", "/tmp/vault-tls.crt", READ_ONLY)
                 .withClasspathResourceMapping("vault-postgres-creation.sql", TMP_VAULT_POSTGRES_CREATION_SQL_FILE, READ_ONLY)
                 .withClasspathResourceMapping("secret.json", "/tmp/secret.json", READ_ONLY)
+                .withClasspathResourceMapping("config.json", "/tmp/config.json", READ_ONLY)
                 .withCommand("server", "-log-level=debug", "-config=" + TMP_VAULT_CONFIG_JSON_FILE);
 
         vaultContainer.setPortBindings(Arrays.asList(VAULT_PORT + ":" + VAULT_PORT));
@@ -343,6 +344,7 @@ public class VaultTestExtension {
                 format("vault kv put %s/%s %s=%s", SECRET_PATH_V1, LIST_PATH + "/" + LIST_SUB_PATH, SECRET_KEY, SECRET_VALUE));
         execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V1, APP_CONFIG_PATH, PASSWORD_PROPERTY_NAME, DB_PASSWORD));
         execVault(format("vault kv put %s/foo-json @/tmp/secret.json", SECRET_PATH_V1));
+        execVault(format("vault kv put %s/config-json @/tmp/config.json", SECRET_PATH_V1));
 
         // static secrets kv v2
         execVault(format("vault secrets enable -path=%s -version=2 kv", SECRET_PATH_V2));
@@ -351,6 +353,7 @@ public class VaultTestExtension {
                 format("vault kv put %s/%s %s=%s", SECRET_PATH_V2, LIST_PATH + "/" + LIST_SUB_PATH, SECRET_KEY, SECRET_VALUE));
         execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V2, APP_CONFIG_PATH, PASSWORD_PROPERTY_NAME, DB_PASSWORD));
         execVault(format("vault kv put %s/foo-json @/tmp/secret.json", SECRET_PATH_V2));
+        execVault(format("vault kv put %s/config-json @/tmp/config.json", SECRET_PATH_V2));
 
         // multi config
         execVault(format("vault kv put %s/multi/default1 color=blue size=XL", SECRET_PATH_V2));

@@ -129,8 +129,16 @@ public class VaultConfigSource implements ConfigSource {
     }
 
     private Map<String, String> fetchSecrets(String path, String prefix) {
-        Map<String, String> secrets = getVaultKVSecretEngine().readSecret(path).await().indefinitely();
-        return prefixMap(secrets, prefix);
+
+        Map<String, Object> secretJson = getVaultKVSecretEngine().readSecretJson(path).await().indefinitely();
+
+        // ignore list and map, honor null, get as string scalar types
+        Map<String, String> secret = secretJson.entrySet().stream()
+                .filter(entry -> isScalar(entry.getKey(), entry.getValue()))
+                // we cannot use toMap because it does not allow null value because it uses Map.merge
+                .collect(HashMap::new, (m, v) -> m.put(v.getKey(), toString(v.getValue())), HashMap::putAll);
+
+        return prefixMap(secret, prefix);
     }
 
     private VaultKVSecretReactiveEngine getVaultKVSecretEngine() {
@@ -141,5 +149,17 @@ public class VaultConfigSource implements ConfigSource {
         return prefix == null
                 ? map
                 : map.entrySet().stream().collect(toMap(entry -> prefix + "." + entry.getKey(), Map.Entry::getValue));
+    }
+
+    private boolean isScalar(String key, Object value) {
+        boolean isScalar = !(value instanceof List || value instanceof Map);
+        if (!isScalar) {
+            log.warnv("Unsupported type (List or Map) for key {0}, skipping", key);
+        }
+        return isScalar;
+    }
+
+    private String toString(Object value) {
+        return value == null ? null : value.toString();
     }
 }
