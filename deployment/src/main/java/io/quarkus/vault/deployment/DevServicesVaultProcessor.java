@@ -182,7 +182,7 @@ public class DevServicesVaultProcessor {
         private final Closeable closeable;
 
         public VaultInstance(String host, int port, String clientToken, Closeable closeable) {
-            this("https://" + host + ":" + port, clientToken, closeable);
+            this("http://" + host + ":" + port, clientToken, closeable);
         }
 
         public VaultInstance(String url, String clientToken, Closeable closeable) {
