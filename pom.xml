@@ -8,7 +8,7 @@
   </parent>
   <groupId>io.quarkiverse.vault</groupId>
   <artifactId>quarkus-vault-parent</artifactId>
-  <version>3.4.0-SNAPSHOT</version>
+  <version>3.4.0</version>
   <packaging>pom</packaging>
   <name>Quarkus - Vault - Parent</name>
   <modules>
@@ -23,7 +23,7 @@
     <connection>scm:git:git@github.com:quarkiverse/quarkus-vault.git</connection>
     <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-vault.git</developerConnection>
     <url>https://github.com/quarkiverse/quarkus-vault</url>
-    <tag>HEAD</tag>
+    <tag>3.4.0</tag>
   </scm>
   <properties>
     <maven.compiler.parameters>true</maven.compiler.parameters>
