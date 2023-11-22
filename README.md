@@ -5,6 +5,10 @@
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse.vault/quarkus-vault?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.vault/quarkus-vault)
 
+Note: Quarkus Vault `3.3.0` introduced an issue breaking Vault Dev Service in Quarkus `3.5`. Quarkus Vault `3.4.0` fixes
+that issue, and is the default version for Quarkus `3.6`. If you want Dev Service to work with Quarkus `3.5`
+you can force an upgrade to Quarkus Vault `3.4.0`, which should work with both Quarkus `3.5` and `3.6`.
+
 ## Introduction
 
 This Quarkus extension enables the use of [HashiCorp Vault](https://www.vaultproject.io) as a config source in Quarkus.
