@@ -100,6 +100,8 @@ public class VaultITCase {
 
     public static final String MY_PASSWORD = "my-password";
 
+    public static final String MOUNT = "transit";
+
     @RegisterExtension
     static final QuarkusUnitTest config = new QuarkusUnitTest()
             .withApplicationRoot((jar) -> jar
@@ -291,7 +293,8 @@ public class VaultITCase {
         VaultTransitSignBody batchBody = new VaultTransitSignBody();
         batchBody.batchInput = singletonList(new VaultTransitSignBatchInput(Base64String.from(data), context));
 
-        VaultTransitSign batchSign = vaultInternalTransitSecretEngine.sign(vaultClient, token, keyName, null, batchBody).await()
+        VaultTransitSign batchSign = vaultInternalTransitSecretEngine.sign(vaultClient, token, MOUNT, keyName, null, batchBody)
+                .await()
                 .indefinitely();
 
         VaultTransitVerifyBody verifyBody = new VaultTransitVerifyBody();

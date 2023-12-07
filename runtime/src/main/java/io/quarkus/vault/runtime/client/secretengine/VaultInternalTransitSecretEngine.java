@@ -1,27 +1,33 @@
 package io.quarkus.vault.runtime.client.secretengine;
 
-import jakarta.inject.Singleton;
-
 import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultInternalBase;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitCreateKeyBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitDecrypt;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitDecryptBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitEncrypt;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitEncryptBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitKeyConfigBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitKeyExport;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitListKeysResult;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitReadKeyResult;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitRewrapBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitSign;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitSignBody;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerify;
-import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerifyBody;
+import io.quarkus.vault.runtime.client.dto.transit.*;
 import io.smallrye.mutiny.Uni;
+import jakarta.inject.Singleton;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Singleton
 public class VaultInternalTransitSecretEngine extends VaultInternalBase {
+
+    /**
+     * Concatenates the provided URL path segments and sanitizes separators.
+     * The path is returned without a leading "/".
+     *
+     * @param firstPart first URL path segment
+     * @param otherParts other URL path segments
+     * @return String concatenated path
+     */
+    private String getPath(String firstPart, String... otherParts) {
+        String path = Stream.of(Paths.get(firstPart, otherParts))
+                .map(Path::toString)
+                .collect(Collectors.joining("/"));
+        return (path.startsWith("/")) ? path.substring(1) : path;
+    }
 
     @Override
     protected String opNamePrefix() {
@@ -65,9 +71,9 @@ public class VaultInternalTransitSecretEngine extends VaultInternalBase {
         return vaultClient.post(opName("Decrypt Key"), "transit/decrypt/" + keyName, token, body, VaultTransitDecrypt.class);
     }
 
-    public Uni<VaultTransitSign> sign(VaultClient vaultClient, String token, String keyName, String hashAlgorithm,
+    public Uni<VaultTransitSign> sign(VaultClient vaultClient, String token, String mount, String keyName, String hashAlgorithm,
             VaultTransitSignBody body) {
-        String path = "transit/sign/" + keyName + (hashAlgorithm == null ? "" : "/" + hashAlgorithm);
+        String path = getPath(mount, "sign", keyName, hashAlgorithm == null ? "" : hashAlgorithm);
         return vaultClient.post(opName("Sign"), path, token, body, VaultTransitSign.class);
     }
 

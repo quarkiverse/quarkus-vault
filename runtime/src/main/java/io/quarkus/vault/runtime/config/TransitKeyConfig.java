@@ -8,11 +8,10 @@ import io.quarkus.runtime.annotations.ConfigGroup;
 public interface TransitKeyConfig {
 
     /**
-     * Specifies the name of the key to use. By default this will be the property key alias. Used when
+     * Specifies the name of the key to use. By default, this will be the property key alias. Used when
      * the same transit key is used with different configurations. Such as in:
      * ```
      * quarkus.vault.transit.key.my-foo-key.name=foo
-     *
      * quarkus.vault.transit.key.my-foo-key-with-prehashed.name=foo
      * quarkus.vault.transit.key.my-foo-key-with-prehashed.prehashed=true
      * ...
@@ -71,4 +70,9 @@ public interface TransitKeyConfig {
      *      convergent_encryption</a>
      */
     Optional<String> convergentEncryption();
+
+    /**
+     * Specifies the mount path of the Transit engine
+     */
+    Optional<String> mount();
 }

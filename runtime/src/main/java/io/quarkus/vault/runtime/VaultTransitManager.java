@@ -333,12 +333,15 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
         final String configKeyName;
         final String configHashAlgorithm;
+        final String mount;
         if (config != null) {
+            mount = config.mount().orElse("transit");
             configKeyName = config.name().orElse(keyName);
             configHashAlgorithm = config.hashAlgorithm().orElse(null);
             body.signatureAlgorithm = config.signatureAlgorithm().orElse(null);
             body.prehashed = config.prehashed().orElse(null);
         } else {
+            mount = "transit";
             configKeyName = keyName;
             configHashAlgorithm = null;
         }
@@ -354,7 +357,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         }
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.sign(vaultClient, token, configKeyName, selectedHashAlgorithm, body)
+            return vaultInternalTransitSecretEngine.sign(vaultClient, token, mount, configKeyName, selectedHashAlgorithm, body)
                     .map(sign -> {
                         for (int i = 0; i < pairs.size(); i++) {
                             VaultTransitSignDataBatchResult result = sign.data.batchResults.get(i);
