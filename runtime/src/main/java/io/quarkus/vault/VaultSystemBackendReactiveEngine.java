@@ -1,12 +1,17 @@
 package io.quarkus.vault;
 
 import java.util.List;
+import java.util.Map;
+
+import jakarta.annotation.Nullable;
 
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.quarkus.vault.sys.EnableEngineOptions;
 import io.quarkus.vault.sys.VaultHealth;
 import io.quarkus.vault.sys.VaultHealthStatus;
 import io.quarkus.vault.sys.VaultInit;
+import io.quarkus.vault.sys.VaultPluginDetails;
+import io.quarkus.vault.sys.VaultPlugins;
 import io.quarkus.vault.sys.VaultSealStatus;
 import io.quarkus.vault.sys.VaultSecretEngine;
 import io.quarkus.vault.sys.VaultSecretEngineInfo;
@@ -146,5 +151,54 @@ public interface VaultSystemBackendReactiveEngine {
      * @param mount Engine mount path.
      */
     Uni<Void> disable(String mount);
+
+    /**
+     * Lists all available plugins.
+     *
+     * @return Map of plugin types to plugin names.
+     */
+    Uni<VaultPlugins> listPlugins();
+
+    /**
+     * Lists all available plugins of a specific type.
+     *
+     * @param type Plugin type.
+     * @return List of plugin names.
+     */
+    Uni<List<String>> listPlugins(String type);
+
+    /**
+     * Gets details for a specific plugin.
+     *
+     * @param type Plugin type.
+     * @param name Plugin name.
+     * @param version Plugin version.
+     * @return Plugin info.
+     */
+    Uni<VaultPluginDetails> getPluginDetails(String type, String name, @Nullable String version);
+
+    /**
+     * Registers a plugin.
+     *
+     * @param type Plugin type.
+     * @param name Plugin name.
+     * @param version Plugin version.
+     * @param sha256 SHA256 of the plugin binary.
+     * @param command Plugin command.
+     * @param args Plugin args.
+     * @param env Plugin environment variables.
+     * @return Plugin registration status.
+     */
+    Uni<Void> registerPlugin(String type, String name, @Nullable String version, String sha256, String command,
+            @Nullable List<String> args, @Nullable List<String> env);
+
+    /**
+     * Deregisters a plugin.
+     *
+     * @param type Plugin type.
+     * @param name Plugin name.
+     * @param version Plugin version.
+     */
+    Uni<Void> removePlugin(String type, String name, @Nullable String version);
 
 }

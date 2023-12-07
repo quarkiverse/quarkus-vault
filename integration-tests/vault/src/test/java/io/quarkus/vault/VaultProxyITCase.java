@@ -2,7 +2,7 @@ package io.quarkus.vault;
 
 import static io.quarkus.vault.WiremockProxy.PROXY_HOST;
 import static io.quarkus.vault.WiremockProxy.PROXY_PORT;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import jakarta.inject.Inject;
 

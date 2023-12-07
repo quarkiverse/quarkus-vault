@@ -15,9 +15,13 @@ import io.quarkus.vault.runtime.client.dto.sys.VaultInitBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultInitResponse;
 import io.quarkus.vault.runtime.client.dto.sys.VaultLeasesBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultLeasesLookup;
+import io.quarkus.vault.runtime.client.dto.sys.VaultListAllPluginsResult;
+import io.quarkus.vault.runtime.client.dto.sys.VaultListPluginsResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultListPolicyResult;
+import io.quarkus.vault.runtime.client.dto.sys.VaultPluginDetailsResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyResult;
+import io.quarkus.vault.runtime.client.dto.sys.VaultRegisterPluginBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultRenewLease;
 import io.quarkus.vault.runtime.client.dto.sys.VaultSealStatusResult;
 import io.quarkus.vault.runtime.client.dto.sys.VaultSecretEngineInfoResult;
@@ -123,5 +127,31 @@ public class VaultInternalSystemBackend extends VaultInternalBase {
         }
 
         return queryParams;
+    }
+
+    public Uni<VaultListAllPluginsResult> listPlugins(VaultClient vaultClient, String token) {
+        return vaultClient.get(opName("List Plugins"), "sys/plugins/catalog", token, VaultListAllPluginsResult.class);
+    }
+
+    public Uni<VaultListPluginsResult> listPlugins(VaultClient vaultClient, String token, String type) {
+        return vaultClient.list(opName("List Plugins (" + type + ")"), "sys/plugins/catalog/" + type, token,
+                VaultListPluginsResult.class);
+    }
+
+    public Uni<VaultPluginDetailsResult> getPluginDetails(VaultClient vaultClient, String token, String type, String name,
+            String version) {
+        var query = version != null ? "?version=" + version : "";
+        return vaultClient.get(opName("Get Plugin Details"), "sys/plugins/catalog/" + type + "/" + name + query, token,
+                VaultPluginDetailsResult.class);
+    }
+
+    public Uni<Void> registerPlugin(VaultClient vaultClient, String token, String type, String name,
+            VaultRegisterPluginBody body) {
+        return vaultClient.post(opName("Register Plugin"), "sys/plugins/catalog/" + type + "/" + name, token, body, 204);
+    }
+
+    public Uni<Void> removePlugin(VaultClient vaultClient, String token, String type, String name, String version) {
+        var query = version != null ? "?version=" + version : "";
+        return vaultClient.delete(opName("Remove Plugin"), "sys/plugins/catalog/" + type + "/" + name + query, token, 204);
     }
 }

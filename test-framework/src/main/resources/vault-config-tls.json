@@ -12,5 +12,6 @@
     "tls_key_file": "/tmp/vault-tls.key",
     "tls_disable": "false"
   }
-  }
+  },
+  "plugin_directory": "/vault/plugins"
 }
