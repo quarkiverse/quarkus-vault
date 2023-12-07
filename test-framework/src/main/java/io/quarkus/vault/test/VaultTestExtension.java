@@ -14,10 +14,8 @@ import static org.mockito.Mockito.when;
 import static org.testcontainers.containers.BindMode.READ_ONLY;
 import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -267,6 +265,7 @@ public class VaultTestExtension {
                 .withClasspathResourceMapping("vault-postgres-creation.sql", TMP_VAULT_POSTGRES_CREATION_SQL_FILE, READ_ONLY)
                 .withClasspathResourceMapping("secret.json", "/tmp/secret.json", READ_ONLY)
                 .withClasspathResourceMapping("config.json", "/tmp/config.json", READ_ONLY)
+                .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY)
                 .withCommand("server", "-log-level=debug", "-config=" + TMP_VAULT_CONFIG_JSON_FILE);
 
         vaultContainer.setPortBindings(Arrays.asList(VAULT_PORT + ":" + VAULT_PORT));
@@ -336,6 +335,9 @@ public class VaultTestExtension {
         vaultInternalSystemBackend.createUpdatePolicy(vaultClient, rootToken, VAULT_POLICY, new VaultPolicyBody(policyContent))
                 .await()
                 .indefinitely();
+
+        // executable permission for test-plugin
+        execVault("chmod +x /vault/plugins/test-plugin");
 
         // static secrets kv v1
         execVault(format("vault secrets enable -path=%s kv", SECRET_PATH_V1));
@@ -453,19 +455,12 @@ public class VaultTestExtension {
         execVault("vault token create -policy=root -id=pkiroot");
     }
 
-    private String readResourceContent(String path) throws IOException {
-        int count;
-        byte[] buf = new byte[512];
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
-        try {
-            while ((count = in.read(buf)) > 0) {
-                baos.write(buf, 0, count);
-            }
-        } finally {
-            in.close();
-        }
-        return new String(baos.toByteArray());
+    public static String readResourceContent(String path) throws IOException {
+        return new String(readResourceData(path));
+    }
+
+    public static byte[] readResourceData(String path) throws IOException {
+        return Thread.currentThread().getContextClassLoader().getResourceAsStream(path).readAllBytes();
     }
 
     private String fetchWrappingToken(String out) {
@@ -476,6 +471,15 @@ public class VaultTestExtension {
         } else {
             throw new RuntimeException("unable to find wrapping_token in " + out);
         }
+    }
+
+    public static String getTestPluginFilename() {
+        return "vault-test-plugin-linux-" + getPluginArchitecture();
+    }
+
+    public static String getPluginArchitecture() {
+        var osArch = System.getProperty("os.arch");
+        return osArch.contains("aarch") || osArch.contains("arm") ? "arm64" : "amd64";
     }
 
     public static boolean useTls() {

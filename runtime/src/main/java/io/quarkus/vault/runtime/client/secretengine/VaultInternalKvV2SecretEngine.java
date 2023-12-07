@@ -4,7 +4,10 @@ import jakarta.inject.Singleton;
 
 import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultInternalBase;
-import io.quarkus.vault.runtime.client.dto.kv.*;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvListSecrets;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretJsonV2;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2Write;
+import io.quarkus.vault.runtime.client.dto.kv.VaultKvSecretV2WriteBody;
 import io.smallrye.mutiny.Uni;
 
 @Singleton

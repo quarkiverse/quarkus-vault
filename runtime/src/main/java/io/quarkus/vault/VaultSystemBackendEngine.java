@@ -2,6 +2,7 @@ package io.quarkus.vault;
 
 import java.util.List;
 
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -10,6 +11,8 @@ import io.quarkus.vault.sys.EnableEngineOptions;
 import io.quarkus.vault.sys.VaultHealth;
 import io.quarkus.vault.sys.VaultHealthStatus;
 import io.quarkus.vault.sys.VaultInit;
+import io.quarkus.vault.sys.VaultPluginDetails;
+import io.quarkus.vault.sys.VaultPlugins;
 import io.quarkus.vault.sys.VaultSealStatus;
 import io.quarkus.vault.sys.VaultSecretEngine;
 import io.quarkus.vault.sys.VaultSecretEngineInfo;
@@ -186,6 +189,64 @@ public class VaultSystemBackendEngine {
      */
     public void disable(String mount) {
         engine.disable(mount).await().indefinitely();
+    }
+
+    /**
+     * Lists all available plugins.
+     *
+     * @return Map of plugin types to plugin names.
+     */
+    public VaultPlugins listPlugins() {
+        return engine.listPlugins().await().indefinitely();
+    }
+
+    /**
+     * Lists all available plugins of a specific type.
+     *
+     * @param type Plugin type.
+     * @return List of plugin names.
+     */
+    public List<String> listPlugins(String type) {
+        return engine.listPlugins(type).await().indefinitely();
+    }
+
+    /**
+     * Gets details for a specific plugin.
+     *
+     * @param type Plugin type.
+     * @param name Plugin name.
+     * @param version Plugin version.
+     * @return Plugin info.
+     */
+    public VaultPluginDetails getPluginDetails(String type, String name, @Nullable String version) {
+        return engine.getPluginDetails(type, name, version).await().indefinitely();
+    }
+
+    /**
+     * Registers a plugin.
+     *
+     * @param type Plugin type.
+     * @param name Plugin name.
+     * @param version Plugin version.
+     * @param sha256 SHA256 of the plugin binary.
+     * @param command Plugin command.
+     * @param args Plugin args.
+     * @param env Plugin environment variables.
+     */
+    public void registerPlugin(String type, String name, @Nullable String version, String sha256, String command,
+            @Nullable List<String> args, @Nullable List<String> env) {
+        engine.registerPlugin(type, name, version, sha256, command, args, env).await().indefinitely();
+    }
+
+    /**
+     * Deregisters a plugin.
+     *
+     * @param type Plugin type.
+     * @param name Plugin name.
+     * @param version Plugin version.
+     */
+    public void removePlugin(String type, String name, @Nullable String version) {
+        engine.removePlugin(type, name, version).await().indefinitely();
     }
 
 }
