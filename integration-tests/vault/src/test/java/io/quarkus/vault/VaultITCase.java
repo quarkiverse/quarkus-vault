@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.StreamSupport;
 
 import io.quarkus.vault.runtime.VaultTransitManager;
@@ -137,6 +136,12 @@ public class VaultITCase {
     VaultInternalTokenAuthMethod vaultInternalTokenAuthMethod;
     @Inject
     VaultInternalDynamicCredentialsSecretEngine vaultInternalDynamicCredentialsSecretEngine;
+
+    private List<String> getTransitEngineMounts() {
+        return Arrays.asList(
+                VaultTransitManager.DEFAULT_MOUNT,
+                VaultTestExtension.TRANSIT_ENGINE_CUSTOM_MOUNT_PATH);
+    }
 
     @Test
     public void credentialsProvider() {
@@ -286,62 +291,64 @@ public class VaultITCase {
     }
 
     private void assertTransitSign(String token, String keyName, Base64String context) {
-
         String data = "coucou";
 
-        VaultTransitSignBody batchBody = new VaultTransitSignBody();
-        batchBody.batchInput = singletonList(new VaultTransitSignBatchInput(Base64String.from(data), context));
+        for (String mount: getTransitEngineMounts()) {
+            VaultTransitSignBody batchBody = new VaultTransitSignBody();
+            batchBody.batchInput = singletonList(new VaultTransitSignBatchInput(Base64String.from(data), context));
 
-        VaultTransitSign batchSign = vaultInternalTransitSecretEngine.sign(vaultClient, token, VaultTransitManager.DEFAULT_MOUNT, keyName, null, batchBody)
-                .await()
-                .indefinitely();
+            VaultTransitSign batchSign = vaultInternalTransitSecretEngine.sign(vaultClient, token, mount, keyName, null, batchBody)
+                    .await()
+                    .indefinitely();
 
-        VaultTransitVerifyBody verifyBody = new VaultTransitVerifyBody();
-        VaultTransitVerifyBatchInput batchInput = new VaultTransitVerifyBatchInput(Base64String.from(data), context);
-        batchInput.signature = batchSign.data.batchResults.get(0).signature;
-        verifyBody.batchInput = singletonList(batchInput);
+            VaultTransitVerifyBody verifyBody = new VaultTransitVerifyBody();
+            VaultTransitVerifyBatchInput batchInput = new VaultTransitVerifyBatchInput(Base64String.from(data), context);
+            batchInput.signature = batchSign.data.batchResults.get(0).signature;
+            verifyBody.batchInput = singletonList(batchInput);
 
-        VaultTransitVerify verify = vaultInternalTransitSecretEngine.verify(vaultClient, token, VaultTransitManager.DEFAULT_MOUNT, keyName, null, verifyBody)
-                .await()
-                .indefinitely();
-        assertEquals(1, verify.data.batchResults.size());
-        assertTrue(verify.data.batchResults.get(0).valid);
+            VaultTransitVerify verify = vaultInternalTransitSecretEngine.verify(vaultClient, token, mount, keyName, null, verifyBody)
+                    .await()
+                    .indefinitely();
+            assertEquals(1, verify.data.batchResults.size());
+            assertTrue(verify.data.batchResults.get(0).valid);
+        }
     }
 
     private void assertTransitEncryption(String token, String keyName, Base64String context) {
-
         String data = "coucou";
 
-        VaultTransitEncryptBatchInput encryptBatchInput = new VaultTransitEncryptBatchInput(Base64String.from(data), context);
-        VaultTransitEncryptBody encryptBody = new VaultTransitEncryptBody();
-        encryptBody.batchInput = singletonList(encryptBatchInput);
-        VaultTransitEncrypt encryptBatchResult = vaultInternalTransitSecretEngine
-                .encrypt(vaultClient, token, VaultTransitManager.DEFAULT_MOUNT, keyName, encryptBody).await()
-                .indefinitely();
-        String ciphertext = encryptBatchResult.data.batchResults.get(0).ciphertext;
+        for (String mount: getTransitEngineMounts()) {
+            VaultTransitEncryptBatchInput encryptBatchInput = new VaultTransitEncryptBatchInput(Base64String.from(data), context);
+            VaultTransitEncryptBody encryptBody = new VaultTransitEncryptBody();
+            encryptBody.batchInput = singletonList(encryptBatchInput);
+            VaultTransitEncrypt encryptBatchResult = vaultInternalTransitSecretEngine
+                    .encrypt(vaultClient, token, mount, keyName, encryptBody).await()
+                    .indefinitely();
+            String ciphertext = encryptBatchResult.data.batchResults.get(0).ciphertext;
 
-        String batchDecryptedString = decrypt(token, keyName, ciphertext, context);
-        assertEquals(data, batchDecryptedString);
+            String batchDecryptedString = decrypt(token, keyName, mount, ciphertext, context);
+            assertEquals(data, batchDecryptedString);
 
-        VaultTransitRewrapBatchInput rewrapBatchInput = new VaultTransitRewrapBatchInput(ciphertext, context);
-        VaultTransitRewrapBody rewrapBody = new VaultTransitRewrapBody();
-        rewrapBody.batchInput = singletonList(rewrapBatchInput);
-        VaultTransitEncrypt rewrap = vaultInternalTransitSecretEngine.rewrap(vaultClient, token,
-                        VaultTransitManager.DEFAULT_MOUNT, keyName, rewrapBody).await()
-                .indefinitely();
-        assertEquals(1, rewrap.data.batchResults.size());
-        String rewrappedCiphertext = rewrap.data.batchResults.get(0).ciphertext;
+            VaultTransitRewrapBatchInput rewrapBatchInput = new VaultTransitRewrapBatchInput(ciphertext, context);
+            VaultTransitRewrapBody rewrapBody = new VaultTransitRewrapBody();
+            rewrapBody.batchInput = singletonList(rewrapBatchInput);
+            VaultTransitEncrypt rewrap = vaultInternalTransitSecretEngine.rewrap(vaultClient, token,
+                            mount, keyName, rewrapBody).await()
+                    .indefinitely();
+            assertEquals(1, rewrap.data.batchResults.size());
+            String rewrappedCiphertext = rewrap.data.batchResults.get(0).ciphertext;
 
-        batchDecryptedString = decrypt(token, keyName, rewrappedCiphertext, context);
-        assertEquals(data, batchDecryptedString);
+            batchDecryptedString = decrypt(token, keyName, mount, rewrappedCiphertext, context);
+            assertEquals(data, batchDecryptedString);
+        }
     }
 
-    private String decrypt(String token, String keyName, String ciphertext, Base64String context) {
+    private String decrypt(String token, String keyName, String mount, String ciphertext, Base64String context) {
         VaultTransitDecryptBatchInput decryptBatchInput = new VaultTransitDecryptBatchInput(ciphertext, context);
         VaultTransitDecryptBody decryptBody = new VaultTransitDecryptBody();
         decryptBody.batchInput = singletonList(decryptBatchInput);
         VaultTransitDecrypt decryptBatchResult = vaultInternalTransitSecretEngine
-                .decrypt(vaultClient, token, VaultTransitManager.DEFAULT_MOUNT, keyName, decryptBody).await()
+                .decrypt(vaultClient, token, mount, keyName, decryptBody).await()
                 .indefinitely();
         return decryptBatchResult.data.batchResults.get(0).plaintext.decodeAsString();
     }

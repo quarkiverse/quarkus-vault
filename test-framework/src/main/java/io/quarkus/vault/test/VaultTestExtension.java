@@ -100,6 +100,7 @@ public class VaultTestExtension {
     public static final String SIGN_KEY_NAME = "my-sign-key";
     public static final String SIGN_KEY2_NAME = "my-sign-key2";
     public static final String SIGN_DERIVATION_KEY_NAME = "my-derivation-sign-key";
+    public static final String TRANSIT_ENGINE_CUSTOM_MOUNT_PATH = "custom-transit";
 
     public static final String TMP_VAULT_POSTGRES_CREATION_SQL_FILE = "/tmp/vault-postgres-creation.sql";
     public static final String TMP_VAULT_CONFIG_JSON_FILE = "/tmp/vault-config.json";
@@ -429,8 +430,7 @@ public class VaultTestExtension {
                 VAULT_RMQROLE, db_default_ttl, db_max_ttl);
         execVault(vault_write_rabbitmq_roles_myrabbitmqrole);
 
-        // transit
-
+        // transit engine with default mount path ("transit")
         execVault("vault secrets enable transit");
         execVault(format("vault write -f transit/keys/%s", ENCRYPTION_KEY_NAME));
         execVault(format("vault write -f transit/keys/%s", ENCRYPTION_KEY2_NAME));
@@ -438,8 +438,17 @@ public class VaultTestExtension {
         execVault(format("vault write transit/keys/%s type=ecdsa-p256", SIGN_KEY_NAME));
         execVault(format("vault write transit/keys/%s type=rsa-2048", SIGN_KEY2_NAME));
         execVault(format("vault write transit/keys/%s type=ed25519 derived=true", SIGN_DERIVATION_KEY_NAME));
-
         execVault("vault write transit/keys/jws type=ecdsa-p256");
+
+        // transit engine with custom mount path
+        execVault(format("vault secrets enable -path=%s transit", TRANSIT_ENGINE_CUSTOM_MOUNT_PATH));
+        execVault(format("vault write -f %s/keys/%s", TRANSIT_ENGINE_CUSTOM_MOUNT_PATH, ENCRYPTION_KEY_NAME));
+        execVault(format("vault write -f %s/keys/%s", TRANSIT_ENGINE_CUSTOM_MOUNT_PATH, ENCRYPTION_KEY2_NAME));
+        execVault(format("vault write %s/keys/%s derived=true", TRANSIT_ENGINE_CUSTOM_MOUNT_PATH, ENCRYPTION_DERIVED_KEY_NAME));
+        execVault(format("vault write %s/keys/%s type=ecdsa-p256", TRANSIT_ENGINE_CUSTOM_MOUNT_PATH, SIGN_KEY_NAME));
+        execVault(format("vault write %s/keys/%s type=rsa-2048", TRANSIT_ENGINE_CUSTOM_MOUNT_PATH, SIGN_KEY2_NAME));
+        execVault(format("vault write %s/keys/%s type=ed25519 derived=true", TRANSIT_ENGINE_CUSTOM_MOUNT_PATH, SIGN_DERIVATION_KEY_NAME));
+        execVault(format("vault write %s/keys/jws type=ecdsa-p256", TRANSIT_ENGINE_CUSTOM_MOUNT_PATH));
 
         // TOTP
 
