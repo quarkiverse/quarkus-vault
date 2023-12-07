@@ -387,4 +387,15 @@ public class VaultTransitSecretEngine {
     public List<String> listKeys() {
         return engine.listKeys().await().indefinitely();
     }
+
+    /**
+     * List all Transit keys of the specified Transit engine mount
+     *
+     * @param mount Transit engine mount path
+     * @return key names
+     * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#list-keys">list keys</a>
+     */
+    public List<String> listKeys(String mount) {
+        return engine.listKeys(mount).await().indefinitely();
+    }
 }

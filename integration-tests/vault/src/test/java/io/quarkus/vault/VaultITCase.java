@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
 
+import io.quarkus.vault.runtime.VaultTransitManager;
 import jakarta.inject.Inject;
 
 import org.eclipse.microprofile.config.Config;
@@ -99,8 +100,6 @@ public class VaultITCase {
     private static final Logger log = Logger.getLogger(VaultITCase.class);
 
     public static final String MY_PASSWORD = "my-password";
-
-    public static final String MOUNT = "transit";
 
     @RegisterExtension
     static final QuarkusUnitTest config = new QuarkusUnitTest()
@@ -293,7 +292,7 @@ public class VaultITCase {
         VaultTransitSignBody batchBody = new VaultTransitSignBody();
         batchBody.batchInput = singletonList(new VaultTransitSignBatchInput(Base64String.from(data), context));
 
-        VaultTransitSign batchSign = vaultInternalTransitSecretEngine.sign(vaultClient, token, MOUNT, keyName, null, batchBody)
+        VaultTransitSign batchSign = vaultInternalTransitSecretEngine.sign(vaultClient, token, VaultTransitManager.DEFAULT_MOUNT, keyName, null, batchBody)
                 .await()
                 .indefinitely();
 
@@ -302,7 +301,7 @@ public class VaultITCase {
         batchInput.signature = batchSign.data.batchResults.get(0).signature;
         verifyBody.batchInput = singletonList(batchInput);
 
-        VaultTransitVerify verify = vaultInternalTransitSecretEngine.verify(vaultClient, token, keyName, null, verifyBody)
+        VaultTransitVerify verify = vaultInternalTransitSecretEngine.verify(vaultClient, token, VaultTransitManager.DEFAULT_MOUNT, keyName, null, verifyBody)
                 .await()
                 .indefinitely();
         assertEquals(1, verify.data.batchResults.size());
@@ -317,7 +316,7 @@ public class VaultITCase {
         VaultTransitEncryptBody encryptBody = new VaultTransitEncryptBody();
         encryptBody.batchInput = singletonList(encryptBatchInput);
         VaultTransitEncrypt encryptBatchResult = vaultInternalTransitSecretEngine
-                .encrypt(vaultClient, token, keyName, encryptBody).await()
+                .encrypt(vaultClient, token, VaultTransitManager.DEFAULT_MOUNT, keyName, encryptBody).await()
                 .indefinitely();
         String ciphertext = encryptBatchResult.data.batchResults.get(0).ciphertext;
 
@@ -327,7 +326,8 @@ public class VaultITCase {
         VaultTransitRewrapBatchInput rewrapBatchInput = new VaultTransitRewrapBatchInput(ciphertext, context);
         VaultTransitRewrapBody rewrapBody = new VaultTransitRewrapBody();
         rewrapBody.batchInput = singletonList(rewrapBatchInput);
-        VaultTransitEncrypt rewrap = vaultInternalTransitSecretEngine.rewrap(vaultClient, token, keyName, rewrapBody).await()
+        VaultTransitEncrypt rewrap = vaultInternalTransitSecretEngine.rewrap(vaultClient, token,
+                        VaultTransitManager.DEFAULT_MOUNT, keyName, rewrapBody).await()
                 .indefinitely();
         assertEquals(1, rewrap.data.batchResults.size());
         String rewrappedCiphertext = rewrap.data.batchResults.get(0).ciphertext;
@@ -341,7 +341,7 @@ public class VaultITCase {
         VaultTransitDecryptBody decryptBody = new VaultTransitDecryptBody();
         decryptBody.batchInput = singletonList(decryptBatchInput);
         VaultTransitDecrypt decryptBatchResult = vaultInternalTransitSecretEngine
-                .decrypt(vaultClient, token, keyName, decryptBody).await()
+                .decrypt(vaultClient, token, VaultTransitManager.DEFAULT_MOUNT, keyName, decryptBody).await()
                 .indefinitely();
         return decryptBatchResult.data.batchResults.get(0).plaintext.decodeAsString();
     }
