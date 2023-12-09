@@ -197,10 +197,18 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     @Override
     public Uni<Void> updateTuneInfo(String mount, VaultTuneInfo tuneInfoUpdates) {
         VaultTuneBody body = new VaultTuneBody();
-        body.description = tuneInfoUpdates.getDescription();
         body.defaultLeaseTimeToLive = tuneInfoUpdates.getDefaultLeaseTimeToLive();
         body.maxLeaseTimeToLive = tuneInfoUpdates.getMaxLeaseTimeToLive();
-        body.forceNoCache = tuneInfoUpdates.getForceNoCache();
+        body.description = tuneInfoUpdates.getDescription();
+        body.auditNonHMACRequestKeys = tuneInfoUpdates.getAuditNonHMACRequestKeys();
+        body.auditNonHMACResponseKeys = tuneInfoUpdates.getAuditNonHMACResponseKeys();
+        body.listingVisibility = tuneInfoUpdates.getListingVisibility() != null
+                ? tuneInfoUpdates.getListingVisibility().name().toLowerCase()
+                : null;
+        body.passthroughRequestHeaders = tuneInfoUpdates.getPassthroughRequestHeaders();
+        body.allowedResponseHeaders = tuneInfoUpdates.getAllowedResponseHeaders();
+        body.allowedManagedKeys = tuneInfoUpdates.getAllowedManagedKeys();
+        body.pluginVersion = tuneInfoUpdates.getPluginVersion();
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
             return vaultInternalSystemBackend.updateTuneInfo(vaultClient, token, mount, body);

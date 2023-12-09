@@ -16,6 +16,7 @@ public class VaultTuneInfo {
     private List<String> passthroughRequestHeaders;
     private List<String> allowedResponseHeaders;
     private List<String> allowedManagedKeys;
+    private String pluginVersion;
 
     public String getDescription() {
         return description;
@@ -67,6 +68,18 @@ public class VaultTuneInfo {
         return allowedManagedKeys;
     }
 
+    /**
+     * Returns the plugin version.
+     *
+     * @apiNote This value is not returned by {@link io.quarkus.vault.VaultSystemBackendEngine#getTuneInfo(String)},
+     *          use {@link io.quarkus.vault.VaultSystemBackendEngine#getSecretEngineInfo(String)} instead.
+     *
+     * @return the plugin version
+     */
+    public String getPluginVersion() {
+        return pluginVersion;
+    }
+
     public VaultTuneInfo setMaxLeaseTimeToLive(Long maxLeaseTimeToLive) {
         this.maxLeaseTimeToLive = maxLeaseTimeToLive;
         return this;
@@ -76,6 +89,15 @@ public class VaultTuneInfo {
         return forceNoCache;
     }
 
+    /**
+     * Sets whether caching is disabled for this mount.
+     *
+     * @apiNote Updating this value using
+     *          {@link io.quarkus.vault.VaultSystemBackendEngine#updateTuneInfo(String, VaultTuneInfo)} is not supported
+     *          by the Vault API.
+     *
+     * @param forceNoCache true if caching is disabled for this mount
+     */
     public VaultTuneInfo setForceNoCache(Boolean forceNoCache) {
         this.forceNoCache = forceNoCache;
         return this;
@@ -113,6 +135,11 @@ public class VaultTuneInfo {
 
     public VaultTuneInfo setAllowedManagedKeys(List<String> allowedManagedKeys) {
         this.allowedManagedKeys = allowedManagedKeys;
+        return this;
+    }
+
+    public VaultTuneInfo setPluginVersion(String pluginVersion) {
+        this.pluginVersion = pluginVersion;
         return this;
     }
 }

@@ -85,19 +85,37 @@ public class VaultSysITCase {
 
     @Test
     public void testTuneInfo() {
-        VaultTuneInfo tuneInfo = vaultSystemBackendEngine.getTuneInfo("secret");
+        var randomMount = String.format("test-%X", RANDOM.nextInt());
+
+        vaultSystemBackendEngine.enable(VaultSecretEngine.KEY_VALUE, randomMount, randomMount, new EnableEngineOptions());
+        VaultTuneInfo tuneInfo = vaultSystemBackendEngine.getTuneInfo(randomMount);
         assertNotNull(tuneInfo.getDescription());
         assertNotNull(tuneInfo.getDefaultLeaseTimeToLive());
         assertNotNull(tuneInfo.getMaxLeaseTimeToLive());
         assertNotNull(tuneInfo.getForceNoCache());
 
         VaultTuneInfo tuneInfoUpdates = new VaultTuneInfo();
+        tuneInfoUpdates.setDefaultLeaseTimeToLive(tuneInfo.getDefaultLeaseTimeToLive() + 10);
         tuneInfoUpdates.setMaxLeaseTimeToLive(tuneInfo.getMaxLeaseTimeToLive() + 10);
-        vaultSystemBackendEngine.updateTuneInfo("secret", tuneInfoUpdates);
+        tuneInfoUpdates.setDescription("updated test");
+        tuneInfoUpdates.setAuditNonHMACRequestKeys(List.of("key1"));
+        tuneInfoUpdates.setAuditNonHMACResponseKeys(List.of("key2"));
+        tuneInfoUpdates.setListingVisibility(EngineListingVisibility.UNAUTH);
+        tuneInfoUpdates.setPassthroughRequestHeaders(List.of("header1"));
+        tuneInfoUpdates.setAllowedResponseHeaders(List.of("header2"));
+        tuneInfoUpdates.setAllowedManagedKeys(List.of("key3"));
+        vaultSystemBackendEngine.updateTuneInfo(randomMount, tuneInfoUpdates);
 
-        VaultTuneInfo updatedTuneInfo = vaultSystemBackendEngine.getTuneInfo("secret");
-
+        VaultTuneInfo updatedTuneInfo = vaultSystemBackendEngine.getTuneInfo(randomMount);
+        assertEquals(tuneInfo.getDefaultLeaseTimeToLive() + 10, updatedTuneInfo.getDefaultLeaseTimeToLive());
         assertEquals(tuneInfo.getMaxLeaseTimeToLive() + 10, updatedTuneInfo.getMaxLeaseTimeToLive());
+        assertEquals("updated test", updatedTuneInfo.getDescription());
+        assertEquals(List.of("key1"), updatedTuneInfo.getAuditNonHMACRequestKeys());
+        assertEquals(List.of("key2"), updatedTuneInfo.getAuditNonHMACResponseKeys());
+        assertEquals(EngineListingVisibility.UNAUTH, updatedTuneInfo.getListingVisibility());
+        assertEquals(List.of("header1"), updatedTuneInfo.getPassthroughRequestHeaders());
+        assertEquals(List.of("header2"), updatedTuneInfo.getAllowedResponseHeaders());
+        assertEquals(List.of("key3"), updatedTuneInfo.getAllowedManagedKeys());
     }
 
     @Test
@@ -381,9 +399,31 @@ public class VaultSysITCase {
         assertNull(details);
     }
 
+    @Test
+    void testMountPluginVersionUpgradeViaTune() throws Exception {
+        registerTestPlugin(true);
+        registerTestPlugin("v0.0.2");
+
+        vaultSystemBackendEngine.enable("test-plugin", "test", "test plugin",
+                new EnableEngineOptions().setPluginVersion("v0.0.1"));
+
+        var tuneInfo = vaultSystemBackendEngine.getSecretEngineInfo("test");
+        assertEquals("v0.0.1", tuneInfo.getPluginVersion());
+
+        // Upgrade the mount's plugin version via the tune endpoint
+        vaultSystemBackendEngine.updateTuneInfo("test", new VaultTuneInfo().setPluginVersion("v0.0.2"));
+
+        // Check that the plugin version has been upgraded
+        tuneInfo = vaultSystemBackendEngine.getSecretEngineInfo("test");
+        assertEquals("v0.0.2", tuneInfo.getPluginVersion());
+    }
+
     String registerTestPlugin(Boolean includeVersion) throws Exception {
+        return registerTestPlugin(includeVersion ? "v0.0.1" : null);
+    }
+
+    String registerTestPlugin(String version) throws Exception {
         var testPluginSHA = sha256Hex(VaultTestExtension.readResourceData(VaultTestExtension.getTestPluginFilename()));
-        var version = includeVersion ? "v0.0.1" : null;
         vaultSystemBackendEngine.registerPlugin("secret", "test-plugin", version, testPluginSHA, "test-plugin",
                 List.of("--some-flag=1"), List.of("ENV_VAR=1"));
         return testPluginSHA;
