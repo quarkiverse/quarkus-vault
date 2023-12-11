@@ -82,7 +82,7 @@ path "totp/*" {
 }
 
 path "sys/*" {
-  capabilities = ["read", "create", "update", "delete", "list"]
+  capabilities = ["read", "create", "update", "delete", "list", "sudo"]
 }
 
 path "auth/kubernetes/*" {

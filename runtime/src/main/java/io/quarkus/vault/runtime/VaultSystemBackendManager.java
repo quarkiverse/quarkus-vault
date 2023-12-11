@@ -1,7 +1,9 @@
 package io.quarkus.vault.runtime;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -11,12 +13,16 @@ import io.quarkus.vault.runtime.client.VaultClientException;
 import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
 import io.quarkus.vault.runtime.client.dto.sys.VaultEnableEngineBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
+import io.quarkus.vault.runtime.client.dto.sys.VaultRegisterPluginBody;
 import io.quarkus.vault.runtime.client.dto.sys.VaultTuneBody;
 import io.quarkus.vault.runtime.config.VaultBuildTimeConfig;
 import io.quarkus.vault.sys.EnableEngineOptions;
+import io.quarkus.vault.sys.EngineListingVisibility;
 import io.quarkus.vault.sys.VaultHealth;
 import io.quarkus.vault.sys.VaultHealthStatus;
 import io.quarkus.vault.sys.VaultInit;
+import io.quarkus.vault.sys.VaultPluginDetails;
+import io.quarkus.vault.sys.VaultPlugins;
 import io.quarkus.vault.sys.VaultSealStatus;
 import io.quarkus.vault.sys.VaultSecretEngine;
 import io.quarkus.vault.sys.VaultSecretEngineInfo;
@@ -143,7 +149,22 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                         info.setLocal(result.data.local);
                         info.setExternalEntropyAccess(result.data.externalEntropyAccess);
                         info.setSealWrap(result.data.sealWrap);
+                        info.setPluginVersion(result.data.pluginVersion);
+                        info.setRunningPluginVersion(result.data.runningPluginVersion);
+                        info.setRunningSha256(result.data.runningSha256);
+                        info.setDefaultLeaseTimeToLive(result.data.config.defaultLeaseTimeToLive);
+                        info.setMaxLeaseTimeToLive(result.data.config.maxLeaseTimeToLive);
+                        info.setForceNoCache(result.data.config.forceNoCache);
                         info.setOptions(result.data.options);
+                        info.setAuditNonHMACRequestKeys(result.data.config.auditNonHMACRequestKeys);
+                        info.setAuditNonHMACResponseKeys(result.data.config.auditNonHMACResponseKeys);
+                        info.setListingVisibility(result.data.config.listingVisibility != null
+                                ? EngineListingVisibility.valueOf(result.data.config.listingVisibility
+                                        .toUpperCase())
+                                : null);
+                        info.setPassthroughRequestHeaders(result.data.config.passthroughRequestHeaders);
+                        info.setAllowedResponseHeaders(result.data.config.allowedResponseHeaders);
+                        info.setAllowedManagedKeys(result.data.config.allowedManagedKeys);
                         return info;
                     });
         });
@@ -158,6 +179,16 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                         tuneInfo.setMaxLeaseTimeToLive(vaultTuneResult.data.maxLeaseTimeToLive);
                         tuneInfo.setDescription(vaultTuneResult.data.description);
                         tuneInfo.setForceNoCache(vaultTuneResult.data.forceNoCache);
+                        tuneInfo.setOptions(vaultTuneResult.data.options);
+                        tuneInfo.setAuditNonHMACRequestKeys(vaultTuneResult.data.auditNonHMACRequestKeys);
+                        tuneInfo.setAuditNonHMACResponseKeys(vaultTuneResult.data.auditNonHMACResponseKeys);
+                        tuneInfo.setListingVisibility(vaultTuneResult.data.listingVisibility != null
+                                ? EngineListingVisibility.valueOf(vaultTuneResult.data.listingVisibility
+                                        .toUpperCase())
+                                : null);
+                        tuneInfo.setPassthroughRequestHeaders(vaultTuneResult.data.passthroughRequestHeaders);
+                        tuneInfo.setAllowedResponseHeaders(vaultTuneResult.data.allowedResponseHeaders);
+                        tuneInfo.setAllowedManagedKeys(vaultTuneResult.data.allowedManagedKeys);
                         return tuneInfo;
                     });
         });
@@ -205,6 +236,15 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
         body.config = new VaultEnableEngineBody.Config();
         body.config.defaultLeaseTimeToLive = options.defaultLeaseTimeToLive;
         body.config.maxLeaseTimeToLive = options.maxLeaseTimeToLive;
+        body.config.forceNoCache = options.forceNoCache;
+        body.config.auditNonHMACRequestKeys = options.auditNonHMACRequestKeys;
+        body.config.auditNonHMACResponseKeys = options.auditNonHMACResponseKeys;
+        body.config.listingVisibility = options.listingVisibility != null ? options.listingVisibility.name().toLowerCase()
+                : null;
+        body.config.passthroughRequestHeaders = options.passthroughRequestHeaders;
+        body.config.allowedResponseHeaders = options.allowedResponseHeaders;
+        body.config.pluginVersion = options.pluginVersion;
+        body.config.allowedManagedKeys = options.allowedManagedKeys;
         body.options = options.options;
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
@@ -216,6 +256,80 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     public Uni<Void> disable(String mount) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
             return vaultInternalSystemBackend.disableEngine(vaultClient, token, mount);
+        });
+    }
+
+    @Override
+    public Uni<VaultPlugins> listPlugins() {
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.listPlugins(vaultClient, token).map(r -> new VaultPlugins()
+                    .setAuth(r.data.auth)
+                    .setDatabase(r.data.database)
+                    .setSecret(r.data.secret)
+                    .setDetailed(r.data.detailed.stream().map(d -> new VaultPluginDetails()
+                            .setBuiltin(d.builtin)
+                            .setDeprecationStatus(d.deprecationStatus)
+                            .setName(d.name)
+                            .setType(d.type)
+                            .setVersion(d.version)
+                            .setSha256(d.sha256)
+                            .setCommand(d.command)
+                            .setArgs(d.args)
+                            .setEnv(d.env)).collect(Collectors.toList())));
+        });
+    }
+
+    @Override
+    public Uni<List<String>> listPlugins(String type) {
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.listPlugins(vaultClient, token, type).map(r -> r.data.keys);
+        });
+    }
+
+    @Override
+    public Uni<VaultPluginDetails> getPluginDetails(String type, String name, @Nullable String version) {
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.getPluginDetails(vaultClient, token, type, name, version)
+                    .map(r -> new VaultPluginDetails()
+                            .setBuiltin(r.data.builtin)
+                            .setDeprecationStatus(r.data.deprecationStatus)
+                            .setName(r.data.name)
+                            .setType(r.data.type)
+                            .setVersion(r.data.version)
+                            .setSha256(r.data.sha256)
+                            .setCommand(r.data.command)
+                            .setArgs(r.data.args)
+                            .setEnv(r.data.env));
+        })
+                .onFailure(VaultClientException.class).recoverWithUni(x -> {
+                    VaultClientException vx = (VaultClientException) x;
+                    if (vx.getStatus() == 404) {
+                        return Uni.createFrom().nullItem();
+                    } else {
+                        return Uni.createFrom().failure(x);
+                    }
+                });
+    }
+
+    @Override
+    public Uni<Void> registerPlugin(String type, String name, @Nullable String version, String sha256, String command,
+            @Nullable List<String> args, @Nullable List<String> env) {
+        var body = new VaultRegisterPluginBody();
+        body.version = version;
+        body.sha256 = sha256;
+        body.command = command;
+        body.args = args;
+        body.env = env;
+
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.registerPlugin(vaultClient, token, type, name, body);
+        });
+    }
+
+    @Override
+    public Uni<Void> removePlugin(String type, String name, @Nullable String version) {
+        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
+            return vaultInternalSystemBackend.removePlugin(vaultClient, token, type, name, version);
         });
     }
 }
