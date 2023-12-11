@@ -36,6 +36,12 @@ public class VaultInternalTransitSecretEngine extends VaultInternalBase {
      * @return String concatenated path
      */
     private String getPath(String firstPart, String... otherParts) {
+        // use an empty string as default for null parameters
+        firstPart = (firstPart == null) ? "" : firstPart;
+        otherParts = Stream.of(otherParts)
+                .map(part -> part == null ? "" : part)
+                .toArray(String[]::new);
+
         String path = Stream.of(Paths.get(firstPart, otherParts))
                 .map(Path::toString)
                 .collect(Collectors.joining("/"));
