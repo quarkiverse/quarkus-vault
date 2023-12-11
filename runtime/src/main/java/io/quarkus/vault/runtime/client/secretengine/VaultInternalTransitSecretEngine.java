@@ -2,7 +2,20 @@ package io.quarkus.vault.runtime.client.secretengine;
 
 import io.quarkus.vault.runtime.client.VaultClient;
 import io.quarkus.vault.runtime.client.VaultInternalBase;
-import io.quarkus.vault.runtime.client.dto.transit.*;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitCreateKeyBody;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitDecrypt;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitDecryptBody;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitEncrypt;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitEncryptBody;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitKeyConfigBody;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitKeyExport;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitListKeysResult;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitReadKeyResult;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitRewrapBody;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitSign;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitSignBody;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerify;
+import io.quarkus.vault.runtime.client.dto.transit.VaultTransitVerifyBody;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Singleton;
 
