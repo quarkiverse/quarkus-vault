@@ -326,13 +326,4 @@ public interface VaultTransitSecretReactiveEngine {
      * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#list-keys">list keys</a>
      */
     Uni<List<String>> listKeys();
-
-    /**
-     * List all Transit keys of the specified Transit engine mount
-     *
-     * @param mount Transit engine mount path
-     * @return key names
-     * @see <a href="https://www.vaultproject.io/api-docs/secret/transit#list-keys">list keys</a>
-     */
-    Uni<List<String>> listKeys(String mount);
 }

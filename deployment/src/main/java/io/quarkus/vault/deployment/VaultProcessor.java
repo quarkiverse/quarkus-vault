@@ -34,6 +34,7 @@ import io.quarkus.vault.runtime.VaultPKIManagerFactory;
 import io.quarkus.vault.runtime.VaultSystemBackendManager;
 import io.quarkus.vault.runtime.VaultTOTPManager;
 import io.quarkus.vault.runtime.VaultTransitManager;
+import io.quarkus.vault.runtime.VaultTransitManagerFactory;
 import io.quarkus.vault.runtime.client.PrivateVertxVaultClient;
 import io.quarkus.vault.runtime.client.SharedVertxVaultClient;
 import io.quarkus.vault.runtime.client.authmethod.VaultInternalAppRoleAuthMethod;
@@ -88,6 +89,7 @@ public class VaultProcessor {
                 .addBeanClass(VaultKvManager.class)
                 .addBeanClass(VaultKVSecretEngine.class)
                 .addBeanClass(VaultTransitManager.class)
+                .addBeanClass(VaultTransitManagerFactory.class)
                 .addBeanClass(VaultTransitSecretEngine.class)
                 .addBeanClass(VaultTOTPManager.class)
                 .addBeanClass(VaultTOTPSecretEngine.class)

@@ -78,15 +78,35 @@ import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
 public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
+    private final VaultClient vaultClient;
+    private final String mount;
+    private final VaultAuthManager vaultAuthManager;
+    private final VaultConfigHolder vaultConfigHolder;
+    private final VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine;
 
     @Inject
-    VaultClient vaultClient;
-    @Inject
-    VaultAuthManager vaultAuthManager;
-    @Inject
-    VaultConfigHolder vaultConfigHolder;
-    @Inject
-    VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine;
+    public VaultTransitManager(
+            VaultClient vaultClient,
+            VaultAuthManager vaultAuthManager,
+            VaultConfigHolder vaultConfigHolder,
+            VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine
+    ) {
+        this(vaultClient, DEFAULT_MOUNT, vaultAuthManager, vaultConfigHolder, vaultInternalTransitSecretEngine);
+    }
+
+    VaultTransitManager(
+            VaultClient vaultClient,
+            String mount,
+            VaultAuthManager vaultAuthManager,
+            VaultConfigHolder vaultConfigHolder,
+            VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine
+    ) {
+        this.vaultClient = vaultClient;
+        this.mount = mount;
+        this.vaultAuthManager = vaultAuthManager;
+        this.vaultConfigHolder = vaultConfigHolder;
+        this.vaultInternalTransitSecretEngine = vaultInternalTransitSecretEngine;
+    }
 
     public static final String DEFAULT_MOUNT = "transit";
 
@@ -124,7 +144,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         }
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.encrypt(vaultClient, token, getMount(keyName), configKeyName, body)
+            return vaultInternalTransitSecretEngine.encrypt(vaultClient, token, mount, configKeyName, body)
                     .map(encrypt -> {
                         EncryptionResult result = new EncryptionResult(encrypt.data.ciphertext, encrypt.data.error);
                         if (result.isInError()) {
@@ -139,11 +159,6 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
     private TransitKeyConfig getTransitConfig(String keyName) {
         return getConfig().transit().key().get(keyName);
-    }
-
-    private String getMount(String keyName) {
-        TransitKeyConfig config = getTransitConfig(keyName);
-        return config == null ? DEFAULT_MOUNT : config.mount().orElse(DEFAULT_MOUNT);
     }
 
     @Override
@@ -179,7 +194,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         }
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.encrypt(vaultClient, token, getMount(keyName), configKeyName, body)
+            return vaultInternalTransitSecretEngine.encrypt(vaultClient, token, mount, configKeyName, body)
                     .map(encrypt -> encrypt.data.batchResults.stream()
                             .map(this::getVaultTransitEncryptBatchResult)
                             .collect(toList()));
@@ -222,7 +237,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         }
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.decrypt(vaultClient, token, getMount(keyName), configKeyName, body)
+            return vaultInternalTransitSecretEngine.decrypt(vaultClient, token, mount, configKeyName, body)
                     .map(decrypt -> decrypt.data.batchResults.stream()
                             .map(this::getVaultTransitDecryptBatchResult)
                             .collect(toList()));
@@ -268,7 +283,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         }
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.rewrap(vaultClient, token, getMount(keyName), configKeyName, body)
+            return vaultInternalTransitSecretEngine.rewrap(vaultClient, token, mount, configKeyName, body)
                     .map(encrypt -> encrypt.data.batchResults.stream()
                             .map(this::getVaultTransitEncryptBatchResult)
                             .collect(toList()));
@@ -361,7 +376,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         }
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.sign(vaultClient, token, getMount(keyName), configKeyName, selectedHashAlgorithm, body)
+            return vaultInternalTransitSecretEngine.sign(vaultClient, token, mount, configKeyName, selectedHashAlgorithm, body)
                     .map(sign -> {
                         for (int i = 0; i < pairs.size(); i++) {
                             VaultTransitSignDataBatchResult result = sign.data.batchResults.get(i);
@@ -423,17 +438,14 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
         TransitKeyConfig config = getTransitConfig(keyName);
 
-        final String mount;
         final String configKeyName;
         final String configHashAlgorithm;
         if (config != null) {
-            mount = config.mount().orElse(DEFAULT_MOUNT);
             configKeyName = config.name().orElse(keyName);
             configHashAlgorithm = config.hashAlgorithm().orElse(null);
             body.signatureAlgorithm = config.signatureAlgorithm().orElse(null);
             body.prehashed = config.prehashed().orElse(null);
         } else {
-            mount = DEFAULT_MOUNT;
             configKeyName = keyName;
             configHashAlgorithm = null;
         }
@@ -468,7 +480,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
             body.type = detail.getType();
         }
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.createTransitKey(vaultClient, token, getMount(keyName), keyName, body);
+            return vaultInternalTransitSecretEngine.createTransitKey(vaultClient, token, mount, keyName, body);
         });
     }
 
@@ -481,14 +493,14 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         body.minDecryptionVersion = detail.getMinDecryptionVersion();
         body.exportable = detail.getExportable();
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.updateTransitKeyConfiguration(vaultClient, token, getMount(keyName), keyName, body);
+            return vaultInternalTransitSecretEngine.updateTransitKeyConfiguration(vaultClient, token, mount, keyName, body);
         });
     }
 
     @Override
     public Uni<Void> deleteKey(String keyName) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.deleteTransitKey(vaultClient, token, getMount(keyName), keyName);
+            return vaultInternalTransitSecretEngine.deleteTransitKey(vaultClient, token, mount, keyName);
         });
     }
 
@@ -497,7 +509,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
             String keyVersion) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
             return vaultInternalTransitSecretEngine
-                    .exportTransitKey(vaultClient, token, getMount(keyName), keyType.name() + "-key", keyName, keyVersion)
+                    .exportTransitKey(vaultClient, token, mount, keyType.name() + "-key", keyName, keyVersion)
                     .map(keyExport -> {
                         VaultTransitKeyExportDetail detail = new VaultTransitKeyExportDetail();
                         detail.setName(keyExport.data.name);
@@ -510,7 +522,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
     @Override
     public Uni<Optional<VaultTransitKeyDetail<?>>> readKey(String keyName) {
         Uni<Optional<VaultTransitKeyDetail<?>>> x = vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.readTransitKey(vaultClient, token, getMount(keyName), keyName)
+            return vaultInternalTransitSecretEngine.readTransitKey(vaultClient, token, mount, keyName)
                     .map(result -> Optional.of(map(result.data)));
         });
         return x.plug(Plugs::notFoundToEmpty);
@@ -518,11 +530,6 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
     @Override
     public Uni<List<String>> listKeys() {
-        return listKeys(DEFAULT_MOUNT);
-    }
-
-    @Override
-    public Uni<List<String>> listKeys(String mount) {
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
             return vaultInternalTransitSecretEngine.listTransitKeys(vaultClient, token, mount).map(r -> r.data.keys);
         });
