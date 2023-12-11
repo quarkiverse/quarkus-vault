@@ -52,7 +52,8 @@ public class VaultInternalTransitSecretEngine extends VaultInternalBase {
         return vaultClient.post(opName("Configure Key"), getPath(mount, "keys", keyName, "config"), token, body, 204);
     }
 
-    public Uni<Void> createTransitKey(VaultClient vaultClient, String token, String mount, String keyName, VaultTransitCreateKeyBody body) {
+    public Uni<Void> createTransitKey(VaultClient vaultClient, String token, String mount, String keyName,
+            VaultTransitCreateKeyBody body) {
         return vaultClient.post(opName("Create Key"), getPath(mount, "keys", keyName), token, body, 204);
     }
 
@@ -60,7 +61,8 @@ public class VaultInternalTransitSecretEngine extends VaultInternalBase {
         return vaultClient.delete(opName("Delete Key"), getPath(mount, "keys", keyName), token, 204);
     }
 
-    public Uni<VaultTransitKeyExport> exportTransitKey(VaultClient vaultClient, String token, String mount, String keyType, String keyName,
+    public Uni<VaultTransitKeyExport> exportTransitKey(VaultClient vaultClient, String token, String mount, String keyType,
+            String keyName,
             String version) {
         String path = getPath(mount, "export", keyType, keyName, version != null ? version : "");
         return vaultClient.get(opName("Export Key"), path, token, VaultTransitKeyExport.class);
@@ -76,12 +78,14 @@ public class VaultInternalTransitSecretEngine extends VaultInternalBase {
 
     public Uni<VaultTransitEncrypt> encrypt(VaultClient vaultClient, String token, String mount, String keyName,
             VaultTransitEncryptBody body) {
-        return vaultClient.post(opName("Encrypt Key"), getPath(mount, "encrypt", keyName), token, body, VaultTransitEncrypt.class);
+        return vaultClient.post(opName("Encrypt Key"), getPath(mount, "encrypt", keyName), token, body,
+                VaultTransitEncrypt.class);
     }
 
     public Uni<VaultTransitDecrypt> decrypt(VaultClient vaultClient, String token, String mount, String keyName,
             VaultTransitDecryptBody body) {
-        return vaultClient.post(opName("Decrypt Key"), getPath(mount, "decrypt", keyName), token, body, VaultTransitDecrypt.class);
+        return vaultClient.post(opName("Decrypt Key"), getPath(mount, "decrypt", keyName), token, body,
+                VaultTransitDecrypt.class);
     }
 
     public Uni<VaultTransitSign> sign(VaultClient vaultClient, String token, String mount, String keyName, String hashAlgorithm,
@@ -90,13 +94,15 @@ public class VaultInternalTransitSecretEngine extends VaultInternalBase {
         return vaultClient.post(opName("Sign"), path, token, body, VaultTransitSign.class);
     }
 
-    public Uni<VaultTransitVerify> verify(VaultClient vaultClient, String token, String mount, String keyName, String hashAlgorithm,
+    public Uni<VaultTransitVerify> verify(VaultClient vaultClient, String token, String mount, String keyName,
+            String hashAlgorithm,
             VaultTransitVerifyBody body) {
         String path = getPath(mount, "verify", keyName, hashAlgorithm == null ? "" : hashAlgorithm);
         return vaultClient.post(opName("Verify"), path, token, body, VaultTransitVerify.class);
     }
 
-    public Uni<VaultTransitEncrypt> rewrap(VaultClient vaultClient, String token, String mount, String keyName, VaultTransitRewrapBody body) {
+    public Uni<VaultTransitEncrypt> rewrap(VaultClient vaultClient, String token, String mount, String keyName,
+            VaultTransitRewrapBody body) {
         return vaultClient.post(opName("Rewrap"), getPath(mount, "rewrap", keyName), token, body, VaultTransitEncrypt.class);
     }
 }

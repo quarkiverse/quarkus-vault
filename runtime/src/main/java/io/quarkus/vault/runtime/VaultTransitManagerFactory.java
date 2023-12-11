@@ -26,6 +26,7 @@ public class VaultTransitManagerFactory implements VaultTransitSecretEngineFacto
 
     @Override
     public VaultTransitSecretReactiveEngine reactiveEngine(String mount) {
-        return new VaultTransitManager(vaultClient, mount, vaultAuthManager, vaultConfigHolder, vaultInternalTransitSecretEngine);
+        return new VaultTransitManager(vaultClient, mount, vaultAuthManager, vaultConfigHolder,
+                vaultInternalTransitSecretEngine);
     }
 }

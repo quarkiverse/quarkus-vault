@@ -89,8 +89,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
             VaultClient vaultClient,
             VaultAuthManager vaultAuthManager,
             VaultConfigHolder vaultConfigHolder,
-            VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine
-    ) {
+            VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine) {
         this(vaultClient, DEFAULT_MOUNT, vaultAuthManager, vaultConfigHolder, vaultInternalTransitSecretEngine);
     }
 
@@ -99,8 +98,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
             String mount,
             VaultAuthManager vaultAuthManager,
             VaultConfigHolder vaultConfigHolder,
-            VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine
-    ) {
+            VaultInternalTransitSecretEngine vaultInternalTransitSecretEngine) {
         this.vaultClient = vaultClient;
         this.mount = mount;
         this.vaultAuthManager = vaultAuthManager;
@@ -111,7 +109,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
     public static final String DEFAULT_MOUNT = "transit";
 
     @Override
-    public String getMount () {
+    public String getMount() {
         return mount;
     }
 
@@ -468,7 +466,8 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         }
 
         return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalTransitSecretEngine.verify(vaultClient, token, mount, configKeyName, selectedHashAlgorithm, body)
+            return vaultInternalTransitSecretEngine
+                    .verify(vaultClient, token, mount, configKeyName, selectedHashAlgorithm, body)
                     .map(verify -> verify.data.batchResults.stream().map(this::getVaultTransitVerifyBatchResult)
                             .collect(toList()));
         });
