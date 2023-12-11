@@ -44,6 +44,15 @@ public class VaultTransitSecretEngine {
     }
 
     /**
+     * Get Transit engine mount path
+     *
+     * @return mount path
+     */
+    public String getMount() {
+        return engine.getMount();
+    }
+
+    /**
      * Encrypt a regular string with a Vault key configured in the transit secret engine.
      * Equivalent to:
      * {@code encrypt(keyName, ClearData.from(clearData), null);}

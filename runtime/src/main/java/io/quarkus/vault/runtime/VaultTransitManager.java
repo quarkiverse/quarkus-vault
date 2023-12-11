@@ -110,6 +110,11 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
     public static final String DEFAULT_MOUNT = "transit";
 
+    @Override
+    public String getMount () {
+        return mount;
+    }
+
     private VaultRuntimeConfig getConfig() {
         return vaultConfigHolder.getVaultRuntimeConfig();
     }

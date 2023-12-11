@@ -31,6 +31,12 @@ import io.smallrye.mutiny.Uni;
  * @see <a href="https://www.vaultproject.io/docs/secrets/transit/index.html#transit-secrets-engine">Transit Secrets Engine</a>
  */
 public interface VaultTransitSecretReactiveEngine {
+    /**
+     * Get Transit engine mount path
+     *
+     * @return mount path
+     */
+    String getMount();
 
     /**
      * Encrypt a regular string with a Vault key configured in the transit secret engine.

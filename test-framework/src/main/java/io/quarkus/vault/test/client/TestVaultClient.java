@@ -34,15 +34,15 @@ public class TestVaultClient extends PrivateVertxVaultClient {
         return get("", "auth/approle/role/" + role + "/role-id", token, VaultAppRoleRoleId.class);
     }
 
-    public Uni<Void> rotate(String token, String keyName) {
-        return post("", "transit/keys/" + keyName + "/rotate", token, null, null, 204);
+    public Uni<Void> rotate(String mount, String token, String keyName) {
+        return post("", mount + "/keys/" + keyName + "/rotate", token, null, null, 204);
     }
 
-    public Uni<VaultTransitRandom> generateRandom(String token, int byteCount, VaultTransitRandomBody body) {
-        return post("", "transit/random/" + byteCount, token, body, VaultTransitRandom.class);
+    public Uni<VaultTransitRandom> generateRandom(String mount, String token, int byteCount, VaultTransitRandomBody body) {
+        return post("", mount + "/random/" + byteCount, token, body, VaultTransitRandom.class);
     }
 
-    public Uni<VaultTransitHash> hash(String token, String hashAlgorithm, VaultTransitHashBody body) {
-        return post("", "transit/hash/" + hashAlgorithm, token, body, VaultTransitHash.class);
+    public Uni<VaultTransitHash> hash(String mount, String token, String hashAlgorithm, VaultTransitHashBody body) {
+        return post("", mount + "/hash/" + hashAlgorithm, token, body, VaultTransitHash.class);
     }
 }

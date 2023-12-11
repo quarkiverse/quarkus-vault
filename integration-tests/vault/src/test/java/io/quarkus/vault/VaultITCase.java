@@ -249,7 +249,9 @@ public class VaultITCase {
         log.info("userPassClientToken = " + userPassClientToken);
         assertNotNull(userPassClientToken);
 
-        assertTransit(appRoleClientToken);
+        getTransitEngineMounts().forEach(mount -> {
+            assertTransit(mount, appRoleClientToken);
+        });
 
         assertTokenUserPass(userPassClientToken);
         assertKvSecrets(userPassClientToken);
@@ -268,8 +270,7 @@ public class VaultITCase {
         assertEquals("zap", unwrapExample.zip);
     }
 
-    private void assertTransit(String token) {
-
+    private void assertTransit(String mount, String token) {
         Base64String context = Base64String.from("mycontext");
 
         assertTransitEncryption(token, ENCRYPTION_KEY_NAME, null);
@@ -278,16 +279,16 @@ public class VaultITCase {
         assertTransitSign(token, SIGN_KEY_NAME, null);
         assertTransitSign(token, SIGN_KEY_NAME, context);
 
-        new TestVaultClient().rotate(token, ENCRYPTION_KEY_NAME);
+        new TestVaultClient().rotate(mount, token, ENCRYPTION_KEY_NAME);
 
-        assertHash(token);
+        assertHash(mount, token);
     }
 
-    private void assertHash(String token) {
+    private void assertHash(String mount, String token) {
         VaultTransitHashBody body = new VaultTransitHashBody();
         body.input = Base64String.from("coucou");
         body.format = "base64";
-        VaultTransitHash hash = new TestVaultClient().hash(token, "sha2-512", body).await().indefinitely();
+        VaultTransitHash hash = new TestVaultClient().hash(mount, token, "sha2-512", body).await().indefinitely();
         Base64String sum = hash.data.sum;
         String expected = "4FrxOZ9PS+t5NMnxK6WpyI9+4ejvP+ehZ75Ll5xRXSQQKtkNOgdU1I/Fkw9jaaMIfmhulzLvNGDmQ5qVCJtIAA==";
         assertEquals(expected, sum.getValue());
@@ -296,7 +297,7 @@ public class VaultITCase {
     private void assertTransitSign(String token, String keyName, Base64String context) {
         String data = "coucou";
 
-        for (String mount: getTransitEngineMounts()) {
+        getTransitEngineMounts().forEach(mount -> {
             VaultTransitSignBody batchBody = new VaultTransitSignBody();
             batchBody.batchInput = singletonList(new VaultTransitSignBatchInput(Base64String.from(data), context));
 
@@ -314,13 +315,13 @@ public class VaultITCase {
                     .indefinitely();
             assertEquals(1, verify.data.batchResults.size());
             assertTrue(verify.data.batchResults.get(0).valid);
-        }
+        });
     }
 
     private void assertTransitEncryption(String token, String keyName, Base64String context) {
         String data = "coucou";
 
-        for (String mount: getTransitEngineMounts()) {
+        getTransitEngineMounts().forEach(mount -> {
             VaultTransitEncryptBatchInput encryptBatchInput = new VaultTransitEncryptBatchInput(Base64String.from(data), context);
             VaultTransitEncryptBody encryptBody = new VaultTransitEncryptBody();
             encryptBody.batchInput = singletonList(encryptBatchInput);
@@ -343,7 +344,7 @@ public class VaultITCase {
 
             batchDecryptedString = decrypt(token, keyName, mount, rewrappedCiphertext, context);
             assertEquals(data, batchDecryptedString);
-        }
+        });
     }
 
     private String decrypt(String token, String keyName, String mount, String ciphertext, Base64String context) {
