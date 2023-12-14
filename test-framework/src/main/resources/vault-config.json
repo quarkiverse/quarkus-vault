@@ -7,11 +7,11 @@
   "default_lease_ttl": "1m",
   "max_lease_ttl": "10m",
   "disable_mlock": true,
-  "listener":
-  { "tcp":
-  { "address": "0.0.0.0:8200",
-    "tls_disable": "true"
-  }
+  "listener": {
+    "tcp": {
+      "address": "0.0.0.0:8200",
+      "tls_disable": "true"
+    }
   },
   "plugin_directory": "/vault/plugins"
 }
