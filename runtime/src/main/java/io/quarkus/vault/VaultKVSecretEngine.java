@@ -18,8 +18,7 @@ import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 @ApplicationScoped
 public class VaultKVSecretEngine {
 
-    @Inject
-    VaultKVSecretReactiveEngine engine;
+    private final VaultKVSecretReactiveEngine engine;
 
     @Inject
     public VaultKVSecretEngine(VaultKVSecretReactiveEngine engine) {
@@ -60,7 +59,7 @@ public class VaultKVSecretEngine {
 
     /**
      * Deletes the secret at the given path. It has no effect if no secret is currently
-     * stored at path.
+     * stored at a path.
      *
      * @param path to delete
      */
