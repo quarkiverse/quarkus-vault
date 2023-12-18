@@ -1,0 +1,54 @@
+relativePackageName: common
+types:
+- name: WrapInfo
+  properties:
+  - name: token
+    type: String
+  - name: ttl
+    type: Integer
+  - name: creationTime
+    type: String
+  - name: creationPath
+    type: String
+- name: LeasedResult<DATA, AUTH extends $AuthResult<?>>
+  implements:
+    - $$.common.VaultJSONResult
+  properties:
+    - name: requestId
+      type: String
+    - name: leaseId
+      type: String
+    - name: renewable
+      type: Boolean
+    - name: leaseDuration
+      type: Integer
+    - name: data
+      type: DATA
+    - name: wrapInfo
+      type: $WrapInfo
+    - name: warnings
+      type: java.util.List<String>
+    - name: auth
+      type: AUTH
+- name: AuthResult<METADATA>
+  properties:
+    - name: clientToken
+      type: String
+    - name: accessor
+      type: String
+    - name: policies
+      type: java.util.List<String>
+    - name: tokenPolicies
+      type: java.util.List<String>
+    - name: metadata
+      type: METADATA
+    - name: leaseDuration
+      type: Integer
+    - name: renewable
+      type: Boolean
+    - name: entityId
+      type: String
+    - name: tokenType
+      type: String
+    - name: orphan
+      type: Boolean

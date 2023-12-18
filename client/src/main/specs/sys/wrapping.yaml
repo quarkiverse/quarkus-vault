@@ -1,0 +1,67 @@
+name: Wrapping
+category: sys
+mountable: false
+
+operations:
+
+- name: lookup
+  method: POST
+  path: "sys/wrapping/lookup"
+  bodyFrom: [token]
+  parameters:
+  - name: token
+    type: String
+  result:
+    kind: leased
+    data:
+    - name: creationPath
+      type: String
+    - name: creationTime
+      type: java.time.OffsetDateTime
+    - name: creationTtl
+      type: Long
+
+
+- name: rewrap
+  method: POST
+  path: "sys/wrapping/rewrap"
+  bodyFrom: [token]
+  parameters:
+  - name: token
+    type: String
+  result:
+    kind: leased
+
+- name: unwrap
+  method: POST
+  path: "sys/wrapping/unwrap"
+  result:
+    kind: leased
+    dataType: java.util.Map<String, Object>
+
+
+- name: unwrap
+  method: POST
+  path: "sys/wrapping/unwrap"
+  bodyFrom: [token]
+  authenticated: false
+  parameters:
+  - name: token
+    type: String
+  result:
+    kind: leased
+    dataType: java.util.Map<String, Object>
+
+
+
+- name: wrap
+  method: POST
+  path: "sys/wrapping/wrap"
+  wrapTTLFrom: wrapTtl
+  parameters:
+  - name: data
+    type: java.util.Map<String, Object>
+  - name: wrapTtl
+    type: java.time.Duration
+  result:
+    kind: leased

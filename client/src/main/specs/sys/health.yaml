@@ -1,0 +1,77 @@
+name: Health
+category: sys
+mountable: false
+
+operations:
+
+- name: status
+  method: HEAD
+  path: "sys/health"
+  queryFrom: [standbyOk, perfStandbyOk]
+  authenticated: false
+  parameters:
+  - name: standbyOk
+    type: Boolean
+    includeNulls: false
+  - name: perfStandbyOk
+    type: Boolean
+    includeNulls: false
+
+
+- name: status
+  method: HEAD
+  path: "sys/health"
+  authenticated: false
+
+
+- name: info
+  method: GET
+  path: "sys/health"
+  queryFrom: [standbyOk, perfStandbyOk]
+  authenticated: false
+  parameters:
+  - name: standbyOk
+    type: Boolean
+    includeNulls: false
+  - name: perfStandbyOk
+    type: Boolean
+    includeNulls: false
+  result:
+    kind: json
+    type: $InfoResult
+
+
+- name: info
+  method: GET
+  path: "sys/health"
+  authenticated: false
+  result:
+    kind: json
+    type: $InfoResult
+
+
+types:
+- name: InfoResult
+  implements:
+  - $$.common.VaultJSONResult
+  properties:
+  - name: initialized
+    type: Boolean
+  - name: sealed
+    type: Boolean
+  - name: standby
+    type: Boolean
+  - name: performanceStandby
+    type: Boolean
+  - name: replicationPerformanceMode
+    type: String
+  - name: replicationDrMode
+    type: String
+  - name: serverTimeUtc
+    type: Long
+  - name: version
+    type: String
+  - name: clusterName
+    type: String
+  - name: clusterId
+    type: String

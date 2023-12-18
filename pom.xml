@@ -12,6 +12,8 @@
   <packaging>pom</packaging>
   <name>Quarkus - Vault - Parent</name>
   <modules>
+    <module>generator</module>
+    <module>client</module>
     <module>deployment</module>
     <module>model</module>
     <module>runtime</module>

@@ -1,0 +1,96 @@
+name: Seal
+category: sys
+mountable: false
+
+operations:
+
+- name: status
+  method: GET
+  path: "sys/seal-status"
+  result:
+    kind: json
+    type: $StatusResult
+
+
+- name: backendStatus
+  method: GET
+  path: "sys/seal-backend-status"
+  parameters:
+  - name: mountPoint
+    type: String
+  result:
+    kind: json
+    object:
+    - name: healthy
+      type: Boolean
+    - name: unhealthySince
+      type: java.time.OffsetDateTime
+    - name: backends
+      type: java.util.List<$BackendStatus>
+
+
+- name: seal
+  method: POST
+  status: NO_CONTENT
+  path: "sys/seal"
+
+
+- name: unseal
+  method: POST
+  path: "sys/unseal"
+  parameters:
+  - name: key
+    type: String
+    includeNulls: false
+  - name: reset
+    type: Boolean
+  - name: migrate
+    type: Boolean
+  result:
+    kind: json
+    type: $StatusResult
+
+
+types:
+
+- name: StatusResult
+  implements:
+    - $$.common.VaultJSONResult
+  properties:
+  - name: type
+    type: String
+  - name: initialized
+    type: Boolean
+  - name: sealed
+    type: Boolean
+  - name: t
+    type: Integer
+  - name: n
+    type: Integer
+  - name: progress
+    type: Integer
+  - name: nonce
+    type: String
+  - name: version
+    type: String
+  - name: buildDate
+    type: java.time.OffsetDateTime
+  - name: migration
+    type: Boolean
+  - name: clusterName
+    type: String
+  - name: clusterId
+    type: String
+  - name: recoverySeal
+    type: Boolean
+  - name: storageType
+    type: String
+
+- name: BackendStatus
+  properties:
+  - name: name
+    type: String
+  - name: healthy
+    type: Boolean
+  - name: unhealthySince
+    type: java.time.OffsetDateTime
