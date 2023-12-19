@@ -33,6 +33,14 @@ public class VaultClient implements VaultRequestExecutor {
             return this;
         }
 
+        public Builder baseUrl(String baseUrl) {
+            try {
+                return baseUrl(new URL(baseUrl));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid URL: " + baseUrl, e);
+            }
+        }
+
         public Builder apiVersion(String apiVersion) {
             this.apiVersion = Objects.requireNonNull(apiVersion, "apiVersion is required");
             return this;
