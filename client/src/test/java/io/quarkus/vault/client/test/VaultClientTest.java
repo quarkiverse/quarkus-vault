@@ -12,13 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(VaultClientTestExtension.class)
 public @interface VaultClientTest {
 
-    @interface EngineMount {
-        String engine();
+    String logLevel() default "debug";
+
+    @interface Mount {
+        String type();
 
         String path();
 
         String[] options() default "";
     }
 
-    EngineMount[] value() default {};
+    Mount[] secrets() default {};
+
+    Mount[] auths() default {};
 }

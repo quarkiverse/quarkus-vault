@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
-import io.quarkus.vault.client.test.VaultClientTest.EngineMount;
+import io.quarkus.vault.client.test.VaultClientTest.Mount;
 
-@VaultClientTest({
-        @EngineMount(engine = "kv", path = "kv-v1"),
+@VaultClientTest(secrets = {
+        @Mount(type = "kv", path = "kv-v1"),
 })
 public class VaultSecretsKV1Test {
 

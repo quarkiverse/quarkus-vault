@@ -1,4 +1,4 @@
-name: Mounts
+name: Auth
 category: sys
 mountable: false
 basePath: sys
@@ -6,28 +6,17 @@ basePath: sys
 operations:
 
 - name: list
-  method: LIST
-  path: mounts
-  result:
-    kind: leased
-    dataType: java.util.Map<String, $MountInfo>
-
-
-- name: readConfig
   method: GET
-  path: mounts/:path
-  parameters:
-  - name: path
-    type: String
+  path: auth
   result:
     kind: leased
-    dataType: $MountInfo
+    dataType: java.util.Map<String, $MethodInfo>
 
 
 - name: enable
   method: POST
   status: NO_CONTENT
-  path: mounts/:path
+  path: auth/:path
   bodyFrom: [type, description, config]
   parameters:
   - name: path
@@ -40,18 +29,40 @@ operations:
     type: $EnableOptions
 
 
+- name: read
+  method: GET
+  path: auth/:path
+  parameters:
+  - name: path
+    type: String
+  result:
+    kind: leased
+    dataType: $MethodInfo
+
+
 - name: disable
   method: DELETE
-  path: mounts/:path
+  path: auth/:path
   parameters:
   - name: path
     type: String
 
 
+- name: readTune
+  method: GET
+  path: auth/:path/tune
+  parameters:
+  - name: path
+    type: String
+  result:
+    kind: leased
+    dataType: $MethodInfo
+
+
 - name: tune
   method: POST
   status: NO_CONTENT
-  path: mounts/:path/tune
+  path: auth/:path/tune
   parameters:
   - name: path
     type: String
@@ -63,7 +74,7 @@ operations:
 
 types:
 
-- name: MountInfo
+- name: MethodInfo
   nested:
   - name: Config
     properties:
@@ -73,11 +84,13 @@ types:
       type: Long
     - name: forceNoCache
       type: Boolean
+    - name: tokenType
+      type: String
   properties:
   - name: accessor
     type: String
   - name: config
-    type: $MountInfo.Config
+    type: $MethodInfo.Config
   - name: deprecationStatus
     type: String
   - name: description
@@ -86,8 +99,6 @@ types:
     type: Boolean
   - name: local
     type: Boolean
-  - name: options
-    type: java.util.Map<String, Object>
   - name: pluginVersion
     type: String
   - name: runningPluginVersion
@@ -102,13 +113,12 @@ types:
     type: String
 
 - name: EnableOptions
+  nested:
   properties:
   - name: defaultLeaseTtl
     type: String
   - name: maxLeaseTtl
     type: String
-  - name: forceNoCache
-    type: Boolean
   - name: auditNonHmacRequestKeys
     type: java.util.List<String>
   - name: auditNonHmacResponseKeys
@@ -121,13 +131,28 @@ types:
     type: java.util.List<String>
   - name: pluginVersion
     type: String
-  - name: allowedManagedKeys
-    type: java.util.List<String>
-  - name: options
-    type: java.util.Map<String, Object>
+  - name: local
+    type: Boolean
+  - name: sealWrap
+    type: Boolean
 
 - name: TuneOptions
   extends: $EnableOptions
   properties:
   - name: description
     type: String
+  - name: tokenType
+    type: String
+  - name: userLockoutConfig
+    type: Boolean
+  nested:
+  - name: UserLockoutConfig
+    properties:
+    - name: lockoutThreshold
+      type: Integer
+    - name: lockoutDuration
+      type: String
+    - name: lockoutCounterReset
+      type: String
+    - name: lockoutDisable
+      type: Boolean

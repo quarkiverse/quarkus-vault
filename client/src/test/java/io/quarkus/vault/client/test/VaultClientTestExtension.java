@@ -32,7 +32,11 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
 
-        vaultContainer.start();
+        var annotation = extensionContext.getRequiredTestClass().getAnnotation(VaultClientTest.class);
+
+        vaultContainer
+                .withEnv("VAULT_LOG_LEVEL", annotation.logLevel())
+                .start();
 
         vaultClient = VaultClient.builder()
                 .executor(httpClient)
@@ -40,14 +44,25 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
                 .clientToken("root")
                 .build();
 
-        var engineMounts = extensionContext.getRequiredTestClass().getAnnotation(VaultClientTest.class).value();
-        for (var engineMount : engineMounts) {
-            var cmd = "vault secrets enable -path=" + engineMount.path() + " " +
-                    String.join(" ", engineMount.options()) + " " + engineMount.engine();
+        var secretMounts = annotation.secrets();
+        for (var secretMount : secretMounts) {
+            var cmd = "vault secrets enable -path=" + secretMount.path() + " " +
+                    String.join(" ", secretMount.options()) + " " + secretMount.type();
             var result = vaultContainer.execInContainer("/bin/sh", "-c", cmd);
             if (result.getExitCode() != 0) {
-                throw new RuntimeException("Failed to enable Vault engine '" + engineMount.engine() + "' at mount path '" +
-                        engineMount.path() + "': " + result.getStderr());
+                throw new RuntimeException("Failed to enable Vault engine '" + secretMount.type() + "' at mount path '" +
+                        secretMount.path() + "': " + result.getStderr());
+            }
+        }
+
+        var authMounts = annotation.auths();
+        for (var authMount : authMounts) {
+            var cmd = "vault auth enable -path=" + authMount.path() + " " +
+                    String.join(" ", authMount.options()) + " " + authMount.type();
+            var result = vaultContainer.execInContainer("/bin/sh", "-c", cmd);
+            if (result.getExitCode() != 0) {
+                throw new RuntimeException("Failed to enable Vault auth '" + authMount.type() + "' at mount path '" +
+                        authMount.path() + "': " + result.getStderr());
             }
         }
     }

@@ -1,0 +1,49 @@
+name: Policy
+category: sys
+mountable: false
+basePath: sys
+
+operations:
+
+- name: list
+  method: GET
+  path: policy
+  result:
+    kind: leased
+    data:
+    - name: policies
+      type: java.util.List<String>
+
+- name: read
+  method: GET
+  path: policy/:name
+  parameters:
+  - name: name
+    type: String
+  result:
+    kind: leased
+    data:
+    - name: name
+      type: String
+    - name: rules
+      type: String
+
+
+- name: update
+  method: POST
+  status: NO_CONTENT
+  path: policy/:name
+  bodyFrom: [policy]
+  parameters:
+  - name: name
+    type: String
+  - name: policy
+    type: String
+
+
+- name: delete
+  method: DELETE
+  path: policy/:name
+  parameters:
+  - name: name
+    type: String

@@ -12,10 +12,10 @@ import io.quarkus.vault.client.api.secrets.kv2.VaultSecretsKV2SecretMetadataPara
 import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsEnableOptions;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
-import io.quarkus.vault.client.test.VaultClientTest.EngineMount;
+import io.quarkus.vault.client.test.VaultClientTest.Mount;
 
-@VaultClientTest({
-        @EngineMount(engine = "kv", path = "kv-v2", options = "-version=2"),
+@VaultClientTest(secrets = {
+        @Mount(type = "kv", path = "kv-v2", options = "-version=2"),
 })
 public class VaultSecretsKV2Test {
 

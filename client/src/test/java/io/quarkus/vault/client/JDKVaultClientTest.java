@@ -7,6 +7,7 @@ import java.net.http.HttpClient;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.vault.VaultContainer;
 
@@ -29,6 +30,7 @@ public class JDKVaultClientTest {
         vault.stop();
     }
 
+    @Disabled("Example for client usage, replicated in other tests and tracing generates a lot of noise")
     @Test
     void testExample() throws Exception {
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
@@ -69,8 +71,9 @@ public class JDKVaultClientTest {
         }
     }
 
+    @Disabled("Example for client usage, replicated in other tests")
     @Test
-    void testKV1() throws Exception {
+    void testKV1() {
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
 
             var client = VaultClient.builder()

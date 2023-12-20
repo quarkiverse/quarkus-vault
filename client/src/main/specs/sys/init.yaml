@@ -2,7 +2,6 @@ name: Init
 category: sys
 mountable: false
 basePath: sys
-traceNameTag: ""
 
 operations:
 
