@@ -1,6 +1,7 @@
 package io.quarkus.vault.generator;
 
 import static io.quarkus.vault.generator.utils.Strings.capitalize;
+import static io.quarkus.vault.generator.utils.Strings.decapitalize;
 import static javax.lang.model.element.Modifier.*;
 
 import java.util.List;
@@ -53,25 +54,25 @@ public class AccessorGenerator {
                 continue;
             }
 
-            var defaultMountPath = DEFAULT_MOUNT_PATHS
-                    .getOrDefault(api.getName().toLowerCase(), api.getName().toLowerCase());
-
-            var defaultMountPathConst = "DEFAULT_%S_MOUNT_PATH".formatted(apiName.toUpperCase());
-            typeSpec.addField(
-                    FieldSpec.builder(String.class, defaultMountPathConst)
-                            .addModifiers(PUBLIC, STATIC, FINAL)
-                            .initializer("$S", defaultMountPath)
-                            .build());
-
             if (api.isMountable()) {
 
-                typeSpec.addMethod(MethodSpec.methodBuilder(api.getName().toLowerCase())
+                var defaultMountPath = DEFAULT_MOUNT_PATHS
+                        .getOrDefault(api.getName().toLowerCase(), api.getName().toLowerCase());
+
+                var defaultMountPathConst = "DEFAULT_%S_MOUNT_PATH".formatted(apiName.toUpperCase());
+                typeSpec.addField(
+                        FieldSpec.builder(String.class, defaultMountPathConst)
+                                .addModifiers(PUBLIC, STATIC, FINAL)
+                                .initializer("$S", defaultMountPath)
+                                .build());
+
+                typeSpec.addMethod(MethodSpec.methodBuilder(decapitalizeCategory(api.getName()))
                         .addModifiers(PUBLIC)
                         .returns(apiClassName)
                         .addStatement("return new $T(executor, $L)", apiClassName, defaultMountPathConst)
                         .build());
 
-                typeSpec.addMethod(MethodSpec.methodBuilder(api.getName().toLowerCase())
+                typeSpec.addMethod(MethodSpec.methodBuilder(decapitalizeCategory(api.getName()))
                         .addModifiers(PUBLIC)
                         .returns(apiClassName)
                         .addParameter(ParameterSpec.builder(String.class, "mountPath").build())
@@ -79,7 +80,7 @@ public class AccessorGenerator {
                         .build());
             } else {
 
-                typeSpec.addMethod(MethodSpec.methodBuilder(api.getName().toLowerCase())
+                typeSpec.addMethod(MethodSpec.methodBuilder(decapitalizeCategory(api.getName()))
                         .addModifiers(PUBLIC)
                         .returns(apiClassName)
                         .addStatement("return new $T(executor)", apiClassName)
@@ -88,6 +89,14 @@ public class AccessorGenerator {
         }
 
         return JavaFile.builder(className.packageName(), typeSpec.build()).build();
+    }
+
+    private static String decapitalizeCategory(String str) {
+        if (str.equals(str.toUpperCase())) {
+            return str.toLowerCase();
+        } else {
+            return decapitalize(str);
+        }
     }
 
 }
