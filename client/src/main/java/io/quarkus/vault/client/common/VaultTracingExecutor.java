@@ -2,6 +2,8 @@ package io.quarkus.vault.client.common;
 
 import java.util.logging.Logger;
 
+import org.jboss.logmanager.Level;
+
 import io.smallrye.mutiny.Uni;
 
 public class VaultTracingExecutor implements VaultRequestExecutor {
@@ -16,9 +18,31 @@ public class VaultTracingExecutor implements VaultRequestExecutor {
 
     @Override
     public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
-        log.info("Executing request: " + request.getOperation());
+        log.info("Executing: " + request.getOperation() + "\n" + getCurlFormattedRequest(request));
         return delegate.execute(request)
-                .onItem().invoke((result) -> log.info("Request successful: " + request.getOperation()))
+                .onItem().invoke((response) -> {
+                    var message = "Response: " + request.getOperation() + "\n" + getHTTPFormattedResponse(response) + "\n";
+                    log.log(response.isSuccessful() ? Level.INFO : Level.WARNING, message);
+                })
                 .onFailure().invoke((error) -> log.info("Request failed: " + error));
+    }
+
+    private String getCurlFormattedRequest(VaultRequest<?> request) {
+        var builder = new StringBuilder();
+        builder.append("curl -X ").append(request.getMethod()).append(" \\\n");
+        request.getHTTPHeaders()
+                .forEach((key, value) -> builder.append("  -H \"").append(key).append(": ").append(value).append("\" \\\n"));
+        request.getSerializedBody().ifPresent(body -> builder.append("  -d '").append(body).append("' \\\n"));
+        builder.append("  ").append(request.getUrl());
+        return builder.toString();
+    }
+
+    private String getHTTPFormattedResponse(VaultResponse<?> response) {
+        var builder = new StringBuilder();
+        builder.append("HTTP/1.1 ").append(response.statusCode).append("\n");
+        response.headers.forEach((entry) -> builder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n"));
+        builder.append("\n");
+        response.getBodyAsString().ifPresent(builder::append);
+        return builder.toString();
     }
 }

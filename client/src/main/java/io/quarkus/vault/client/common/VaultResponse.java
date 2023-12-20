@@ -2,6 +2,7 @@ package io.quarkus.vault.client.common;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 public class VaultResponse<T> {
 
@@ -37,4 +38,7 @@ public class VaultResponse<T> {
         return request.getResultExtractor().extract(this);
     }
 
+    public Optional<String> getBodyAsString() {
+        return Optional.ofNullable(body).map(String::new);
+    }
 }
