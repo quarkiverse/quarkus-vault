@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import io.quarkus.vault.client.api.auth.kubernetes.VaultAuthKubernetes;
+import io.quarkus.vault.client.common.VaultResponse;
 import io.smallrye.mutiny.Uni;
 
 public class VaultKubernetesTokenProvider implements VaultTokenProvider {
@@ -38,8 +39,8 @@ public class VaultKubernetesTokenProvider implements VaultTokenProvider {
                     authRequest.request().getLogConfidentialityLevel().maskWithTolerance(jwt, LOW));
 
             return executor.execute(VaultAuthKubernetes.FACTORY.login(mountPath, role, jwt))
-                    .map(result -> VaultToken.from(result.auth.clientToken, result.auth.renewable,
-                            result.auth.leaseDuration));
+                    .map(VaultResponse::getResult)
+                    .map(res -> VaultToken.from(res.auth.clientToken, res.auth.renewable, res.auth.leaseDuration));
         });
     }
 

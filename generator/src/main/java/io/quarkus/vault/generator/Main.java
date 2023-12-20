@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
@@ -16,18 +18,24 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length == 0 || args.length > 2) {
-            throw new IllegalArgumentException("Usage: java -jar generator.jar <specs directory> <target directory>");
+        if (args.length == 0 || args.length > 3) {
+            throw new IllegalArgumentException("Usage: java -jar generator.jar <specs directory> <target directory> [-clean]");
         }
 
         var specsPath = Path.of(args[0]);
+        var targetPath = Path.of(args[1]);
+
+        var clean = args.length == 3 && args[2].equals("-clean");
+
         if (!Files.exists(specsPath)) {
             throw new IllegalArgumentException("Specs directory does not exist: " + specsPath);
         }
 
-        var targetPath = Path.of(args[1]);
         if (Files.exists(targetPath)) {
-            deleteJavaFiles(targetPath);
+            if (clean) {
+                System.out.println("Deleting existing Java files from " + targetPath);
+                deleteJavaFiles(targetPath);
+            }
         } else {
             if (!targetPath.toFile().mkdirs()) {
                 throw new RuntimeException("Could not create target directory: " + targetPath);
@@ -40,6 +48,8 @@ public class Main {
 
         try {
 
+            var apis = new ArrayList<API>();
+
             try (var specPaths = Files.walk(specsPath)) {
                 specPaths.filter(path -> path.toString().endsWith(".yaml"))
                         .forEach(path -> {
@@ -49,16 +59,19 @@ public class Main {
                                 var targetSpecPath = targetSpecsPath.resolve(relativePath);
                                 targetSpecPath.getParent().toFile().mkdirs();
 
-                                System.out.println("Copying spec to " + targetSpecPath);
-                                Files.copy(specsPath, targetSpecPath, REPLACE_EXISTING);
-
                                 System.out.println("Generating spec: " + relativePath);
 
-                                generate(path.toUri().toURL(), targetPath);
+                                Files.copy(specsPath, targetSpecPath, REPLACE_EXISTING);
+
+                                var api = generateAPI(path.toUri().toURL(), targetPath);
+                                apis.add(api);
+
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
                         });
+
+                generateAccessors(apis, targetPath);
             }
 
         } catch (Throwable e) {
@@ -71,7 +84,25 @@ public class Main {
         }
     }
 
-    static void generate(URL url, Path dir) throws Exception {
+    static void generateAccessors(ArrayList<API> apis, Path dir) throws Exception {
+        var groupedByCategory = apis.stream().collect(Collectors.<API, String> groupingBy(API::getCategory));
+        for (var entry : groupedByCategory.entrySet()) {
+
+            if (entry.getKey().isEmpty()) {
+                continue;
+            }
+
+            var accessorsGenerator = new AccessorGenerator(entry.getKey(), entry.getValue());
+            var file = accessorsGenerator.generate();
+            try {
+                file.writeToPath(dir);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    static API generateAPI(URL url, Path dir) throws Exception {
         try (var stream = url.openStream()) {
 
             var mapper = new YAMLMapper().findAndRegisterModules();
@@ -98,6 +129,8 @@ public class Main {
                             throw new RuntimeException(e);
                         }
                     });
+
+            return api;
         }
     }
 
@@ -106,7 +139,6 @@ public class Main {
             files.forEach(path -> {
                 if (Files.isRegularFile(path) && path.toString().endsWith("java")) {
                     try {
-                        System.out.println("Deleting " + path);
                         Files.delete(path);
                     } catch (IOException e) {
                         throw new RuntimeException(e);

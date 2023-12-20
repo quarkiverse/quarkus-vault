@@ -10,8 +10,9 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import io.quarkus.vault.client.api.common.VaultLeasedResult;
+import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
+import io.quarkus.vault.client.util.JsonMapping;
 
 public class VaultRequest<T> {
 
@@ -43,8 +44,8 @@ public class VaultRequest<T> {
         private Map<String, String> queryParams = new HashMap<>();
         private Map<String, String> headers = new HashMap<>();
         private Object body;
-        private List<Integer> expectedStatusCodes;
-        private Class<?> resultClass;
+        private VaultResultExtractor<?> resultExtractor;
+        private List<Integer> expectedStatusCodes = List.of();
         private Duration timeout = Duration.ofSeconds(30);
         private LogConfidentialityLevel logConfidentialityLevel = LogConfidentialityLevel.HIGH;
 
@@ -73,8 +74,8 @@ public class VaultRequest<T> {
             return path(selector ? truePathSegments : falsePathSegments);
         }
 
-        public final Builder pathChoice(Object selector, Map.Entry<Object, String[]>... options) {
-            for (Map.Entry<Object, String[]> option : options) {
+        public final Builder pathChoice(Object selector, Map<Object, String[]> options) {
+            for (Map.Entry<Object, String[]> option : options.entrySet()) {
                 if (option.getKey().equals(selector)) {
                     return path(option.getValue());
                 }
@@ -132,6 +133,13 @@ public class VaultRequest<T> {
             return this;
         }
 
+        public Builder header(boolean condition, String key, Object value) {
+            if (condition) {
+                this.headers.put(key, value.toString());
+            }
+            return this;
+        }
+
         public Builder body(Object body) {
             this.body = body;
             return this;
@@ -140,6 +148,26 @@ public class VaultRequest<T> {
         public Builder expectedStatusCodes(List<Integer> expectedStatusCodes) {
             this.expectedStatusCodes = expectedStatusCodes;
             return this;
+        }
+
+        public Builder expectOkStatus() {
+            return expectedStatusCodes(OK_STATUS);
+        }
+
+        public Builder expectNoContentStatus() {
+            return expectedStatusCodes(NO_CONTENT_STATUS);
+        }
+
+        public Builder expectAcceptedStatus() {
+            return expectedStatusCodes(ACCEPTED_STATUS);
+        }
+
+        public Builder expectOkOrAcceptedStatus() {
+            return expectedStatusCodes(OK_OR_ACCEPTED_STATUS);
+        }
+
+        public Builder expectAnyStatus() {
+            return expectedStatusCodes(List.of());
         }
 
         public Builder timeout(Duration timeout) {
@@ -152,41 +180,17 @@ public class VaultRequest<T> {
             return this;
         }
 
-        public <T extends VaultResult> VaultRequest<T> build(Class<T> resultClass) {
-            this.resultClass = resultClass;
+        public <T> VaultRequest<T> rebuild() {
             return new VaultRequest<>(this);
         }
 
-        public <T> VaultRequest<T> build() {
+        public <T> VaultRequest<T> build(VaultResultExtractor<T> resultExtractor) {
+            this.resultExtractor = resultExtractor;
             return new VaultRequest<>(this);
         }
 
-        public <T extends VaultResult> VaultRequest<T> ok(Class<T> resultClass) {
-            return expectedStatusCodes(OK_STATUS).build(resultClass);
-        }
-
-        public VaultRequest<Void> ok() {
-            return expectedStatusCodes(OK_STATUS).build();
-        }
-
-        public VaultRequest<Void> noContent() {
-            return expectedStatusCodes(NO_CONTENT_STATUS).build();
-        }
-
-        public <T extends VaultResult> VaultRequest<T> accepted(Class<T> resultClass) {
-            return expectedStatusCodes(ACCEPTED_STATUS).build(resultClass);
-        }
-
-        public VaultRequest<Void> accepted() {
-            return expectedStatusCodes(ACCEPTED_STATUS).build();
-        }
-
-        public <T extends VaultResult> VaultRequest<T> okOrAccepted(Class<T> resultClass) {
-            return expectedStatusCodes(OK_OR_ACCEPTED_STATUS).build(resultClass);
-        }
-
-        public VaultRequest<Void> okOrAccepted() {
-            return expectedStatusCodes(OK_OR_ACCEPTED_STATUS).build();
+        public VaultRequest<Void> build() {
+            return build(VaultVoidResultExtractor.INSTANCE);
         }
     }
 
@@ -202,7 +206,7 @@ public class VaultRequest<T> {
     private final Map<String, String> headers;
     private final Map<String, String> queryParams;
     private final Object body;
-    private final Class<T> resultClass;
+    private final VaultResultExtractor<T> resultExtractor;
     private final List<Integer> expectedStatusCodes;
     private final Duration timeout;
     private final LogConfidentialityLevel logConfidentialityLevel;
@@ -224,7 +228,7 @@ public class VaultRequest<T> {
         this.expectedStatusCodes = builder.expectedStatusCodes;
         this.timeout = builder.timeout;
         this.logConfidentialityLevel = builder.logConfidentialityLevel;
-        this.resultClass = (Class<T>) builder.resultClass;
+        this.resultExtractor = (VaultResultExtractor<T>) builder.resultExtractor;
     }
 
     public URL getBaseUrl() {
@@ -281,6 +285,10 @@ public class VaultRequest<T> {
         return wrapTTL != null ? wrapTTL : Optional.empty();
     }
 
+    public Optional<String> getWrapTTLHeaderValue() {
+        return getWrapTTL().map(ttl -> String.valueOf(ttl.toSeconds()));
+    }
+
     public Map<String, String> getHeaders() {
         return headers;
     }
@@ -297,8 +305,19 @@ public class VaultRequest<T> {
         return Optional.ofNullable(body);
     }
 
-    public Class<T> getResultClass() {
-        return resultClass;
+    public Optional<String> getSerializedBody() {
+        if (body == null) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(JsonMapping.mapper.writeValueAsString(body));
+        } catch (Exception e) {
+            throw new VaultException("Failed to serialize request body", e);
+        }
+    }
+
+    public VaultResultExtractor<T> getResultExtractor() {
+        return resultExtractor;
     }
 
     public List<Integer> getExpectedStatusCodes() {
@@ -340,26 +359,6 @@ public class VaultRequest<T> {
                 .collect(Collectors.joining("&"));
     }
 
-    public boolean isVoidResult() {
-        return Void.class == resultClass || void.class == resultClass;
-    }
-
-    public boolean isBinaryResult() {
-        return VaultBinaryResult.class.isAssignableFrom(resultClass);
-    }
-
-    public boolean isJSONResult() {
-        return VaultJSONResult.class.isAssignableFrom(resultClass);
-    }
-
-    public boolean isLeasedResult() {
-        return VaultLeasedResult.class.isAssignableFrom(resultClass);
-    }
-
-    public boolean isStatusResult() {
-        return VaultStatusResult.class.isAssignableFrom(resultClass);
-    }
-
     public Duration getTimeout() {
         return timeout;
     }
@@ -376,7 +375,7 @@ public class VaultRequest<T> {
         builder.headers = headers;
         builder.body = body;
         builder.expectedStatusCodes = expectedStatusCodes;
-        builder.resultClass = resultClass;
+        builder.resultExtractor = resultExtractor;
         builder.logConfidentialityLevel = logConfidentialityLevel;
         return builder;
     }

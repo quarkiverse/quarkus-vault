@@ -15,7 +15,7 @@ public class VaultTracingExecutor implements VaultRequestExecutor {
     }
 
     @Override
-    public <T> Uni<T> execute(VaultRequest<T> request) {
+    public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
         log.info("Executing request: " + request.getOperation());
         return delegate.execute(request)
                 .onItem().invoke((result) -> log.info("Request successful: " + request.getOperation()))

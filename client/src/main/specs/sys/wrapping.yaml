@@ -1,12 +1,13 @@
 name: Wrapping
 category: sys
 mountable: false
+basePath: sys
 
 operations:
 
 - name: lookup
   method: POST
-  path: "sys/wrapping/lookup"
+  path: wrapping/lookup
   bodyFrom: [token]
   parameters:
   - name: token
@@ -24,7 +25,7 @@ operations:
 
 - name: rewrap
   method: POST
-  path: "sys/wrapping/rewrap"
+  path: wrapping/rewrap
   bodyFrom: [token]
   parameters:
   - name: token
@@ -34,7 +35,7 @@ operations:
 
 - name: unwrap
   method: POST
-  path: "sys/wrapping/unwrap"
+  path: wrapping/unwrap
   result:
     kind: leased
     dataType: java.util.Map<String, Object>
@@ -42,7 +43,7 @@ operations:
 
 - name: unwrap
   method: POST
-  path: "sys/wrapping/unwrap"
+  path: wrapping/unwrap
   bodyFrom: [token]
   authenticated: false
   parameters:
@@ -56,7 +57,7 @@ operations:
 
 - name: wrap
   method: POST
-  path: "sys/wrapping/wrap"
+  path: wrapping/wrap
   wrapTTLFrom: wrapTtl
   parameters:
   - name: data

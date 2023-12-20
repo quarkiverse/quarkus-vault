@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.api.auth.token.VaultAuthToken;
+import io.quarkus.vault.client.common.VaultResponse;
 import io.smallrye.mutiny.Uni;
 
 public class VaultCachingTokenProvider implements VaultTokenProvider {
@@ -85,9 +86,9 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
     private Uni<VaultToken> extend(VaultAuthRequest authRequest, String clientToken) {
         var logLevel = authRequest.request().getLogConfidentialityLevel();
         return authRequest.executor().execute(VaultAuthToken.FACTORY.renewSelf(clientToken, null))
-                .map(renew -> {
-                    VaultToken vaultToken = new VaultToken(renew.auth.clientToken, renew.auth.renewable,
-                            renew.auth.leaseDuration);
+                .map(VaultResponse::getResult)
+                .map(res -> {
+                    var vaultToken = new VaultToken(res.auth.clientToken, res.auth.renewable, res.auth.leaseDuration);
                     sanityCheck(vaultToken);
                     log.fine("extended login token: " + vaultToken.getConfidentialInfo(logLevel));
                     return vaultToken;

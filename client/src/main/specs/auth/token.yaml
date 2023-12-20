@@ -1,5 +1,6 @@
 name: Token
 category: auth
+mountable: false
 basePath: auth
 
 operations:
@@ -76,6 +77,18 @@ operations:
     dataType: $TokenInfoData
 
 
+- name: lookupSelf
+  method: GET
+  path: "lookup-self"
+  tokenFrom: token
+  parameters:
+  - name: token
+    type: String
+  result:
+    kind: leased
+    dataType: $TokenInfoData
+
+
 - name: lookupAccessor
   method: POST
   path: "lookup-accessor"
@@ -107,6 +120,21 @@ operations:
   path: "renew-self"
   bodyFrom: [increment]
   parameters:
+  - name: increment
+    type: String
+  result:
+    kind: leased
+    authType: $RenewTokenData
+
+
+- name: renewSelf
+  method: POST
+  path: "renew-self"
+  bodyFrom: [increment]
+  tokenFrom: token
+  parameters:
+  - name: token
+    type: String
   - name: increment
     type: String
   result:

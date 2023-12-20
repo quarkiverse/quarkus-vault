@@ -12,6 +12,7 @@ public record POJO(
         @JsonProperty(required = true) String name,
         @JsonProperty("extends") Optional<String> extendsName,
         @JsonProperty("implements") Optional<List<String>> implementsNames,
+        Optional<List<POJO>> nested,
         Optional<List<Property>> properties,
         Optional<List<Method>> methods) implements AnyPOJO {
 

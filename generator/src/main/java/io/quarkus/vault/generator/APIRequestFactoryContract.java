@@ -25,6 +25,10 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
     private final ClassName leasedResultTypeName;
     private final ClassName authResultTypeName;
     private final ClassName statusResultTypeName;
+    private final ClassName leasedExtractorTypeName;
+    private final ClassName jsonExtractorTypeName;
+    private final ClassName statusExtractorTypeName;
+    private final ClassName binaryExtractorTypeName;
 
     public APIRequestFactoryContract(API api) {
         super(api);
@@ -34,6 +38,10 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
         leasedResultTypeName = className(api.getCommonAPIPackageName(), "VaultLeasedResult");
         authResultTypeName = className(api.getCommonAPIPackageName(), "VaultAuthResult");
         statusResultTypeName = className(api.getCommonPackageName(), "VaultStatusResult");
+        leasedExtractorTypeName = className(api.getCommonPackageName(), "VaultLeasedResultExtractor");
+        jsonExtractorTypeName = className(api.getCommonPackageName(), "VaultJSONResultExtractor");
+        statusExtractorTypeName = className(api.getCommonPackageName(), "VaultStatusResultExtractor");
+        binaryExtractorTypeName = className(api.getCommonPackageName(), "VaultBinaryResultExtractor");
     }
 
     @Override
@@ -114,6 +122,23 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
             }
         }
 
+        if (operation.headers().isPresent()) {
+            for (var header : operation.headers().get().entrySet()) {
+                String headerName = header.getKey();
+                String headerValue = header.getValue();
+                if (headerValue.startsWith(":")) {
+                    var headerParam = operation.getRequiredParameter(headerValue.substring(1));
+                    if (headerParam.isIncludeNulls()) {
+                        body.add(".header($S, $L)\n", headerName, headerParam.name());
+                    } else {
+                        body.add(".header($L != null, $S, $L)\n", headerParam.name(), headerName, headerParam.name());
+                    }
+                } else {
+                    body.add(".header($S, $S)\n", headerName, headerValue);
+                }
+            }
+        }
+
         if (operation.bodyFrom().isPresent()) {
 
             var bodyPropertyNames = operation.bodyFrom().get();
@@ -147,7 +172,8 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
             body.add(".body($L)\n", bodyParameter.name());
         }
 
-        addStatusReturn(operation, body);
+        addExpectedStatus(operation, body);
+        addBuild(operation, body);
 
         body.add(";$]\n");
 
@@ -164,20 +190,22 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
             body.add(",\n");
             addPathChoiceSegments(body, pathSegments(pathChoice.getRequiredChoice(false).path()));
         } else if (paramType.equals(ClassName.get(String.class))) {
+            body.add("Map.of($>\n");
             var choices = new ArrayList<CodeBlock>();
             for (var choice : pathChoice.choices()) {
                 choices.add(addPathChoice(choice.value().toString(), pathSegments(choice.path())));
             }
             body.add(choices.stream().collect(CodeBlock.joining(",\n")));
+            body.add("$<\n)");
         }
         body.add(")$<\n");
     }
 
     private CodeBlock addPathChoice(String choiceValue, List<Map.Entry<String, String>> pathSegments) {
         var body = CodeBlock.builder();
-        body.add("Map.entry($S, ", choiceValue);
+        body.add("$S, ", choiceValue);
         addPathChoiceSegments(body, pathSegments);
-        body.add(")");
+        body.add(",\n");
         return body.build();
     }
 
@@ -211,50 +239,49 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
         return pathSegments;
     }
 
-    private void addStatusReturn(Operation operation, CodeBlock.Builder body) {
-        Object resultTypeName = operationResultTypeName(operation);
-
+    private void addExpectedStatus(Operation operation, CodeBlock.Builder body) {
         if (operation.getStatus().isEmpty()) {
-            body.add(".build($T.class)", statusResultTypeName);
+            body.add(".expectAnyStatus()");
+        } else {
+            switch (operation.getStatus().get()) {
+                case OK:
+                    body.add(".expectOkStatus()");
+                    break;
+                case NO_CONTENT:
+                    body.add(".expectNoContentStatus()");
+                    break;
+                case ACCEPTED:
+                    body.add(".expectAcceptedStatus()");
+                    break;
+                case OK_OR_ACCEPTED:
+                    body.add(".expectOkOrAcceptedStatus()");
+                    break;
+            }
+        }
+        body.add("\n");
+    }
+
+    private void addBuild(Operation operation, CodeBlock.Builder body) {
+        if (operation.getStatus().isEmpty()) {
+            body.add(".build($T.INSTANCE)", statusExtractorTypeName);
+            return;
+        } else if (operation.result().isEmpty()) {
+            body.add(".build()");
             return;
         }
 
-        switch (operation.getStatus().get()) {
-            case OK:
-                if (resultTypeName.equals(TypeName.VOID.box())) {
-                    body.add(".ok()");
-                } else {
-                    body.add(".ok($T.class)", resultTypeName);
-                }
-                break;
-            case NO_CONTENT:
-                if (resultTypeName.equals(TypeName.VOID.box())) {
-                    body.add(".noContent()");
-                } else {
-                    body.add(".noContent($T.class)", resultTypeName);
-                }
-                break;
-            case ACCEPTED:
-                if (resultTypeName.equals(TypeName.VOID.box())) {
-                    body.add(".accepted()");
-                } else {
-                    body.add(".accepted($T.class)", resultTypeName);
-                }
-                break;
-            case OK_OR_ACCEPTED:
-                if (resultTypeName.equals(TypeName.VOID.box())) {
-                    body.add(".okOrAccepted()");
-                } else {
-                    body.add(".okOrAccepted($T.class)", resultTypeName);
-                }
-                break;
+        var resultTypeName = operationResultTypeName(operation);
+        switch (operation.result().get().kind()) {
+            case Leased -> body.add(".build($T.of($T.class))", leasedExtractorTypeName, resultTypeName);
+            case JSON -> body.add(".build($T.of($T.class))", jsonExtractorTypeName, resultTypeName);
+            case Raw -> body.add(".build($T.of($T.class))", binaryExtractorTypeName, resultTypeName);
         }
     }
 
     @Override
     public TypeName operationResultTypeName(Operation operation) {
         if (operation.getStatus().isEmpty()) {
-            return statusResultTypeName;
+            return TypeName.INT.box();
         }
         if (operation.result().isEmpty()) {
             return TypeName.VOID.box();

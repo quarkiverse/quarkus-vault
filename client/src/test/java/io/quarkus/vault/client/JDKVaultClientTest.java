@@ -1,4 +1,4 @@
-package io.quarkus.vault.client.test;
+package io.quarkus.vault.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,8 +10,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.vault.VaultContainer;
 
-import io.quarkus.vault.client.VaultClient;
-import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient;
 import io.quarkus.vault.client.util.JsonMapping;
 
@@ -49,7 +47,7 @@ public class JDKVaultClientTest {
 
             var statusResult = healthApi.status()
                     .await().indefinitely();
-            assertEquals(statusResult.getStatusCode(), 200);
+            assertEquals(statusResult, 200);
 
             var infoResult = healthApi.info()
                     .await().indefinitely();

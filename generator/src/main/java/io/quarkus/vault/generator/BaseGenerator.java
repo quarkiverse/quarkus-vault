@@ -60,21 +60,20 @@ public abstract class BaseGenerator implements Generator {
     public TypeSpec generatePOJO(String name, AnyPOJO pojo, Consumer<TypeSpec.Builder> customizer) {
         var spec = startPOJO(name, customizer);
         var specName = getTypeNames().typeName(spec.build());
-        if (pojo.extendsName().isPresent()) {
-            spec.superclass(typeName(pojo.extendsName().get()));
-        }
-        if (pojo.implementsNames().isPresent()) {
-            for (var iface : pojo.implementsNames().get()) {
+        generatePOJO(spec, specName, pojo);
+        return spec.build();
+    }
+
+    public void generatePOJO(TypeSpec.Builder spec, TypeName specName, AnyPOJO pojo) {
+        pojo.extendsName().ifPresent(extendsName -> spec.superclass(typeName(extendsName)));
+        pojo.implementsNames().ifPresent(implementsNames -> {
+            for (var iface : implementsNames) {
                 spec.addSuperinterface(typeName(iface));
             }
-        }
-        if (pojo.properties().isPresent()) {
-            addPOJOProperties(specName, spec, pojo.properties().get());
-        }
-        if (pojo.methods().isPresent()) {
-            addPOJOMethods(spec, pojo.methods().get());
-        }
-        return spec.build();
+        });
+        pojo.nested().ifPresent(nested -> addNestedPOJOs(spec, specName, nested));
+        pojo.properties().ifPresent(properties -> addPOJOProperties(specName, spec, properties));
+        pojo.methods().ifPresent(methods -> addPOJOMethods(spec, methods));
     }
 
     public TypeSpec.Builder startPOJO(String name, Consumer<TypeSpec.Builder> customizer) {
@@ -82,6 +81,24 @@ public abstract class BaseGenerator implements Generator {
                 .addModifiers(Modifier.PUBLIC);
         customizer.accept(spec);
         return spec;
+    }
+
+    public void addNestedPOJOs(TypeSpec.Builder spec, TypeName specName, List<POJO> nested) {
+        ClassName specClassName;
+        if (specName instanceof ClassName) {
+            specClassName = (ClassName) specName;
+        } else if (specName instanceof ParameterizedTypeName parameterizedTypeName) {
+            specClassName = parameterizedTypeName.rawType;
+        } else {
+            throw new IllegalArgumentException("Unsupported specName type: " + specName.getClass());
+        }
+
+        for (var pojo : nested) {
+            var nestedSpec = startPOJO(pojo.name(), s -> s.addModifiers(Modifier.STATIC));
+            var nestedSpecName = specClassName.nestedClass(pojo.name());
+            generatePOJO(nestedSpec, nestedSpecName, pojo);
+            spec.addType(nestedSpec.build());
+        }
     }
 
     public void addPOJOProperties(TypeName specName, TypeSpec.Builder spec, List<POJO.Property> properties) {

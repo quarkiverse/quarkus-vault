@@ -87,4 +87,17 @@ public record API(
         return "[" + getCategory().toUpperCase() + " (" + tag + ")]";
     }
 
+    public static final API EMPTY = new API(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
 }

@@ -1,12 +1,13 @@
 name: Health
 category: sys
 mountable: false
+basePath: sys
 
 operations:
 
 - name: status
   method: HEAD
-  path: "sys/health"
+  path: health
   queryFrom: [standbyOk, perfStandbyOk]
   authenticated: false
   parameters:
@@ -20,13 +21,13 @@ operations:
 
 - name: status
   method: HEAD
-  path: "sys/health"
+  path: health
   authenticated: false
 
 
 - name: info
   method: GET
-  path: "sys/health"
+  path: health
   queryFrom: [standbyOk, perfStandbyOk]
   authenticated: false
   parameters:
@@ -43,7 +44,7 @@ operations:
 
 - name: info
   method: GET
-  path: "sys/health"
+  path: health
   authenticated: false
   result:
     kind: json

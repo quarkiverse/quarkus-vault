@@ -1,12 +1,13 @@
 name: Seal
 category: sys
 mountable: false
+basePath: sys
 
 operations:
 
 - name: status
   method: GET
-  path: "sys/seal-status"
+  path: seal-status
   result:
     kind: json
     type: $StatusResult
@@ -14,7 +15,7 @@ operations:
 
 - name: backendStatus
   method: GET
-  path: "sys/seal-backend-status"
+  path: seal-backend-status
   parameters:
   - name: mountPoint
     type: String
@@ -32,12 +33,12 @@ operations:
 - name: seal
   method: POST
   status: NO_CONTENT
-  path: "sys/seal"
+  path: seal
 
 
 - name: unseal
   method: POST
-  path: "sys/unseal"
+  path: unseal
   parameters:
   - name: key
     type: String

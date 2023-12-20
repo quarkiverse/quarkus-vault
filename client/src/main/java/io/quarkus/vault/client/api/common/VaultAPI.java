@@ -5,19 +5,13 @@ import io.quarkus.vault.client.common.VaultRequestExecutor;
 public class VaultAPI {
 
     protected final VaultRequestExecutor executor;
-    protected final String mountPath;
 
-    public VaultAPI(VaultRequestExecutor executor, String mountPath) {
+    public VaultAPI(VaultRequestExecutor executor) {
         this.executor = executor;
-        this.mountPath = mountPath;
     }
 
     public VaultRequestExecutor getExecutor() {
         return executor;
-    }
-
-    public String getMountPath() {
-        return mountPath;
     }
 
 }

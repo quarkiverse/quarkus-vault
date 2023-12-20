@@ -1,6 +1,6 @@
 package io.quarkus.vault.client.auth;
 
-import static io.quarkus.vault.client.api.VaultAuthAPIAccessor.DEFAULT_KUBERNETES_MOUNT_PATH;
+import static io.quarkus.vault.client.api.VaultAuthAccessor.DEFAULT_KUBERNETES_MOUNT_PATH;
 import static io.quarkus.vault.client.auth.VaultCachingTokenProvider.DEFAULT_RENEW_GRACE_PERIOD;
 import static io.quarkus.vault.client.auth.VaultKubernetesTokenProvider.jwtTokenPathReader;
 

@@ -1,0 +1,134 @@
+name: Mounts
+category: sys
+mountable: false
+basePath: sys
+traceNameTag: ""
+
+operations:
+
+- name: list
+  method: LIST
+  path: mounts
+  result:
+    kind: leased
+    dataType: java.util.Map<String, $MountInfo>
+
+
+- name: read
+  method: GET
+  path: mounts/:path
+  parameters:
+  - name: path
+    type: String
+  result:
+    kind: leased
+    dataType: $MountInfo
+
+
+- name: enable
+  method: POST
+  status: NO_CONTENT
+  path: mounts/:path
+  bodyFrom: [type, description, config]
+  parameters:
+  - name: path
+    type: String
+  - name: type
+    type: String
+  - name: description
+    type: String
+  - name: config
+    type: $EnableOptions
+
+
+- name: disable
+  method: DELETE
+  path: mounts/:path
+  parameters:
+  - name: path
+    type: String
+
+
+- name: tune
+  method: POST
+  status: NO_CONTENT
+  path: mounts/:path/tune
+  parameters:
+  - name: path
+    type: String
+  - name: description
+    type: String
+  - name: config
+    type: $TuneOptions
+
+
+types:
+
+- name: MountInfo
+  nested:
+  - name: Config
+    properties:
+    - name: defaultLeaseTtl
+      type: Long
+    - name: maxLeaseTtl
+      type: Long
+    - name: forceNoCache
+      type: Boolean
+  properties:
+  - name: accessor
+    type: String
+  - name: config
+    type: $MountInfo.Config
+  - name: deprecationStatus
+    type: String
+  - name: description
+    type: String
+  - name: externalEntropyAccess
+    type: Boolean
+  - name: local
+    type: Boolean
+  - name: options
+    type: java.util.Map<String, Object>
+  - name: pluginVersion
+    type: String
+  - name: runningPluginVersion
+    type: String
+  - name: runningSha256
+    type: String
+  - name: sealWrap
+    type: Boolean
+  - name: type
+    type: String
+  - name: uuid
+    type: String
+
+- name: EnableOptions
+  properties:
+  - name: defaultLeaseTtl
+    type: String
+  - name: maxLeaseTtl
+    type: String
+  - name: forceNoCache
+    type: Boolean
+  - name: auditNonHmacRequestKeys
+    type: java.util.List<String>
+  - name: auditNonHmacResponseKeys
+    type: java.util.List<String>
+  - name: listingVisibility
+    type: String
+  - name: passthroughRequestHeaders
+    type: java.util.List<String>
+  - name: allowedResponseHeaders
+    type: java.util.List<String>
+  - name: pluginVersion
+    type: String
+  - name: allowedManagedKeys
+    type: java.util.List<String>
+  - name: options
+    type: java.util.Map<String, Object>
+
+- name: TuneOptions
+  extends: $EnableOptions
+  properties:
+  - name: description
+    type: String

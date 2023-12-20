@@ -6,12 +6,13 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.quarkus.vault.client.api.VaultAuthAPIAccessor;
-import io.quarkus.vault.client.api.VaultSecretsAPIAccessor;
-import io.quarkus.vault.client.api.VaultSysAPIAccessor;
+import io.quarkus.vault.client.api.VaultAuthAccessor;
+import io.quarkus.vault.client.api.VaultSecretsAccessor;
+import io.quarkus.vault.client.api.VaultSysAccessor;
 import io.quarkus.vault.client.auth.*;
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultRequestExecutor;
+import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.common.VaultTracingExecutor;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
 import io.smallrye.mutiny.Uni;
@@ -131,8 +132,8 @@ public class VaultClient implements VaultRequestExecutor {
         return new Builder();
     }
 
-    private final AtomicReference<VaultSecretsAPIAccessor> secrets = new AtomicReference<>();
-    private final AtomicReference<VaultAuthAPIAccessor> auth = new AtomicReference<>();
+    private final AtomicReference<VaultSecretsAccessor> secrets = new AtomicReference<>();
+    private final AtomicReference<VaultAuthAccessor> auth = new AtomicReference<>();
     private final URL baseUrl;
     private final String apiVersion;
     private final VaultRequestExecutor executor;
@@ -151,26 +152,26 @@ public class VaultClient implements VaultRequestExecutor {
         this.namespace = builder.namespace;
     }
 
-    public VaultSecretsAPIAccessor secrets() {
+    public VaultSecretsAccessor secrets() {
         if (secrets.get() == null) {
-            secrets.set(new VaultSecretsAPIAccessor(this));
+            secrets.set(new VaultSecretsAccessor(this));
         }
         return secrets.get();
     }
 
-    public VaultAuthAPIAccessor auth() {
+    public VaultAuthAccessor auth() {
         if (auth.get() == null) {
-            auth.set(new VaultAuthAPIAccessor(this));
+            auth.set(new VaultAuthAccessor(this));
         }
         return auth.get();
     }
 
-    public VaultSysAPIAccessor sys() {
-        return new VaultSysAPIAccessor(this);
+    public VaultSysAccessor sys() {
+        return new VaultSysAccessor(this);
     }
 
     @Override
-    public <T> Uni<T> execute(VaultRequest<T> request) {
+    public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
 
         var requestBuilder = request.builder();
 
@@ -190,7 +191,7 @@ public class VaultClient implements VaultRequestExecutor {
         }
 
         if (request.hasToken() || tokenProvider == null) {
-            return executor.execute(requestBuilder.build());
+            return executor.execute(requestBuilder.rebuild());
         }
 
         return tokenProvider.apply(VaultAuthRequest.of(this, request))
@@ -202,7 +203,7 @@ public class VaultClient implements VaultRequestExecutor {
                         requestBuilder.token(token.clientToken);
                     }
 
-                    return executor.execute(requestBuilder.build());
+                    return executor.execute(requestBuilder.rebuild());
                 });
     }
 

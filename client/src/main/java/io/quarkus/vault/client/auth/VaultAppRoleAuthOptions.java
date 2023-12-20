@@ -1,6 +1,6 @@
 package io.quarkus.vault.client.auth;
 
-import static io.quarkus.vault.client.api.VaultAuthAPIAccessor.DEFAULT_APPROLE_MOUNT_PATH;
+import static io.quarkus.vault.client.api.VaultAuthAccessor.DEFAULT_APPROLE_MOUNT_PATH;
 import static io.quarkus.vault.client.auth.VaultCachingTokenProvider.DEFAULT_RENEW_GRACE_PERIOD;
 
 import java.time.Duration;

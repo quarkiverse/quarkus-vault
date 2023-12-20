@@ -36,6 +36,10 @@ public class VaultClientException extends VaultException {
         return status;
     }
 
+    public List<String> getErrors() {
+        return errors;
+    }
+
     public String getBody() {
         return body;
     }

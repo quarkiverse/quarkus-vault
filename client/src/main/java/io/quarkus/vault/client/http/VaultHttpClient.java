@@ -2,71 +2,42 @@ package io.quarkus.vault.client.http;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.IOException;
 import java.net.ConnectException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.VaultIOException;
-import io.quarkus.vault.client.api.common.VaultLeasedResult;
-import io.quarkus.vault.client.common.*;
+import io.quarkus.vault.client.common.VaultErrorResponse;
+import io.quarkus.vault.client.common.VaultRequest;
+import io.quarkus.vault.client.common.VaultRequestExecutor;
+import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.util.JsonMapping;
 import io.smallrye.mutiny.Uni;
 
 public abstract class VaultHttpClient implements VaultRequestExecutor, AutoCloseable {
 
-    private static final Logger log = Logger.getLogger(VaultHttpClient.class.getName());
-
     protected String X_VAULT_TOKEN = "X-Vault-Token";
     protected String X_VAULT_WRAP_TTL = "X-Vault-Wrap-TTL";
     protected String X_VAULT_NAMESPACE = "X-Vault-Namespace";
 
-    protected <T> byte[] requestBody(VaultRequest<T> request) {
-        try {
-            return JsonMapping.mapper.writeValueAsBytes(request.getBody());
-        } catch (IOException e) {
-            throw new VaultException("Failed to serialize request body", e);
-        }
-    }
-
-    protected <T> Uni<T> processResponse(VaultRequest<T> request, int statusCode, byte[] body) {
+    protected <T> Uni<VaultResponse<T>> buildResponse(VaultRequest<T> request, int statusCode,
+            Collection<Map.Entry<String, String>> headers, byte[] body) {
         return Uni.createFrom().nullItem()
-                .map((none) -> {
+                .map(none -> {
+                    var response = new VaultResponse<>(request, statusCode, List.copyOf(headers), body);
 
-                    if (request.getMethod().equals(VaultRequest.Method.HEAD) && request.isStatusResult()) {
-                        return request.getResultClass().cast(new VaultStatusResult(statusCode));
+                    if (!response.isStatusCodeExpected() && !response.isUpgradedResponse()) {
+                        throwVaultException(request, statusCode, body);
                     }
 
-                    if (!request.getExpectedStatusCodes().contains(statusCode) && request.isLeasedResult()) {
-                        if (!isWarningResponse(statusCode, request.getExpectedStatusCodes())) {
-                            throwVaultException(request, statusCode, body);
-                        }
-                    }
-
-                    var resultClass = request.getResultClass();
-                    if (request.isVoidResult()) {
-                        return null;
-                    } else if (request.isStatusResult()) {
-                        log.warning("Status result requested with required status: " + request.getOperation());
-                        return resultClass.cast(new VaultStatusResult(statusCode));
-                    } else if (request.isBinaryResult()) {
-                        return resultClass.cast(new VaultBinaryResult(body));
-                    } else if (request.isJSONResult()) {
-                        var result = convert(body, resultClass);
-                        if (result instanceof VaultLeasedResult) {
-                            logResultWarnings((VaultLeasedResult<?, ?>) result);
-                        }
-                        return result;
-                    } else {
-                        throw new VaultClientException(request.getOperation(), request.getUrl().toString(), statusCode,
-                                "Unsupported result class: " + resultClass);
-                    }
+                    return response;
                 })
                 .onFailure(JsonProcessingException.class).transform(VaultException::new)
                 .onFailure(io.smallrye.mutiny.TimeoutException.class).transform(VaultIOException::new)
@@ -83,25 +54,13 @@ public abstract class VaultHttpClient implements VaultRequestExecutor, AutoClose
                 });
     }
 
-    private boolean isWarningResponse(int statusCode, List<Integer> expectedCodes) {
-        return expectedCodes.contains(204) && statusCode == 200;
-    }
-
-    private void logResultWarnings(VaultLeasedResult<?, ?> result) {
-        if (result.warnings != null) {
-            for (var warning : result.warnings) {
-                log.warning(warning);
-            }
-        }
-    }
-
     private void throwVaultException(VaultRequest<?> request, int statusCode, byte[] body) {
         String bodyText = null;
         List<String> errors = null;
         try {
             VaultErrorResponse errorResponse = null;
             try {
-                errorResponse = convert(body, VaultErrorResponse.class);
+                errorResponse = JsonMapping.mapper.readValue(body, VaultErrorResponse.class);
             } catch (Exception e) {
                 // ignore
             }
@@ -118,14 +77,6 @@ public abstract class VaultHttpClient implements VaultRequestExecutor, AutoClose
             throw new VaultClientException(request.getOperation(), request.getUrl().toString(), statusCode, errors);
         } else {
             throw new VaultClientException(request.getOperation(), request.getUrl().toString(), statusCode, bodyText);
-        }
-    }
-
-    private <T> T convert(byte[] data, Class<T> resultClass) {
-        try {
-            return JsonMapping.mapper.readValue(data, resultClass);
-        } catch (IOException e) {
-            throw new VaultException("Failed to parse Vault response", e);
         }
     }
 

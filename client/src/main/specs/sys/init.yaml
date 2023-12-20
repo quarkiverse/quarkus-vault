@@ -1,13 +1,14 @@
 name: Init
 category: sys
 mountable: false
+basePath: sys
 traceNameTag: ""
 
 operations:
 
 - name: status
   method: GET
-  path: "sys/init"
+  path: init
   authenticated: false
   result:
     kind: json
@@ -18,7 +19,7 @@ operations:
 
 - name: init
   method: POST
-  path: "sys/init"
+  path: init
   authenticated: false
   parameters:
   - name: params

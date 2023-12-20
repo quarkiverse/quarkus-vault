@@ -3,6 +3,7 @@ package io.quarkus.vault.client.auth;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.api.auth.userpass.VaultAuthUserPass;
+import io.quarkus.vault.client.common.VaultResponse;
 import io.smallrye.mutiny.Uni;
 
 public class VaultUserPassTokenProvider implements VaultTokenProvider {
@@ -26,8 +27,8 @@ public class VaultUserPassTokenProvider implements VaultTokenProvider {
         var executor = authRequest.executor();
         return passwordProvider.apply(authRequest).flatMap(password -> {
             return executor.execute(VaultAuthUserPass.FACTORY.login(mountPath, username, password))
-                    .map(result -> VaultToken.from(result.auth.clientToken, result.auth.renewable,
-                            result.auth.leaseDuration));
+                    .map(VaultResponse::getResult)
+                    .map(res -> VaultToken.from(res.auth.clientToken, res.auth.renewable, res.auth.leaseDuration));
         });
     }
 }

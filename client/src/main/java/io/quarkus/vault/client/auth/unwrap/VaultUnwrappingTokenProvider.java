@@ -14,6 +14,7 @@ import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.api.sys.wrapping.VaultSysWrapping;
 import io.quarkus.vault.client.auth.VaultAuthRequest;
+import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.util.JsonMapping;
 import io.smallrye.mutiny.Uni;
 
@@ -38,8 +39,9 @@ public abstract class VaultUnwrappingTokenProvider<UnwrapResult> implements Vaul
         return unwrappingCache.get(wrappingToken, (token) -> {
             var executor = unwrapRequest.executor();
             return executor.execute(VaultSysWrapping.FACTORY.unwrap(token))
-                    .map(unwrappedResult -> {
-                        var unwrappedClientToken = extractClientToken(convert(JsonMapping.mapper, unwrappedResult.data));
+                    .map(VaultResponse::getResult)
+                    .map(res -> {
+                        var unwrappedClientToken = extractClientToken(convert(JsonMapping.mapper, res.data));
 
                         String displayValue = unwrapRequest.request().getLogConfidentialityLevel()
                                 .maskWithTolerance(unwrappedClientToken, LOW);

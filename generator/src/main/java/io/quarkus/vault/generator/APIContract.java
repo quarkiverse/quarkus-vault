@@ -14,16 +14,18 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
     private static final ClassName UNI_TYPE_NAME = ClassName.get("io.smallrye.mutiny", "Uni");
 
     private final ClassName apiName;
+    private final ClassName mountableApiName;
     private final ClassName requestExecutorTypeName;
     private final ClassName requestFactoryTypeName;
-    private final ClassName statusResultTypeName;
+    private final ClassName responseTypeName;
 
     public APIContract(API api) {
         super(api);
         apiName = className(api.getCommonAPIPackageName(), "VaultAPI");
+        mountableApiName = className(api.getCommonAPIPackageName(), "VaultMountableAPI");
         requestExecutorTypeName = className(api.getCommonPackageName(), "VaultRequestExecutor");
         requestFactoryTypeName = typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX);
-        statusResultTypeName = className(api.getCommonPackageName(), "VaultStatusResult");
+        responseTypeName = className(api.getCommonPackageName(), "VaultResponse");
     }
 
     @Override
@@ -33,9 +35,8 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
 
     @Override
     public TypeSpec.Builder start() {
-        return TypeSpec.classBuilder(typeName())
+        var typeSpec = TypeSpec.classBuilder(typeName())
                 .addModifiers(Modifier.PUBLIC)
-                .superclass(apiName)
                 .addField(
                         FieldSpec.builder(requestFactoryTypeName, "FACTORY")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -44,23 +45,45 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
                 .addField(
                         FieldSpec.builder(typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX), "factory")
                                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-                                .build())
-                .addMethod(
-                        MethodSpec.constructorBuilder()
-                                .addModifiers(Modifier.PUBLIC)
-                                .addParameter(requestExecutorTypeName, "executor")
-                                .addParameter(String.class, "mountPath")
-                                .addParameter(typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX), "factory")
-                                .addStatement("super(executor, mountPath)")
-                                .addStatement("this.factory = factory")
-                                .build())
-                .addMethod(
-                        MethodSpec.constructorBuilder()
-                                .addModifiers(Modifier.PUBLIC)
-                                .addParameter(requestExecutorTypeName, "executor")
-                                .addParameter(String.class, "mountPath")
-                                .addStatement("this(executor, mountPath, FACTORY)")
                                 .build());
+
+        if (api.isMountable()) {
+            typeSpec.superclass(mountableApiName);
+            typeSpec.addMethod(
+                    MethodSpec.constructorBuilder()
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(requestExecutorTypeName, "executor")
+                            .addParameter(String.class, "mountPath")
+                            .addParameter(typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX), "factory")
+                            .addStatement("super(executor, mountPath)")
+                            .addStatement("this.factory = factory")
+                            .build());
+            typeSpec.addMethod(
+                    MethodSpec.constructorBuilder()
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(requestExecutorTypeName, "executor")
+                            .addParameter(String.class, "mountPath")
+                            .addStatement("this(executor, mountPath, FACTORY)")
+                            .build());
+        } else {
+            typeSpec.superclass(apiName);
+            typeSpec.addMethod(
+                    MethodSpec.constructorBuilder()
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(requestExecutorTypeName, "executor")
+                            .addParameter(typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX), "factory")
+                            .addStatement("super(executor)")
+                            .addStatement("this.factory = factory")
+                            .build());
+            typeSpec.addMethod(
+                    MethodSpec.constructorBuilder()
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(requestExecutorTypeName, "executor")
+                            .addStatement("this(executor, FACTORY)")
+                            .build());
+        }
+
+        return typeSpec;
     }
 
     @Override
@@ -86,8 +109,10 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
             parameterNames = operation.getParameters().stream().map(Operation.Parameter::name);
         }
 
-        body.addStatement("return executor.execute(factory.$L($L))", operation.name(),
+        body.add("$[return executor.execute(factory.$L($L))\n", operation.name(),
                 parameterNames.map(CodeBlock::of).collect(CodeBlock.joining(", ")));
+
+        body.add(".map($T::getResult);$]", responseTypeName);
 
         return body.build();
     }
@@ -95,7 +120,7 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
     @Override
     public TypeName operationResultTypeName(Operation operation) {
         if (operation.getStatus().isEmpty()) {
-            return statusResultTypeName;
+            return TypeName.INT.box();
         }
         if (operation.result().isEmpty()) {
             return TypeName.VOID.box();

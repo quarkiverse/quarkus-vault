@@ -1,6 +1,7 @@
 package io.quarkus.vault.generator.model;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,6 +26,7 @@ public record Operation(
         Optional<List<String>> bodyFrom,
         Optional<String> bodyType,
         Optional<List<String>> queryFrom,
+        Optional<Map<String, String>> headers,
         Optional<Result> result) {
 
     public enum Method {
@@ -179,7 +181,7 @@ public record Operation(
         }
         return Optional.ofNullable(
                 switch (getMethod()) {
-                    case GET, LIST, POST -> Status.OK;
+                    case GET, LIST, POST -> result.isPresent() ? Status.OK : Status.NO_CONTENT;
                     case PATCH, PUT, DELETE -> Status.NO_CONTENT;
                     case HEAD -> null;
                 });

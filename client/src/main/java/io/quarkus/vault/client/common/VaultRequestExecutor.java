@@ -4,6 +4,6 @@ import io.smallrye.mutiny.Uni;
 
 public interface VaultRequestExecutor {
 
-    <T> Uni<T> execute(VaultRequest<T> request);
+    <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request);
 
 }
