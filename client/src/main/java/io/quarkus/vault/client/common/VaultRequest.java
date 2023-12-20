@@ -36,7 +36,6 @@ public class VaultRequest<T> {
         private String apiVersion = "v1";
         private String operation;
         private Method method;
-        private String mountPath;
         private String path;
         private Optional<String> token;
         private Optional<String> namespace;
@@ -49,10 +48,9 @@ public class VaultRequest<T> {
         private Duration timeout = Duration.ofSeconds(30);
         private LogConfidentialityLevel logConfidentialityLevel = LogConfidentialityLevel.HIGH;
 
-        private Builder(String operation, Method method, String mountPath) {
+        private Builder(String operation, Method method) {
             this.operation = operation;
             this.method = method;
-            this.mountPath = mountPath;
         }
 
         public Builder baseUrl(URL baseUrl) {
@@ -198,7 +196,6 @@ public class VaultRequest<T> {
     private final String apiVersion;
     private final String operation;
     private final Method method;
-    private final String mountPath;
     private final String path;
     private final Optional<String> token;
     private final Optional<String> namespace;
@@ -217,7 +214,6 @@ public class VaultRequest<T> {
         this.apiVersion = builder.apiVersion;
         this.operation = builder.operation;
         this.method = builder.method;
-        this.mountPath = builder.mountPath;
         this.path = builder.path;
         this.token = builder.token;
         this.namespace = builder.namespace;
@@ -245,10 +241,6 @@ public class VaultRequest<T> {
 
     public Method getMethod() {
         return method;
-    }
-
-    public String getMountPath() {
-        return mountPath;
     }
 
     public String getPath() {
@@ -333,7 +325,7 @@ public class VaultRequest<T> {
             throw new IllegalStateException("baseUrl is not set");
         }
 
-        var fullPath = joinPath(baseUrl.getPath(), apiVersion, mountPath, path);
+        var fullPath = joinPath(baseUrl.getPath(), apiVersion, path);
         if (!queryParams.isEmpty()) {
             fullPath += "?" + getQueryParamsString();
         }
@@ -364,7 +356,7 @@ public class VaultRequest<T> {
     }
 
     public Builder builder() {
-        var builder = new Builder(operation, method, mountPath);
+        var builder = new Builder(operation, method);
         builder.baseUrl = baseUrl;
         builder.apiVersion = apiVersion;
         builder.path = path;
@@ -380,36 +372,36 @@ public class VaultRequest<T> {
         return builder;
     }
 
-    public static Builder request(String operation, Method method, String mountPath) {
-        return new Builder(operation, method, mountPath);
+    public static Builder request(String operation, Method method) {
+        return new Builder(operation, method);
     }
 
-    public static Builder get(String operation, String mountPath) {
-        return request(operation, Method.GET, mountPath);
+    public static Builder get(String operation) {
+        return request(operation, Method.GET);
     }
 
-    public static Builder post(String operation, String mountPath) {
-        return request(operation, Method.POST, mountPath);
+    public static Builder post(String operation) {
+        return request(operation, Method.POST);
     }
 
-    public static Builder put(String operation, String mountPath) {
-        return request(operation, Method.PUT, mountPath);
+    public static Builder put(String operation) {
+        return request(operation, Method.PUT);
     }
 
-    public static Builder patch(String operation, String mountPath) {
-        return request(operation, Method.PATCH, mountPath);
+    public static Builder patch(String operation) {
+        return request(operation, Method.PATCH);
     }
 
-    public static Builder delete(String operation, String mountPath) {
-        return request(operation, Method.DELETE, mountPath);
+    public static Builder delete(String operation) {
+        return request(operation, Method.DELETE);
     }
 
-    public static Builder list(String operation, String mountPath) {
-        return request(operation, Method.LIST, mountPath);
+    public static Builder list(String operation) {
+        return request(operation, Method.LIST);
     }
 
-    public static Builder head(String operation, String mountPath) {
-        return request(operation, Method.HEAD, mountPath);
+    public static Builder head(String operation) {
+        return request(operation, Method.HEAD);
     }
 
     private static String joinPath(String... pathSegments) {

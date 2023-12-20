@@ -24,7 +24,6 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
     private final ClassName jsonResultTypeName;
     private final ClassName leasedResultTypeName;
     private final ClassName authResultTypeName;
-    private final ClassName statusResultTypeName;
     private final ClassName leasedExtractorTypeName;
     private final ClassName jsonExtractorTypeName;
     private final ClassName statusExtractorTypeName;
@@ -37,7 +36,6 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
         jsonResultTypeName = className(api.getCommonPackageName(), "VaultJSONResult");
         leasedResultTypeName = className(api.getCommonAPIPackageName(), "VaultLeasedResult");
         authResultTypeName = className(api.getCommonAPIPackageName(), "VaultAuthResult");
-        statusResultTypeName = className(api.getCommonPackageName(), "VaultStatusResult");
         leasedExtractorTypeName = className(api.getCommonPackageName(), "VaultLeasedResultExtractor");
         jsonExtractorTypeName = className(api.getCommonPackageName(), "VaultJSONResultExtractor");
         statusExtractorTypeName = className(api.getCommonPackageName(), "VaultStatusResultExtractor");
@@ -85,11 +83,7 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
 
         body.add("$[return $T." + method.getBuilderMethodName(), requestTypeName);
 
-        if (api.isMountable()) {
-            body.add("(getTraceOpName($S), mountPath)\n", operation.getTraceTitle());
-        } else {
-            body.add("(getTraceOpName($S), null)\n", operation.getTraceTitle());
-        }
+        body.add("(getTraceOpName($S))\n", operation.getTraceTitle());
 
         if (operation.pathChoice().isPresent()) {
             addPathChoice(body, operation, operation.pathChoice().get());
@@ -228,6 +222,9 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
         var pathSegments = new ArrayList<Map.Entry<String, String>>();
         if (api.basePath().isPresent()) {
             pathSegments.add(Map.entry("$S", api.basePath().get()));
+        }
+        if (api.isMountable()) {
+            pathSegments.add(Map.entry("$L", "mountPath"));
         }
         for (var pathPart : pathParts) {
             if (pathPart.startsWith(":")) {
