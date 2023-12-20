@@ -10,6 +10,7 @@ operations:
   path: mounts
   result:
     kind: leased
+    unwrapsData: true
     dataType: java.util.Map<String, $MountInfo>
 
 
@@ -21,6 +22,7 @@ operations:
     type: String
   result:
     kind: leased
+    unwrapsData: true
     dataType: $MountInfo
 
 

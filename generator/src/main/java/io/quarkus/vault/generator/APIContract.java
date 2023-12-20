@@ -1,11 +1,14 @@
 package io.quarkus.vault.generator;
 
+import static io.quarkus.vault.generator.utils.Strings.capitalize;
+
 import java.util.stream.Stream;
 
 import javax.lang.model.element.Modifier;
 
 import com.squareup.javapoet.*;
 
+import io.quarkus.vault.generator.errors.OperationGenerationError;
 import io.quarkus.vault.generator.model.API;
 import io.quarkus.vault.generator.model.Operation;
 
@@ -112,7 +115,17 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
         body.add("$[return executor.execute(factory.$L($L))\n", operation.name(),
                 parameterNames.map(CodeBlock::of).collect(CodeBlock.joining(", ")));
 
-        body.add(".map($T::getResult);$]", responseTypeName);
+        body.add(".map($T::getResult)", responseTypeName);
+
+        if (operation.result().isPresent() && operation.result().get() instanceof Operation.LeasedResult leasedResult) {
+            if (leasedResult.unwrapsData().orElse(false)) {
+                body.add(".map(t -> t.data)");
+            } else if (leasedResult.unwrapsAuth().orElse(false)) {
+                body.add(".map(r -> r.auth)");
+            }
+        }
+
+        body.add(";$]");
 
         return body.build();
     }
@@ -129,10 +142,27 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
         var result = operation.result().get();
         if (result instanceof Operation.RawResult rawResult) {
             return typeName(rawResult.type());
-        } else if (result instanceof Operation.JSONResult jsonResult && jsonResult.type().isPresent()) {
-            return typeName(jsonResult.type().get());
+        } else if (result instanceof Operation.JSONResult jsonResult) {
+            if (jsonResult.type().isPresent()) {
+                return typeName(jsonResult.type().get());
+            } else {
+                return typeNameFor(operation.name(), "Result");
+            }
+        } else if (result instanceof Operation.LeasedResult leasedResult) {
+            if (leasedResult.unwrapsData().orElse(false)) {
+                if (leasedResult.dataType().isPresent()) {
+                    return typeName(leasedResult.dataType().get());
+                } else {
+                    return typeNameFor(capitalize(operation.name()), "ResultData");
+                }
+            } else if (leasedResult.unwrapsAuth().orElse(false)) {
+                return typeNameFor(capitalize(operation.name()), "AuthResult");
+            } else {
+                return typeNameFor(operation.name(), "Result");
+            }
         } else {
-            return typeNameFor(operation.name(), "Result");
+            throw new OperationGenerationError(operation.name(), "Unsupported result type: " + result.getClass().getName(),
+                    null);
         }
     }
 }

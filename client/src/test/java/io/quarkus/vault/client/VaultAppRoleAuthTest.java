@@ -23,18 +23,18 @@ public class VaultAppRoleAuthTest {
 
         // Read role id
         var roleId = appRoleApi.readRoleId(role)
-                .await().indefinitely().data.roleId;
+                .await().indefinitely().roleId;
         assertThat(roleId).isNotNull();
 
         // Generate secret id
         var secretId = appRoleApi.generateSecretId(role, null)
-                .await().indefinitely().data.secretId;
+                .await().indefinitely().secretId;
         assertThat(secretId).isNotNull();
 
         // Login
         var loginResult = appRoleApi.login(roleId, secretId)
                 .await().indefinitely();
-        assertThat(loginResult.auth.clientToken).isNotNull();
+        assertThat(loginResult.clientToken).isNotNull();
     }
 
 }

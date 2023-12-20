@@ -103,35 +103,33 @@ public class Main {
     }
 
     static API generateAPI(URL url, Path dir) throws Exception {
-        try (var stream = url.openStream()) {
 
-            var mapper = new YAMLMapper().findAndRegisterModules();
-            var api = mapper.readValue(stream, API.class);
+        var mapper = new YAMLMapper().findAndRegisterModules();
+        var api = mapper.readValue(url, API.class);
 
-            var requestFactoryContract = new APIRequestFactoryContract(api);
-            var requestFactoryGenerator = new APIGenerator(api, requestFactoryContract);
-            requestFactoryGenerator.generate()
-                    .forEach(javaFile -> {
-                        try {
-                            javaFile.writeToPath(dir);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+        var requestFactoryContract = new APIRequestFactoryContract(api);
+        var requestFactoryGenerator = new APIGenerator(api, requestFactoryContract);
+        requestFactoryGenerator.generate()
+                .forEach(javaFile -> {
+                    try {
+                        javaFile.writeToPath(dir);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
-            var apiContract = new APIContract(api);
-            var apiGenerator = new APIGenerator(api, apiContract);
-            apiGenerator.generate()
-                    .forEach(javaFile -> {
-                        try {
-                            javaFile.writeToPath(dir);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+        var apiContract = new APIContract(api);
+        var apiGenerator = new APIGenerator(api, apiContract);
+        apiGenerator.generate()
+                .forEach(javaFile -> {
+                    try {
+                        javaFile.writeToPath(dir);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
-            return api;
-        }
+        return api;
     }
 
     static void deleteJavaFiles(Path dir) throws IOException {

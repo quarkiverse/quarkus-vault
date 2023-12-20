@@ -10,6 +10,7 @@ operations:
   path: policy
   result:
     kind: leased
+    unwrapsData: true
     data:
     - name: policies
       type: java.util.List<String>
@@ -22,6 +23,7 @@ operations:
     type: String
   result:
     kind: leased
+    unwrapsData: true
     data:
     - name: name
       type: String

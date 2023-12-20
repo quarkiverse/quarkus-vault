@@ -53,7 +53,7 @@ public class VaultUserPassAuthTest {
 
         // Validate policies
         var userInfo = userPassApi.readUser(user)
-                .await().indefinitely().data;
+                .await().indefinitely();
         assertThat(userInfo.tokenPolicies).containsExactly(userPolicy);
     }
 
@@ -81,7 +81,7 @@ public class VaultUserPassAuthTest {
 
         // Validate policies (and verify that token max ttl is still set)
         var userInfo = userPassApi.readUser(user)
-                .await().indefinitely().data;
+                .await().indefinitely();
         assertThat(userInfo.tokenPolicies).contains(userPolicy);
         assertThat(userInfo.tokenMaxTtl).isEqualTo("54000");
     }
@@ -139,7 +139,7 @@ public class VaultUserPassAuthTest {
         // Read sys mount (requires root policy)
         var sysMount = authClient.sys().mounts().readConfig("secret")
                 .await().indefinitely();
-        assertThat(sysMount.data.options)
+        assertThat(sysMount.options)
                 .isNotNull()
                 .containsEntry("version", "2");
     }

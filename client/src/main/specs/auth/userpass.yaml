@@ -61,6 +61,7 @@ operations:
     type: String
   result:
     kind: leased
+    unwrapsData: true
     data:
     - name: bindSecretId
       type: Boolean
@@ -127,6 +128,7 @@ operations:
   path: "users"
   result:
     kind: leased
+    unwrapsData: true
     data:
     - name: keys
       type: java.util.List<String>

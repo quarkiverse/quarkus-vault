@@ -134,10 +134,13 @@ public record Operation(
 
     @JsonTypeName("leased")
     public record LeasedResult(
+            Kind kind,
+            Optional<Boolean> unwrapsData,
             Optional<List<POJO.Property>> data,
             Optional<String> dataType,
             Optional<List<POJO.Property>> auth,
             Optional<String> authType,
+            Optional<Boolean> unwrapsAuth,
             Optional<PartialPOJO> custom) implements Result {
 
         @Override
