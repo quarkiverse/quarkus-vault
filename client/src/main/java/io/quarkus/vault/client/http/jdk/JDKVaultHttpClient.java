@@ -40,10 +40,7 @@ public class JDKVaultHttpClient extends VaultHttpClient {
         var requestBuilder = HttpRequest.newBuilder()
                 .uri(request.getUri());
 
-        request.getHeaders().forEach(requestBuilder::header);
-        request.getNamespace().ifPresent(namespace -> requestBuilder.header(X_VAULT_NAMESPACE, namespace));
-        request.getWrapTTLHeaderValue().ifPresent(wrapTTL -> requestBuilder.header(X_VAULT_WRAP_TTL, wrapTTL));
-        request.getToken().ifPresent(token -> requestBuilder.header(X_VAULT_TOKEN, token));
+        request.getHTTPHeaders().forEach(requestBuilder::header);
 
         var body = request.getSerializedBody()
                 .map(BodyPublishers::ofString)

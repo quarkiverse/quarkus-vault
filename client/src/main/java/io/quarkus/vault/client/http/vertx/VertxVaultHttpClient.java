@@ -39,12 +39,7 @@ public class VertxVaultHttpClient extends VaultHttpClient {
         var options = new RequestOptions()
                 .setTraceOperation(request.getOperation())
                 .setAbsoluteURI(request.getUrl());
-
-        request.getHeaders().forEach(options::addHeader);
-        request.getNamespace().ifPresent(namespace -> options.addHeader(X_VAULT_NAMESPACE, namespace));
-        request.getWrapTTLHeaderValue().ifPresent(wrapTTL -> options.addHeader(X_VAULT_WRAP_TTL, wrapTTL));
-        request.getToken().ifPresent(token -> options.addHeader(X_VAULT_TOKEN, token));
-
+        request.getHTTPHeaders().forEach(options::addHeader);
         return options;
     }
 

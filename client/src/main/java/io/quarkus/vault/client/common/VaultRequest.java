@@ -1,5 +1,6 @@
 package io.quarkus.vault.client.common;
 
+import static io.quarkus.vault.client.http.VaultHttpClient.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.net.MalformedURLException;
@@ -335,6 +336,14 @@ public class VaultRequest<T> {
         } catch (MalformedURLException e) {
             throw new IllegalStateException("Invalid URL for Vault request", e);
         }
+    }
+
+    public Map<String, String> getHTTPHeaders() {
+        var allHeaders = new HashMap<>(headers);
+        getToken().ifPresent(token -> allHeaders.put(X_VAULT_TOKEN, token));
+        getNamespace().ifPresent(namespace -> allHeaders.put(X_VAULT_NAMESPACE, namespace));
+        getWrapTTL().ifPresent(wrapTTL -> allHeaders.put(X_VAULT_WRAP_TTL, String.valueOf(wrapTTL.toSeconds())));
+        return allHeaders;
     }
 
     public URI getUri() {

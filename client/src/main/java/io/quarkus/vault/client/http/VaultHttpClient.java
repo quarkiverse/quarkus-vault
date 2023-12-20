@@ -23,9 +23,9 @@ import io.smallrye.mutiny.Uni;
 
 public abstract class VaultHttpClient implements VaultRequestExecutor, AutoCloseable {
 
-    protected String X_VAULT_TOKEN = "X-Vault-Token";
-    protected String X_VAULT_WRAP_TTL = "X-Vault-Wrap-TTL";
-    protected String X_VAULT_NAMESPACE = "X-Vault-Namespace";
+    public static final String X_VAULT_TOKEN = "X-Vault-Token";
+    public static final String X_VAULT_WRAP_TTL = "X-Vault-Wrap-TTL";
+    public static final String X_VAULT_NAMESPACE = "X-Vault-Namespace";
 
     protected <T> Uni<VaultResponse<T>> buildResponse(VaultRequest<T> request, int statusCode,
             Collection<Map.Entry<String, String>> headers, byte[] body) {
