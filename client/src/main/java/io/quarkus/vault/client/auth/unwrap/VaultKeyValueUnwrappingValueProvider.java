@@ -4,20 +4,24 @@ import io.quarkus.vault.client.api.secrets.kv.VaultSecretsKVReadResult;
 import io.quarkus.vault.client.api.secrets.kv1.VaultSecretsKV1ReadResult;
 import io.quarkus.vault.client.api.secrets.kv2.VaultSecretsKV2ReadSecretResult;
 
-public class VaultPasswordUnwrappingTokenProvider extends VaultUnwrappingTokenProvider<VaultSecretsKVReadResult> {
+/**
+ * A {@link VaultUnwrappingValueProvider} for Vault KV secrets generated with the KV engine's
+ * {@link VaultSecretsKVReadResult Read Secret}.
+ */
+public class VaultKeyValueUnwrappingValueProvider extends VaultUnwrappingValueProvider<VaultSecretsKVReadResult> {
 
-    public static final String UNWRAPPED_PASSWORD_KEY = "password";
-
+    private final String valueKey;
     private final int version;
 
-    public VaultPasswordUnwrappingTokenProvider(String wrappingToken, int version) {
+    public VaultKeyValueUnwrappingValueProvider(String wrappingToken, String valueKey, int version) {
         super(wrappingToken);
+        this.valueKey = valueKey;
         this.version = version;
     }
 
     @Override
     public String getType() {
-        return "password";
+        return valueKey + " in kv(" + version + ")";
     }
 
     @Override
@@ -27,6 +31,6 @@ public class VaultPasswordUnwrappingTokenProvider extends VaultUnwrappingTokenPr
 
     @Override
     public String extractClientToken(VaultSecretsKVReadResult result) {
-        return result.getData().get(UNWRAPPED_PASSWORD_KEY).toString();
+        return result.getData().get(valueKey).toString();
     }
 }

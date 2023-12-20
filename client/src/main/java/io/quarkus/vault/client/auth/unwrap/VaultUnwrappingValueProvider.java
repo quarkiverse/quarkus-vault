@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
@@ -18,13 +17,13 @@ import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.util.JsonMapping;
 import io.smallrye.mutiny.Uni;
 
-public abstract class VaultUnwrappingTokenProvider<UnwrapResult> implements VaultUnwrappedTokenProvider {
-    private static final Logger log = Logger.getLogger(VaultUnwrappingTokenProvider.class.getName());
+public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements VaultValueProvider {
+    private static final Logger log = Logger.getLogger(VaultUnwrappingValueProvider.class.getName());
     private static final Cache<String, Uni<String>> unwrappingCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofHours(1)).build();
     private final String wrappingToken;
 
-    protected VaultUnwrappingTokenProvider(String wrappingToken) {
+    protected VaultUnwrappingValueProvider(String wrappingToken) {
         this.wrappingToken = wrappingToken;
     }
 
@@ -41,7 +40,7 @@ public abstract class VaultUnwrappingTokenProvider<UnwrapResult> implements Vaul
             return executor.execute(VaultSysWrapping.FACTORY.unwrap(token))
                     .map(VaultResponse::getResult)
                     .map(res -> {
-                        var unwrappedClientToken = extractClientToken(convert(JsonMapping.mapper, res.data));
+                        var unwrappedClientToken = extractClientToken(convert(res.data));
 
                         String displayValue = unwrapRequest.request().getLogConfidentialityLevel()
                                 .maskWithTolerance(unwrappedClientToken, LOW);
@@ -65,10 +64,10 @@ public abstract class VaultUnwrappingTokenProvider<UnwrapResult> implements Vaul
         });
     }
 
-    public UnwrapResult convert(ObjectMapper mapper, Map<String, Object> data) {
+    public UnwrapResult convert(Map<String, Object> data) {
         var resultType = getUnwrapResultType();
         try {
-            return mapper.convertValue(data, resultType);
+            return JsonMapping.mapper.convertValue(data, resultType);
         } catch (Exception e) {
             throw new RuntimeException("Error converting unwrapped result to expected type: " + resultType, e);
         }

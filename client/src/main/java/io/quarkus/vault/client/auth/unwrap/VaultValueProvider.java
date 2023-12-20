@@ -5,16 +5,16 @@ import java.util.function.Function;
 import io.quarkus.vault.client.auth.VaultAuthRequest;
 import io.smallrye.mutiny.Uni;
 
-public interface VaultUnwrappedTokenProvider extends Function<VaultAuthRequest, Uni<String>> {
+public interface VaultValueProvider extends Function<VaultAuthRequest, Uni<String>> {
 
-    static VaultUnwrappedTokenProvider unwrapped(String unwrappedToken) {
-        return new UnwrappedTokenProvider(unwrappedToken);
+    static VaultValueProvider staticValue(String unwrappedToken) {
+        return new StaticValueProvider(unwrappedToken);
     }
 
-    class UnwrappedTokenProvider implements VaultUnwrappedTokenProvider {
+    class StaticValueProvider implements VaultValueProvider {
         private final String unwrappedToken;
 
-        public UnwrappedTokenProvider(String unwrappedToken) {
+        public StaticValueProvider(String unwrappedToken) {
             this.unwrappedToken = unwrappedToken;
         }
 

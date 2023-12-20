@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.auth.unwrap.VaultSecretIdUnwrappingProvider;
-import io.quarkus.vault.client.auth.unwrap.VaultUnwrappedTokenProvider;
+import io.quarkus.vault.client.auth.unwrap.VaultValueProvider;
 import io.smallrye.mutiny.Uni;
 
 public class VaultAppRoleAuthOptions extends VaultAuthOptions {
@@ -30,7 +30,7 @@ public class VaultAppRoleAuthOptions extends VaultAuthOptions {
         }
 
         public Builder secretId(String secretId) {
-            this.secretIdProvider = VaultUnwrappedTokenProvider.unwrapped(secretId);
+            this.secretIdProvider = VaultValueProvider.staticValue(secretId);
             return this;
         }
 

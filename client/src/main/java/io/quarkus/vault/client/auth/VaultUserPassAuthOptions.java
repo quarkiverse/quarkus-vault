@@ -6,8 +6,8 @@ import static io.quarkus.vault.client.auth.VaultCachingTokenProvider.DEFAULT_REN
 import java.time.Duration;
 import java.util.function.Function;
 
-import io.quarkus.vault.client.auth.unwrap.VaultPasswordUnwrappingTokenProvider;
-import io.quarkus.vault.client.auth.unwrap.VaultUnwrappedTokenProvider;
+import io.quarkus.vault.client.auth.unwrap.VaultKeyValueUnwrappingValueProvider;
+import io.quarkus.vault.client.auth.unwrap.VaultValueProvider;
 import io.smallrye.mutiny.Uni;
 
 public class VaultUserPassAuthOptions extends VaultAuthOptions {
@@ -29,12 +29,12 @@ public class VaultUserPassAuthOptions extends VaultAuthOptions {
         }
 
         public Builder password(String password) {
-            this.passwordProvider = VaultUnwrappedTokenProvider.unwrapped(password);
+            this.passwordProvider = VaultValueProvider.staticValue(password);
             return this;
         }
 
         public Builder unwrappingPassword(String wrappingToken, int kvVersion) {
-            this.passwordProvider = new VaultPasswordUnwrappingTokenProvider(wrappingToken, kvVersion);
+            this.passwordProvider = new VaultKeyValueUnwrappingValueProvider(wrappingToken, "password", kvVersion);
             return this;
         }
 

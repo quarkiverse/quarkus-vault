@@ -2,7 +2,11 @@ package io.quarkus.vault.client.auth.unwrap;
 
 import io.quarkus.vault.client.api.auth.approle.VaultAuthAppRoleGenerateSecretIdResult;
 
-public class VaultSecretIdUnwrappingProvider extends VaultUnwrappingTokenProvider<VaultAuthAppRoleGenerateSecretIdResult> {
+/**
+ * A {@link VaultUnwrappingValueProvider} for Vault AppRole secret IDs generated with the AppRole engine's
+ * {@link VaultAuthAppRoleGenerateSecretIdResult Generate Secret ID}.
+ */
+public class VaultSecretIdUnwrappingProvider extends VaultUnwrappingValueProvider<VaultAuthAppRoleGenerateSecretIdResult> {
 
     public VaultSecretIdUnwrappingProvider(String wrappingToken) {
         super(wrappingToken);

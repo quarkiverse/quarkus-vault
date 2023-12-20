@@ -6,7 +6,7 @@ import java.time.Duration;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.auth.unwrap.VaultClientTokenUnwrappingProvider;
-import io.quarkus.vault.client.auth.unwrap.VaultUnwrappedTokenProvider;
+import io.quarkus.vault.client.auth.unwrap.VaultValueProvider;
 import io.smallrye.mutiny.Uni;
 
 public class VaultStaticClientTokenAuthOptions extends VaultAuthOptions {
@@ -16,7 +16,7 @@ public class VaultStaticClientTokenAuthOptions extends VaultAuthOptions {
         private Duration cachingRenewGracePeriod = DEFAULT_RENEW_GRACE_PERIOD;
 
         public Builder token(String token) {
-            this.tokenProvider = VaultUnwrappedTokenProvider.unwrapped(token);
+            this.tokenProvider = VaultValueProvider.staticValue(token);
             return this;
         }
 
