@@ -83,7 +83,7 @@ public record API(
     }
 
     public String getTraceNamePrefix() {
-        var tag = traceNameTag.isPresent() ? traceNameTag : getName().toLowerCase();
+        var tag = traceNameTag.orElseGet(() -> getName().toLowerCase());
         return "[" + getCategory().toUpperCase() + " (" + tag + ")]";
     }
 
