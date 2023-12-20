@@ -1,8 +1,7 @@
 package io.quarkus.vault.client;
 
 import static java.time.OffsetDateTime.now;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 import java.util.Map;
@@ -75,6 +74,48 @@ public class VaultSecretsKV2Test {
         assertThat(data.metadata.createdTime)
                 .isNotNull()
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
+    }
+
+    @Test
+    void testPatch(VaultClient client, @Random String path) {
+
+        var kvApi = client.secrets().kv2("kv-v2");
+
+        kvApi.updateSecret(path, null, Map.of("greeting", "hello", "subject", "world"))
+                .await().indefinitely();
+
+        kvApi.patchSecret(path, null, Map.of("subject", "new world!"))
+                .await().indefinitely();
+
+        var readResult = kvApi.readSecret(path)
+                .await().indefinitely();
+
+        var data = readResult.data;
+
+        assertThat(data).isNotNull();
+        assertThat(data.data).isNotNull()
+                .hasSize(2)
+                .containsEntry("greeting", "hello")
+                .containsEntry("subject", "new world!");
+    }
+
+    @Test
+    void testReadSubkeys(VaultClient client, @Random String path) {
+
+        var kvApi = client.secrets().kv2("kv-v2");
+
+        kvApi.updateSecret(path, null, Map.of("greeting", "hello", "subject", "world"))
+                .await().indefinitely();
+
+        var readResult = kvApi.readSubkeys(path)
+                .await().indefinitely();
+
+        var subkeys = readResult.data.subkeys;
+
+        assertThat(subkeys)
+                .isNotNull()
+                .containsEntry("greeting", null)
+                .containsEntry("subject", null);
     }
 
     @Test
@@ -166,6 +207,27 @@ public class VaultSecretsKV2Test {
                     .isNotNull()
                     .isBetween(now().minusSeconds(2), now().plusSeconds(2));
         }
+    }
+
+    @Test
+    void testReadSubkeysWithVersion(VaultClient client, @Random String path) {
+
+        var kvApi = client.secrets().kv2("kv-v2");
+
+        kvApi.updateSecret(path, null, Map.of("initial", "value"))
+                .await().indefinitely();
+        kvApi.updateSecret(path, null, Map.of("greeting", "hello", "subject", "world"))
+                .await().indefinitely();
+
+        var readResult = kvApi.readSubkeys(path, 2, null)
+                .await().indefinitely();
+
+        var subkeys = readResult.data.subkeys;
+
+        assertThat(subkeys)
+                .isNotNull()
+                .containsEntry("greeting", null)
+                .containsEntry("subject", null);
     }
 
     @Test
@@ -283,6 +345,46 @@ public class VaultSecretsKV2Test {
         assertThat(data.versions).isNotNull().containsKey("1");
         assertThat(data.versions.get("1").destroyed).isFalse();
         assertThat(data.versions.get("1").deletionTime).isBetween(now().minusSeconds(2), now().plusSeconds(2));
+    }
+
+    @Test
+    void testUndeleteVersion(VaultClient client, @Random String path) {
+
+        var kvApi = client.secrets().kv2("kv-v2");
+
+        kvApi.updateSecret(path, null, Map.of("initial", "value"))
+                .await().indefinitely();
+        kvApi.deleteSecretVersions(path, List.of(1))
+                .await().indefinitely();
+
+        {
+            var readResult = kvApi.readSecretMetadata(path)
+                    .await().indefinitely();
+            var data = readResult.data;
+            assertThat(data).isNotNull();
+            assertThat(data.versions).isNotNull().containsKey("1");
+            assertThat(data.versions.get("1").destroyed).isFalse();
+            assertThat(data.versions.get("1").deletionTime).isBetween(now().minusSeconds(2), now().plusSeconds(2));
+
+            assertThatThrownBy(() -> kvApi.readSecret(path, 1).await().indefinitely())
+                    .isInstanceOf(VaultClientException.class)
+                    .asString().contains("status=404");
+        }
+
+        kvApi.undeleteSecretVersions(path, List.of(1))
+                .await().indefinitely();
+
+        {
+            var readResult = kvApi.readSecretMetadata(path)
+                    .await().indefinitely();
+            var data = readResult.data;
+            assertThat(data).isNotNull();
+            assertThat(data.versions).isNotNull().containsKey("1");
+            assertThat(data.versions.get("1").destroyed).isFalse();
+            assertThat(data.versions.get("1").deletionTime).isNull();
+
+            assertThatNoException().isThrownBy(() -> kvApi.readSecret(path, 1).await().indefinitely());
+        }
     }
 
     @Test
