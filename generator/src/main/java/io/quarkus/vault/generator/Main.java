@@ -61,10 +61,10 @@ public class Main {
 
                                 System.out.println("Generating spec: " + relativePath);
 
-                                Files.copy(specsPath, targetSpecPath, REPLACE_EXISTING);
-
                                 var api = generateAPI(path.toUri().toURL(), targetPath);
                                 apis.add(api);
+
+                                Files.copy(specsPath, targetSpecPath, REPLACE_EXISTING);
 
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
