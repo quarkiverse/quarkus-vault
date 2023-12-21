@@ -56,10 +56,11 @@ public record Operation(
             Optional<Boolean> includeNulls,
             Optional<Boolean> body,
             Optional<String> type,
+            Optional<List<POJO.Property.Annotation>> annotations,
             Optional<List<POJO.Property>> object) {
 
         public POJO.Property asProperty() {
-            return new POJO.Property(name, serializedName, required, type);
+            return new POJO.Property(name, serializedName, required, type, annotations);
         }
 
         public String getSerializedName() {

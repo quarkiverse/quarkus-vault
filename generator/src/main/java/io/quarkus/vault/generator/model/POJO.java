@@ -20,7 +20,18 @@ public record POJO(
             @JsonProperty(required = true) String name,
             Optional<String> serializedName,
             Optional<Boolean> required,
-            Optional<String> type) {
+            Optional<String> type,
+            Optional<List<Annotation>> annotations) {
+
+        public record Annotation(
+                @JsonProperty(required = true) String typeName,
+                Optional<Map<String, Member>> members) {
+
+            public record Member(
+                    @JsonProperty(required = true) String format,
+                    Optional<List<String>> arguments) {
+            }
+        }
 
         public String getSerializedName() {
             return serializedName.orElseGet(() -> Strings.camelCaseToSnakeCase(name));

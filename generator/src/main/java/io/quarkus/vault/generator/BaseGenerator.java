@@ -44,6 +44,10 @@ public abstract class BaseGenerator implements Generator {
         return getTypeNames().className(clazz);
     }
 
+    public ClassName className(String name) {
+        return getTypeNames().className(name);
+    }
+
     public TypeName typeName(String name) {
         return getTypeNames().typeName(name);
     }
@@ -122,6 +126,36 @@ public abstract class BaseGenerator implements Generator {
             spec.addAnnotation(AnnotationSpec.builder(className(JsonProperty.class))
                     .addMember("value", "$S", serializedName)
                     .build());
+        }
+
+        if (property.annotations().isPresent()) {
+
+            for (var annotation : property.annotations().get()) {
+
+                var annSpec = AnnotationSpec.builder(className(annotation.typeName()));
+
+                if (annotation.members().isPresent()) {
+
+                    for (var member : annotation.members().get().entrySet()) {
+
+                        var memberName = member.getKey();
+                        var memberValue = member.getValue();
+                        var memberFormat = memberValue.format();
+                        var memberArguments = memberValue.arguments().orElse(List.of()).stream()
+                                .map(argument -> {
+                                    if (argument.startsWith("<type>")) {
+                                        return typeName(argument.substring("<type>".length()));
+                                    } else {
+                                        return argument;
+                                    }
+                                });
+
+                        annSpec.addMember(memberName, memberFormat, memberArguments.toArray());
+                    }
+                }
+
+                spec.addAnnotation(annSpec.build());
+            }
         }
 
         return spec.build();
