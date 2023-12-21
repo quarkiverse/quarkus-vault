@@ -57,9 +57,8 @@ operations:
   parameters:
   - name: path
     type: String
-  - name: description
-    type: String
-  - name: config
+  - name: options
+    body: true
     type: $TuneOptions
 
 

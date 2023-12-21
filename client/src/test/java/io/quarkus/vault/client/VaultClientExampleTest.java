@@ -3,43 +3,31 @@ package io.quarkus.vault.client;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.net.URL;
 import java.net.http.HttpClient;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.vault.VaultContainer;
 
 import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient;
+import io.quarkus.vault.client.test.Vault;
+import io.quarkus.vault.client.test.VaultClientTest;
 import io.quarkus.vault.client.util.JsonMapping;
 
-public class JDKVaultClientTest {
-
-    static VaultContainer<?> vault = new VaultContainer<>("hashicorp/vault:1.15.2")
-            .withVaultToken("root")
-            .withInitCommand("kv put secret/hello value=world");
-
-    @BeforeAll
-    static void startVault() {
-        vault.start();
-    }
-
-    @AfterAll
-    static void stopVault() {
-        vault.stop();
-    }
+@VaultClientTest
+public class VaultClientExampleTest {
 
     @Disabled("Example for client usage, replicated in other tests and tracing generates a lot of noise")
     @Test
-    void testExample() throws Exception {
+    void testExample(@Vault URL baseURL) throws Exception {
+
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
 
             // Start Vault client unauthenticated and with tracing enabled
 
             var client = VaultClient.builder()
                     .executor(httpClient)
-                    .baseUrl(vault.getHttpHostAddress())
+                    .baseUrl(baseURL)
                     .traceRequests()
                     .build();
 
@@ -73,20 +61,20 @@ public class JDKVaultClientTest {
 
     @Disabled("Example for client usage, replicated in other tests")
     @Test
-    void testKV1() {
+    void testKV1(@Vault URL baseURL) {
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
 
             var client = VaultClient.builder()
                     .executor(httpClient)
-                    .baseUrl(vault.getHttpHostAddress())
+                    .baseUrl(baseURL)
                     .clientToken("root")
                     .build();
 
             var kvApi = client.secrets().kv2();
 
-            var readResult = kvApi.readSecret("hello")
+            var secret = kvApi.readSecret("hello")
                     .await().indefinitely();
-            assertEquals(readResult.getData().get("value"), "world");
+            assertEquals(secret.data.get("value"), "world");
         }
     }
 

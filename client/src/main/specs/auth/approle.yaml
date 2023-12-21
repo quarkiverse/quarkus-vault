@@ -25,7 +25,8 @@ operations:
   path: "role"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapUsing: r.data.keys
+    unwrappedType: java.util.List<String>
     data:
     - name: keys
       type: java.util.List<String>
@@ -126,7 +127,8 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapUsing: r.data.roleId
+    unwrappedType: String
     data:
     - name: roleId
       type: String
@@ -141,12 +143,6 @@ operations:
     type: String
   - name: roleId
     type: String
-  result:
-    kind: leased
-    unwrapsData: true
-    data:
-    - name: roleId
-      type: String
 
 
 - name: generateSecretId
@@ -160,6 +156,19 @@ operations:
     object:
     - name: metadata
       type: java.util.Map<String, String>
+      annotations:
+        - typeName: com.fasterxml.jackson.databind.annotation.JsonSerialize
+          members:
+            using:
+              format: $T.class
+              arguments:
+              - <type>io.quarkus.vault.client.json.MapToStringSerializer
+        - typeName: com.fasterxml.jackson.databind.annotation.JsonDeserialize
+          members:
+            using:
+              format: $T.class
+              arguments:
+              - <type>io.quarkus.vault.client.json.StringToMapDeserializer
     - name: cidrList
       type: java.util.List<String>
     - name: tokenBoundCidrs
@@ -190,7 +199,8 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapUsing: r.data.keys
+    unwrappedType: java.util.List<String>
     data:
     - name: keys
       type: java.util.List<String>
@@ -256,6 +266,19 @@ operations:
       type: String
     - name: metadata
       type: java.util.Map<String, String>
+      annotations:
+      - typeName: com.fasterxml.jackson.databind.annotation.JsonSerialize
+        members:
+          using:
+            format: $T.class
+            arguments:
+              - <type>io.quarkus.vault.client.json.MapToStringSerializer
+      - typeName: com.fasterxml.jackson.databind.annotation.JsonDeserialize
+        members:
+          using:
+            format: $T.class
+            arguments:
+              - <type>io.quarkus.vault.client.json.StringToMapDeserializer
     - name: cidrList
       type: java.util.List<String>
     - name: tokenBoundCidrs

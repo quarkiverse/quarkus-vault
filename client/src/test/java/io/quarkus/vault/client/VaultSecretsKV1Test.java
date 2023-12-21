@@ -24,12 +24,11 @@ public class VaultSecretsKV1Test {
         kvApi.update(path, Map.of("greeting", "hello", "subject", "world"))
                 .await().indefinitely();
 
-        var readResult = kvApi.read(path)
+        var data = kvApi.read(path)
                 .await().indefinitely();
 
-        var data = readResult.data;
-
-        assertThat(data).isNotNull()
+        assertThat(data)
+                .isNotNull()
                 .hasSize(2)
                 .containsEntry("greeting", "hello")
                 .containsEntry("subject", "world");
@@ -45,13 +44,13 @@ public class VaultSecretsKV1Test {
         kvApi.update(path + "/test2", Map.of("key1", "val1", "key2", "val2"))
                 .await().indefinitely();
 
-        var listResult = kvApi.list(path + "/")
+        var data = kvApi.list(path + "/")
                 .await().indefinitely();
 
-        var data = listResult.data;
-
-        assertThat(data).isNotNull();
-        assertThat(data.keys).isNotNull()
+        assertThat(data)
+                .isNotNull();
+        assertThat(data.keys)
+                .isNotNull()
                 .contains("test1", "test2");
     }
 
@@ -63,13 +62,11 @@ public class VaultSecretsKV1Test {
         kvApi.update(path, Map.of("key1", "val1", "key2", "val2"))
                 .await().indefinitely();
 
-        var listResult = kvApi.list()
+        var keys = kvApi.list()
                 .await().indefinitely();
 
-        var data = listResult.data;
-
-        assertThat(data).isNotNull();
-        assertThat(data.keys).isNotNull()
+        assertThat(keys)
+                .isNotNull()
                 .contains(path);
     }
 
@@ -85,8 +82,9 @@ public class VaultSecretsKV1Test {
         var data = kvApi.read(path)
                 .await().indefinitely();
 
-        assertThat(data).isNotNull();
-        assertThat(data.data).isNotNull().containsEntry("test", "some-value");
+        assertThat(data)
+                .isNotNull()
+                .containsEntry("test", "some-value");
 
         // Delete and validate
 

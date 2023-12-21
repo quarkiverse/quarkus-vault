@@ -17,6 +17,7 @@ operations:
     type: String
   result:
     kind: leased
+    unwrapsAuth: true
     auth:
     - name: metadata
       type: String
@@ -128,7 +129,8 @@ operations:
   path: "users"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapUsing: r.data.keys
+    unwrappedType: java.util.List<String>
     data:
     - name: keys
       type: java.util.List<String>

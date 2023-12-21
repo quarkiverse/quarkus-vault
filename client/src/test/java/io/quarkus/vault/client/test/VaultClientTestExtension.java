@@ -1,5 +1,6 @@
 package io.quarkus.vault.client.test;
 
+import java.net.URL;
 import java.net.http.HttpClient;
 
 import org.junit.jupiter.api.extension.*;
@@ -16,8 +17,8 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
     // Generate a random path to avoid conflicts between tests
     static String getRandomString(int length) {
         // Generate short random alphanumeric string of given length
-        return random.ints(48, 122)
-                .filter(i -> (i < 57 || i > 65) && (i < 90 || i > 97))
+        return random.ints(48, 123)
+                .filter(i -> Character.isDigit(i) || Character.isLowerCase(i))
                 .limit(length)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
@@ -28,6 +29,7 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
             .withVaultToken("root");
     private final JDKVaultHttpClient httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient());
     private VaultClient vaultClient;
+    private URL vaultBaseUrl;
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
@@ -43,6 +45,8 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
                 .baseUrl(vaultContainer.getHttpHostAddress())
                 .clientToken("root")
                 .build();
+
+        vaultBaseUrl = new URL(vaultContainer.getHttpHostAddress());
 
         var secretMounts = annotation.secrets();
         for (var secretMount : secretMounts) {
@@ -75,10 +79,16 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
             throws ParameterResolutionException {
-        if (parameterContext.getParameter().getType().equals(VaultClient.class)) {
+
+        var param = parameterContext.getParameter();
+        var paramType = param.getType();
+
+        if (paramType.equals(VaultClient.class)) {
             return true;
-        } else if (parameterContext.getParameter().getType().equals(String.class)
-                && parameterContext.getParameter().getAnnotation(Random.class) != null) {
+        } else if (paramType.equals(String.class) && param.getAnnotation(Random.class) != null) {
+            return true;
+        } else if ((paramType.equals(URL.class) || paramType.equals(String.class))
+                && param.getAnnotation(Vault.class) != null) {
             return true;
         }
         return false;
@@ -87,11 +97,20 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
             throws ParameterResolutionException {
-        if (parameterContext.getParameter().getType().equals(VaultClient.class)) {
+
+        var param = parameterContext.getParameter();
+        var paramType = param.getType();
+
+        if (paramType.equals(VaultClient.class)) {
             return vaultClient;
-        } else if (parameterContext.getParameter().getType().equals(String.class)
-                && parameterContext.getParameter().getAnnotation(Random.class) != null) {
+        } else if (paramType.equals(String.class) && param.getAnnotation(Random.class) != null) {
             return getRandomString(8);
+        } else if (param.getAnnotation(Vault.class) != null) {
+            if (paramType.equals(URL.class)) {
+                return vaultBaseUrl;
+            } else {
+                return vaultBaseUrl.toString();
+            }
         }
         return null;
     }

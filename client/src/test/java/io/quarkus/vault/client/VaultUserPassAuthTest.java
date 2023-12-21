@@ -1,6 +1,6 @@
 package io.quarkus.vault.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
@@ -27,9 +27,11 @@ public class VaultUserPassAuthTest {
                 .await().indefinitely();
 
         // Login
-        var loginResult = userPassApi.login(user, "test")
+        var login = userPassApi.login(user, "test")
                 .await().indefinitely();
-        assertThat(loginResult.auth.clientToken).isNotNull();
+
+        assertThat(login.clientToken)
+                .isNotNull();
     }
 
     @Disabled("updateUserPolicies succeeds but doesnt apply policies, unknown if this is a bug in Vault or the client")
@@ -54,7 +56,9 @@ public class VaultUserPassAuthTest {
         // Validate policies
         var userInfo = userPassApi.readUser(user)
                 .await().indefinitely();
-        assertThat(userInfo.tokenPolicies).containsExactly(userPolicy);
+
+        assertThat(userInfo.tokenPolicies)
+                .containsExactly(userPolicy);
     }
 
     @Test
@@ -82,8 +86,11 @@ public class VaultUserPassAuthTest {
         // Validate policies (and verify that token max ttl is still set)
         var userInfo = userPassApi.readUser(user)
                 .await().indefinitely();
-        assertThat(userInfo.tokenPolicies).contains(userPolicy);
-        assertThat(userInfo.tokenMaxTtl).isEqualTo("54000");
+
+        assertThat(userInfo.tokenPolicies)
+                .contains(userPolicy);
+        assertThat(userInfo.tokenMaxTtl)
+                .isEqualTo("54000");
     }
 
     @Test
@@ -97,9 +104,11 @@ public class VaultUserPassAuthTest {
 
         // Validate via login
 
-        var loginResult = userPassApi.login(user, "test")
+        var login = userPassApi.login(user, "test")
                 .await().indefinitely();
-        assertThat(loginResult.auth.clientToken).isNotNull();
+
+        assertThat(login.clientToken)
+                .isNotNull();
 
         // Update password
 
@@ -108,9 +117,69 @@ public class VaultUserPassAuthTest {
 
         // Validate via login
 
-        var loginResult2 = userPassApi.login(user, "test")
+        var login2 = userPassApi.login(user, "test2")
                 .await().indefinitely();
-        assertThat(loginResult2.auth.clientToken).isNotNull();
+
+        assertThat(login2.clientToken)
+                .isNotNull();
+    }
+
+    @Test
+    public void testListUsers(VaultClient client, @Random String user) {
+        var userPassApi = client.auth().userPass();
+
+        var user1 = user.toLowerCase() + "1";
+        var user2 = user.toLowerCase() + "2";
+
+        // Create users
+        userPassApi.updateUser(user1, new VaultAuthUserPassUpdateUserParams()
+                .setPassword("test"))
+                .await().indefinitely();
+        userPassApi.updateUser(user2, new VaultAuthUserPassUpdateUserParams()
+                .setPassword("test"))
+                .await().indefinitely();
+
+        // List users
+        var users = userPassApi.listUsers()
+                .await().indefinitely();
+
+        assertThat(users)
+                .contains(user1, user2);
+    }
+
+    @Test
+    public void testDeleteUser(VaultClient client, @Random String user) {
+        var userPassApi = client.auth().userPass();
+
+        var user1 = user.toLowerCase() + "1";
+        var user2 = user.toLowerCase() + "2";
+
+        // Create users
+        userPassApi.updateUser(user1, new VaultAuthUserPassUpdateUserParams()
+                .setPassword("test"))
+                .await().indefinitely();
+        userPassApi.updateUser(user2, new VaultAuthUserPassUpdateUserParams()
+                .setPassword("test"))
+                .await().indefinitely();
+
+        // List users
+        var users = userPassApi.listUsers()
+                .await().indefinitely();
+
+        assertThat(users)
+                .contains(user1, user2);
+
+        // Delete user
+        userPassApi.deleteUser(user1)
+                .await().indefinitely();
+
+        // Validate
+
+        var users2 = userPassApi.listUsers()
+                .await().indefinitely();
+
+        assertThat(users2)
+                .contains(user2);
     }
 
     @Test
@@ -126,7 +195,8 @@ public class VaultUserPassAuthTest {
         // Create user with policy
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test")
-                .setTokenPolicies(List.of(userPolicy)))
+                .setTokenPolicies(List.of(userPolicy))
+                .setTokenNoDefaultPolicy(true))
                 .await().indefinitely();
 
         // Login
@@ -136,12 +206,15 @@ public class VaultUserPassAuthTest {
 
         // Validate
 
-        // Read sys mount (requires root policy)
-        var sysMount = authClient.sys().mounts().readConfig("secret")
+        assertThatThrownBy(() -> authClient.sys().auth().read("token").await().indefinitely())
+                .isInstanceOf(VaultException.class)
+                .asString().contains("permission denied");
+
+        var mountInfo = authClient.sys().mounts().readConfig("secret")
                 .await().indefinitely();
-        assertThat(sysMount.options)
-                .isNotNull()
-                .containsEntry("version", "2");
+
+        assertThat(mountInfo.description)
+                .isNotNull();
     }
 
 }

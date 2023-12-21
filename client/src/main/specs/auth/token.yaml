@@ -1,7 +1,7 @@
 name: Token
 category: auth
 mountable: false
-basePath: auth
+basePath: auth/token
 
 operations:
 
