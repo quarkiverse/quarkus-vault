@@ -141,6 +141,8 @@ public record Operation(
             Optional<List<POJO.Property>> auth,
             Optional<String> authType,
             Optional<Boolean> unwrapsAuth,
+            Optional<String> unwrappedType,
+            Optional<String> unwrapUsing,
             Optional<PartialPOJO> custom) implements Result {
 
         @Override

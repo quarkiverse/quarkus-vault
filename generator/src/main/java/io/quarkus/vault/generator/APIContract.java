@@ -118,8 +118,10 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
         body.add(".map($T::getResult)", responseTypeName);
 
         if (operation.result().isPresent() && operation.result().get() instanceof Operation.LeasedResult leasedResult) {
-            if (leasedResult.unwrapsData().orElse(false)) {
-                body.add(".map(t -> t.data)");
+            if (leasedResult.unwrapUsing().isPresent()) {
+                body.add(".map(r -> $L)", leasedResult.unwrapUsing().get());
+            } else if (leasedResult.unwrapsData().orElse(false)) {
+                body.add(".map(r -> r.data)");
             } else if (leasedResult.unwrapsAuth().orElse(false)) {
                 body.add(".map(r -> r.auth)");
             }
@@ -149,7 +151,9 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
                 return typeNameFor(operation.name(), "Result");
             }
         } else if (result instanceof Operation.LeasedResult leasedResult) {
-            if (leasedResult.unwrapsData().orElse(false)) {
+            if (leasedResult.unwrappedType().isPresent()) {
+                return typeName(leasedResult.unwrappedType().get());
+            } else if (leasedResult.unwrapsData().orElse(false)) {
                 if (leasedResult.dataType().isPresent()) {
                     return typeName(leasedResult.dataType().get());
                 } else {
