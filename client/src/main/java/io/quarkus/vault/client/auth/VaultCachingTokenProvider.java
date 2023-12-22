@@ -7,6 +7,8 @@ import java.util.logging.Logger;
 
 import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.api.auth.token.VaultAuthToken;
+import io.quarkus.vault.client.api.auth.token.VaultAuthTokenLookupSelfResult;
+import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.smallrye.mutiny.Uni;
 
@@ -71,7 +73,11 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
         if (vaultToken.isEmpty()) {
             return Uni.createFrom().item(Optional.empty());
         }
-        return authRequest.executor().execute(VaultAuthToken.FACTORY.lookupSelf(vaultToken.get().clientToken))
+        VaultRequest<VaultAuthTokenLookupSelfResult> request = VaultAuthToken.FACTORY.lookupSelf()
+                .builder()
+                .token(vaultToken.get().clientToken)
+                .rebuild();
+        return authRequest.executor().execute(request)
                 .map(i -> vaultToken)
                 .onFailure(VaultClientException.class).recoverWithUni(e -> {
                     if (((VaultClientException) e).getStatus() == 403) { // forbidden
@@ -85,7 +91,11 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
 
     private Uni<VaultToken> extend(VaultAuthRequest authRequest, String clientToken) {
         var logLevel = authRequest.request().getLogConfidentialityLevel();
-        return authRequest.executor().execute(VaultAuthToken.FACTORY.renewSelf(clientToken, null))
+        var request = VaultAuthToken.FACTORY.renewSelf(null)
+                .builder()
+                .token(clientToken)
+                .rebuild();
+        return authRequest.executor().execute(request)
                 .map(VaultResponse::getResult)
                 .map(res -> {
                     var vaultToken = new VaultToken(res.auth.clientToken, res.auth.renewable, res.auth.leaseDuration);

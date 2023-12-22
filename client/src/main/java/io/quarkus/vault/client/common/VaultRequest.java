@@ -32,7 +32,7 @@ public class VaultRequest<T> {
     public static List<Integer> ACCEPTED_STATUS = List.of(202);
     public static List<Integer> OK_OR_ACCEPTED_STATUS = List.of(200, 202);
 
-    public static class Builder {
+    public static class Builder<T> {
         private URL baseUrl;
         private String apiVersion = "v1";
         private String operation;
@@ -54,26 +54,26 @@ public class VaultRequest<T> {
             this.method = method;
         }
 
-        public Builder baseUrl(URL baseUrl) {
+        public Builder<T> baseUrl(URL baseUrl) {
             this.baseUrl = baseUrl;
             return this;
         }
 
-        public Builder apiVersion(String apiVersion) {
+        public Builder<T> apiVersion(String apiVersion) {
             this.apiVersion = apiVersion;
             return this;
         }
 
-        public Builder path(String... pathSegments) {
+        public Builder<T> path(String... pathSegments) {
             this.path = joinPath(pathSegments);
             return this;
         }
 
-        public final Builder pathChoice(boolean selector, String[] truePathSegments, String[] falsePathSegments) {
+        public final Builder<T> pathChoice(boolean selector, String[] truePathSegments, String[] falsePathSegments) {
             return path(selector ? truePathSegments : falsePathSegments);
         }
 
-        public final Builder pathChoice(Object selector, Map<Object, String[]> options) {
+        public final Builder<T> pathChoice(Object selector, Map<Object, String[]> options) {
             for (Map.Entry<Object, String[]> option : options.entrySet()) {
                 if (option.getKey().equals(selector)) {
                     return path(option.getValue());
@@ -82,43 +82,43 @@ public class VaultRequest<T> {
             throw new IllegalArgumentException("No path choice for selector " + selector);
         }
 
-        public Builder token(String token) {
+        public Builder<T> token(String token) {
             this.token = Optional.ofNullable(token);
             return this;
         }
 
-        public Builder noToken() {
+        public Builder<T> noToken() {
             return token(null);
         }
 
-        public Builder wrapTTL(Duration ttl) {
+        public Builder<T> wrapTTL(Duration ttl) {
             this.wrapTTL = Optional.of(ttl);
             return this;
         }
 
-        public Builder namespace(String namespace) {
+        public Builder<T> namespace(String namespace) {
             this.namespace = Optional.of(namespace);
             return this;
         }
 
-        public Builder noNamespace() {
+        public Builder<T> noNamespace() {
             this.namespace = Optional.empty();
             return this;
         }
 
-        public Builder queryParams(Map<String, String> queryParams) {
+        public Builder<T> queryParams(Map<String, String> queryParams) {
             this.queryParams = queryParams;
             return this;
         }
 
-        public Builder queryParam(boolean condition, String key, Object value) {
+        public Builder<T> queryParam(boolean condition, String key, Object value) {
             if (condition) {
                 this.queryParams.put(key, value.toString());
             }
             return this;
         }
 
-        public Builder queryParam(String key, Object value) {
+        public Builder<T> queryParam(String key, Object value) {
             return queryParam(true, key, value);
         }
 
@@ -127,63 +127,63 @@ public class VaultRequest<T> {
             return this;
         }
 
-        public Builder header(String key, Object value) {
+        public Builder<T> header(String key, Object value) {
             this.headers.put(key, value.toString());
             return this;
         }
 
-        public Builder header(boolean condition, String key, Object value) {
+        public Builder<T> header(boolean condition, String key, Object value) {
             if (condition) {
                 this.headers.put(key, value.toString());
             }
             return this;
         }
 
-        public Builder body(Object body) {
+        public Builder<T> body(Object body) {
             this.body = body;
             return this;
         }
 
-        public Builder expectedStatusCodes(List<Integer> expectedStatusCodes) {
+        public Builder<T> expectedStatusCodes(List<Integer> expectedStatusCodes) {
             this.expectedStatusCodes = expectedStatusCodes;
             return this;
         }
 
-        public Builder expectOkStatus() {
+        public Builder<T> expectOkStatus() {
             return expectedStatusCodes(OK_STATUS);
         }
 
-        public Builder expectNoContentStatus() {
+        public Builder<T> expectNoContentStatus() {
             return expectedStatusCodes(NO_CONTENT_STATUS);
         }
 
-        public Builder expectAcceptedStatus() {
+        public Builder<T> expectAcceptedStatus() {
             return expectedStatusCodes(ACCEPTED_STATUS);
         }
 
-        public Builder expectOkOrAcceptedStatus() {
+        public Builder<T> expectOkOrAcceptedStatus() {
             return expectedStatusCodes(OK_OR_ACCEPTED_STATUS);
         }
 
-        public Builder expectAnyStatus() {
+        public Builder<T> expectAnyStatus() {
             return expectedStatusCodes(List.of());
         }
 
-        public Builder timeout(Duration timeout) {
+        public Builder<T> timeout(Duration timeout) {
             this.timeout = timeout;
             return this;
         }
 
-        public Builder logConfidentialityLevel(LogConfidentialityLevel logConfidentialityLevel) {
+        public Builder<T> logConfidentialityLevel(LogConfidentialityLevel logConfidentialityLevel) {
             this.logConfidentialityLevel = logConfidentialityLevel;
             return this;
         }
 
-        public <T> VaultRequest<T> rebuild() {
+        public VaultRequest<T> rebuild() {
             return new VaultRequest<>(this);
         }
 
-        public <T> VaultRequest<T> build(VaultResultExtractor<T> resultExtractor) {
+        public <U> VaultRequest<U> build(VaultResultExtractor<U> resultExtractor) {
             this.resultExtractor = resultExtractor;
             return new VaultRequest<>(this);
         }
@@ -364,7 +364,7 @@ public class VaultRequest<T> {
         return timeout;
     }
 
-    public Builder builder() {
+    public Builder<T> builder() {
         var builder = new Builder(operation, method);
         builder.baseUrl = baseUrl;
         builder.apiVersion = apiVersion;
@@ -381,35 +381,35 @@ public class VaultRequest<T> {
         return builder;
     }
 
-    public static Builder request(String operation, Method method) {
-        return new Builder(operation, method);
+    public static <T> Builder<T> request(String operation, Method method) {
+        return new Builder<T>(operation, method);
     }
 
-    public static Builder get(String operation) {
+    public static <T> Builder<T> get(String operation) {
         return request(operation, Method.GET);
     }
 
-    public static Builder post(String operation) {
+    public static <T> Builder<T> post(String operation) {
         return request(operation, Method.POST);
     }
 
-    public static Builder put(String operation) {
+    public static <T> Builder<T> put(String operation) {
         return request(operation, Method.PUT);
     }
 
-    public static Builder patch(String operation) {
+    public static <T> Builder<T> patch(String operation) {
         return request(operation, Method.PATCH);
     }
 
-    public static Builder delete(String operation) {
+    public static <T> Builder<T> delete(String operation) {
         return request(operation, Method.DELETE);
     }
 
-    public static Builder list(String operation) {
+    public static <T> Builder<T> list(String operation) {
         return request(operation, Method.LIST);
     }
 
-    public static Builder head(String operation) {
+    public static <T> Builder<T> head(String operation) {
         return request(operation, Method.HEAD);
     }
 

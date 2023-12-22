@@ -52,3 +52,7 @@ types:
       type: String
     - name: orphan
       type: Boolean
+    - name: mfaRequirement
+      type: String
+    - name: numUses
+      type: Integer

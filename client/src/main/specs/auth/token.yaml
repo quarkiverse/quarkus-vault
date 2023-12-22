@@ -10,7 +10,8 @@ operations:
   path: "accessors"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapUsing: r.data.keys
+    unwrappedType: java.util.List<String>
     data:
     - name: keys
       type: java.util.List<String>
@@ -33,8 +34,8 @@ operations:
     type: $CreateTokenParams
   result:
     kind: leased
-    unwrapsData: true
-    dataType: $CreateTokenResultData
+    unwrapsAuth: true
+    authType: java.util.Map<String, String>
 
 
 - name: create
@@ -46,8 +47,8 @@ operations:
     type: $CreateTokenParams
   result:
     kind: leased
-    unwrapsData: true
-    dataType: $CreateTokenResultData
+    unwrapsAuth: true
+    authType: java.util.Map<String, String>
 
 
 - name: create
@@ -61,35 +62,26 @@ operations:
     type: $CreateTokenParams
   result:
     kind: leased
-    unwrapsData: true
-    dataType: $CreateTokenResultData
+    unwrapsAuth: true
+    authType: java.util.Map<String, String>
 
 
 - name: lookup
   method: POST
   path: "lookup"
-  result:
-    kind: leased
-    unwrapsData: true
-    dataType: $TokenInfoData
-
-
-- name: lookupSelf
-  method: GET
-  path: "lookup-self"
-  result:
-    kind: leased
-    unwrapsData: true
-    dataType: $TokenInfoData
-
-
-- name: lookupSelf
-  method: GET
-  path: "lookup-self"
-  tokenFrom: token
+  bodyFrom: [token]
   parameters:
   - name: token
     type: String
+  result:
+    kind: leased
+    unwrapsData: true
+    dataType: $TokenInfoData
+
+
+- name: lookupSelf
+  method: GET
+  path: "lookup-self"
   result:
     kind: leased
     unwrapsData: true
@@ -121,7 +113,7 @@ operations:
   result:
     kind: leased
     unwrapsAuth: true
-    authType: $RenewTokenData
+    authType: java.util.Map<String, String>
 
 
 - name: renewSelf
@@ -134,23 +126,7 @@ operations:
   result:
     kind: leased
     unwrapsAuth: true
-    authType: $RenewTokenData
-
-
-- name: renewSelf
-  method: POST
-  path: "renew-self"
-  bodyFrom: [increment]
-  tokenFrom: token
-  parameters:
-  - name: token
-    type: String
-  - name: increment
-    type: String
-  result:
-    kind: leased
-    unwrapsAuth: true
-    authType: $RenewTokenData
+    authType: java.util.Map<String, String>
 
 
 - name: renewAccessor
@@ -165,7 +141,7 @@ operations:
   result:
     kind: leased
     unwrapsAuth: true
-    authType: $RenewTokenData
+    authType: java.util.Map<String, String>
 
 
 - name: revoke
@@ -255,7 +231,8 @@ operations:
   path: "roles"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapUsing: r.data.keys
+    unwrappedType: java.util.List<String>
     data:
     - name: keys
       type: java.util.List<String>
@@ -307,8 +284,9 @@ operations:
   - name: roleName
     type: String
 
-- name: tidy
+- name: tidyTokens
   method: POST
+  status: OK_OR_ACCEPTED
   path: "tidy"
   result:
     kind: leased
@@ -324,7 +302,7 @@ types:
   - name: accessor
     type: String
   - name: creationTime
-    type: Long
+    type: java.time.OffsetDateTime
   - name: creationTtl
     type: Long
   - name: displayName
@@ -353,8 +331,12 @@ types:
     type: java.util.List<String>
   - name: renewable
     type: Boolean
+  - name: role
+    type: String
   - name: ttl
     type: Long
+  - name: type
+    type: String
 
 
 - name: CreateTokenParams
@@ -389,43 +371,3 @@ types:
     type: String
   - name: entityAlias
     type: String
-
-
-- name: CreateTokenResultData
-  properties:
-  - name: clientToken
-    type: String
-  - name: accessor
-    type: String
-  - name: policies
-    type: java.util.List<String>
-  - name: tokenPolicies
-    type: java.util.List<String>
-  - name: metadata
-    type: java.util.Map<String, String>
-  - name: leaseDuration
-    type: String
-  - name: renewable
-    type: Boolean
-  - name: entityId
-    type: String
-  - name: tokenType
-    type: String
-  - name: orphan
-    type: Boolean
-  - name: numUses
-    type: Integer
-
-
-- name: RenewTokenData
-  properties:
-  - name: clientToken
-    type: String
-  - name: policies
-    type: java.util.List<String>
-  - name: metadata
-    type: java.util.Map<String, String>
-  - name: leaseDuration
-    type: Long
-  - name: renewable
-    type: Boolean
