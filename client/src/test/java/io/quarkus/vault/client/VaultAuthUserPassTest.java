@@ -15,7 +15,7 @@ import io.quarkus.vault.client.test.VaultClientTest.Mount;
 @VaultClientTest(auths = {
         @Mount(type = "userpass", path = "userpass")
 }, logLevel = "trace")
-public class VaultUserPassAuthTest {
+public class VaultAuthUserPassTest {
 
     @Test
     public void testLoginProcess(VaultClient client, @Random String user) {

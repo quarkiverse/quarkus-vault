@@ -9,7 +9,7 @@ import io.quarkus.vault.client.test.VaultClientTest.Mount;
 @VaultClientTest(auths = {
         @Mount(type = "kubernetes", path = "kubernetes")
 })
-public class VaultKubernetesAuthTest {
+public class VaultAuthKubernetesTest {
 
     @Test
     public void testLoginProcess(VaultClient client, @Random String role) {

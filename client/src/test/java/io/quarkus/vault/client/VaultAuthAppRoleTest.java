@@ -16,7 +16,7 @@ import io.quarkus.vault.client.test.VaultClientTest.Mount;
 @VaultClientTest(auths = {
         @Mount(type = "approle", path = "approle")
 })
-public class VaultAppRoleAuthTest {
+public class VaultAuthAppRoleTest {
 
     @Test
     public void testLogin(VaultClient client, @Random String role) {

@@ -14,7 +14,7 @@ import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
 
 @VaultClientTest
-public class VaultTokenAuthTest {
+public class VaultAuthTokenTest {
 
     @Test
     public void testListAccessors(VaultClient client) {
