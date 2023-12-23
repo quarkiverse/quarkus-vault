@@ -24,6 +24,9 @@ public class VaultJSONResultExtractor<T> implements VaultResultExtractor<T> {
     }
 
     public static <T> T extract(VaultResponse<T> response, Class<T> resultClass) {
+        if (response.body == null || response.body.length == 0) {
+            return null;
+        }
         var request = response.request;
         try {
             return JsonMapping.mapper.readValue(response.body, resultClass);

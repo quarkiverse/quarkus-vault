@@ -21,7 +21,7 @@ public class VaultLeasedResultExtractor<T extends VaultLeasedResult<?, ?>> imple
     @Override
     public T extract(VaultResponse<T> response) {
         var result = VaultJSONResultExtractor.extract(response, resultClass);
-        if (result.warnings != null) {
+        if (result != null && result.warnings != null) {
             for (var warning : result.warnings) {
                 log.warning(warning);
             }

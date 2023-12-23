@@ -106,7 +106,8 @@ public record Operation(
         OK,
         NO_CONTENT,
         ACCEPTED,
-        OK_OR_ACCEPTED
+        OK_OR_ACCEPTED,
+        OK_OR_NO_CONTENT,
     }
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
