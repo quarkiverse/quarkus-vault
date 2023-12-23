@@ -39,7 +39,9 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
 
     private final VaultContainer<?> vaultContainer = new VaultContainer<>("hashicorp/vault:" + getVaultVersion())
             .withCommand("server", "-dev", "-dev-root-token-id=root", "-dev-plugin-dir=/vault/plugins")
-            .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY);
+            .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY)
+            .withVaultToken("root")
+            .withEnv("VAULT_ADDR", "http://127.0.0.1:8200");
 
     private final JDKVaultHttpClient httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient());
     private VaultClient vaultClient;
