@@ -1,0 +1,200 @@
+name: Plugins
+category: sys
+mountable: false
+basePath: sys/plugins
+
+operations:
+
+- name: list
+  method: GET
+  path: catalog
+  result:
+    kind: leased
+    unwrapsData: true
+    data:
+    - name: auth
+      type: java.util.List<String>
+    - name: database
+      type: java.util.List<String>
+    - name: secret
+      type: java.util.List<String>
+    - name: detailed
+      type: java.util.List<$PluginDetails>
+
+
+- name: listAuth
+  method: LIST
+  path: catalog/auth
+  result:
+    kind: leased
+    unwrapUsing: r.data.keys
+    unwrappedType: java.util.List<String>
+    data:
+    - name: keys
+      type: java.util.List<String>
+
+
+- name: listDatabase
+  method: LIST
+  path: catalog/database
+  result:
+    kind: leased
+    unwrapUsing: r.data.keys
+    unwrappedType: java.util.List<String>
+    data:
+    - name: keys
+      type: java.util.List<String>
+
+
+- name: listSecret
+  method: LIST
+  path: catalog/secret
+  result:
+    kind: leased
+    unwrapUsing: r.data.keys
+    unwrappedType: java.util.List<String>
+    data:
+    - name: keys
+      type: java.util.List<String>
+
+
+- name: read
+  method: GET
+  path: catalog/:type/:name
+  queryFrom: [version]
+  parameters:
+  - name: type
+    type: String
+  - name: name
+    type: String
+  - name: version
+    type: String
+    includeNulls: false
+  result:
+    kind: leased
+    unwrapsData: true
+    dataType: $PluginInfo
+
+
+- name: read
+  method: GET
+  path: catalog/:type/:name
+  parameters:
+    - name: type
+      type: String
+    - name: name
+      type: String
+  result:
+    kind: leased
+    unwrapsData: true
+    dataType: $PluginInfo
+
+
+- name: register
+  method: POST
+  path: catalog/:type/:name
+  parameters:
+  - name: type
+    type: String
+  - name: name
+    type: String
+  - name: params
+    body: true
+    object:
+    - name: version
+      type: String
+    - name: sha256
+      type: String
+    - name: command
+      type: String
+    - name: args
+      type: java.util.List<String>
+    - name: env
+      type: java.util.List<String>
+    - name: ociImage
+      type: String
+    - name: runtime
+      type: String
+
+
+- name: remove
+  method: DELETE
+  path: catalog/:type/:name
+  queryFrom: [version]
+  parameters:
+    - name: type
+      type: String
+    - name: name
+      type: String
+    - name: version
+      type: String
+      includeNulls: false
+
+
+- name: remove
+  method: DELETE
+  path: catalog/:type/:name
+  parameters:
+    - name: type
+      type: String
+    - name: name
+      type: String
+
+
+- name: reloadPlugin
+  method: POST
+  status: OK_OR_ACCEPTED
+  path: reload/backend
+  bodyFrom: [plugin, scope]
+  parameters:
+  - name: plugin
+    type: String
+  - name: scope
+    type: String
+
+
+- name: reloadMounts
+  method: POST
+  status: OK_OR_ACCEPTED
+  path: reload/backend
+  bodyFrom: [mounts, scope]
+  parameters:
+    - name: mounts
+      type: java.util.List<String>
+    - name: scope
+      type: String
+
+
+types:
+
+- name: PluginDetails
+  properties:
+  - name: name
+    type: String
+  - name: type
+    type: String
+  - name: builtin
+    type: Boolean
+  - name: deprecationStatus
+    type: String
+  - name: version
+    type: String
+
+- name: PluginInfo
+  properties:
+  - name: name
+    type: String
+  - name: sha256
+    type: String
+  - name: version
+    type: String
+  - name: command
+    type: String
+  - name: args
+    type: java.util.List<String>
+  - name: ociImage
+    type: String
+  - name: runtime
+    type: String
+  - name: builtin
+    type: Boolean

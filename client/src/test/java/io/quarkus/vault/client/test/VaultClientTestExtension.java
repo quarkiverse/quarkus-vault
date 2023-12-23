@@ -1,12 +1,18 @@
 package io.quarkus.vault.client.test;
 
+import static org.testcontainers.containers.BindMode.READ_ONLY;
+
+import java.io.IOException;
 import java.net.URL;
 import java.net.http.HttpClient;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 
 import org.junit.jupiter.api.extension.*;
 import org.testcontainers.vault.VaultContainer;
 
 import io.quarkus.vault.client.VaultClient;
+import io.quarkus.vault.client.VaultSysPluginsTest;
 import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient;
 
 @VaultClientTest
@@ -32,8 +38,9 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
     }
 
     private final VaultContainer<?> vaultContainer = new VaultContainer<>("hashicorp/vault:" + getVaultVersion())
-            .withEnv("VAULT_LOG_LEVEL", "debug")
-            .withVaultToken("root");
+            .withCommand("server", "-dev", "-dev-root-token-id=root", "-dev-plugin-dir=/vault/plugins")
+            .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY);
+
     private final JDKVaultHttpClient httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient());
     private VaultClient vaultClient;
     private URL vaultBaseUrl;
@@ -121,4 +128,27 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
         }
         return null;
     }
+
+    public static String getTestPluginFilename() {
+        return "vault-test-plugin-linux-" + getPluginArchitecture();
+    }
+
+    public static String getPluginArchitecture() {
+        var osArch = System.getProperty("os.arch");
+        return osArch.contains("aarch") || osArch.contains("arm") ? "arm64" : "amd64";
+    }
+
+    public static String getPluginSha256() throws Exception {
+        try (var pluginStream = VaultSysPluginsTest.class.getResourceAsStream("/" + getTestPluginFilename())) {
+            if (pluginStream == null) {
+                throw new IOException("Test plugin not found as resource");
+            }
+
+            var digest = MessageDigest.getInstance("SHA-256");
+            ;
+            digest.update(pluginStream.readAllBytes());
+            return HexFormat.of().formatHex(digest.digest());
+        }
+    }
+
 }
