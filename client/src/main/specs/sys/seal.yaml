@@ -59,11 +59,9 @@ types:
   properties:
   - name: type
     type: String
-  - name: isInitialized
-    serializedName: initialized
+  - name: initialized
     type: Boolean
-  - name: isSealed
-    serializedName: sealed
+  - name: sealed
     type: Boolean
   - name: t
     type: Integer

@@ -26,36 +26,36 @@ public class VaultSysAuthTest {
 
         var tokenAuthInfo = auths.get("token/");
 
-        assertThat(tokenAuthInfo.accessor)
+        assertThat(tokenAuthInfo.getAccessor())
                 .startsWith("auth_token_");
-        assertThat(tokenAuthInfo.config)
+        assertThat(tokenAuthInfo.getConfig())
                 .isNotNull();
-        assertThat(tokenAuthInfo.config.defaultLeaseTtl)
+        assertThat(tokenAuthInfo.getConfig().getDefaultLeaseTtl())
                 .isEqualTo(0);
-        assertThat(tokenAuthInfo.config.maxLeaseTtl)
+        assertThat(tokenAuthInfo.getConfig().getMaxLeaseTtl())
                 .isEqualTo(0);
-        assertThat(tokenAuthInfo.config.forceNoCache)
+        assertThat(tokenAuthInfo.getConfig().isForceNoCache())
                 .isFalse();
-        assertThat(tokenAuthInfo.deprecationStatus)
+        assertThat(tokenAuthInfo.getDeprecationStatus())
                 .isNull();
-        assertThat(tokenAuthInfo.description)
+        assertThat(tokenAuthInfo.getDescription())
                 .isEqualTo("token based credentials");
-        assertThat(tokenAuthInfo.externalEntropyAccess)
+        assertThat(tokenAuthInfo.isExternalEntropyAccess())
                 .isFalse();
-        assertThat(tokenAuthInfo.local)
+        assertThat(tokenAuthInfo.isLocal())
                 .isFalse();
-        assertThat(tokenAuthInfo.pluginVersion)
+        assertThat(tokenAuthInfo.getPluginVersion())
                 .isEmpty();
-        assertThat(tokenAuthInfo.runningPluginVersion)
+        assertThat(tokenAuthInfo.getRunningPluginVersion())
                 .startsWith("v")
                 .endsWith("+builtin.vault");
-        assertThat(tokenAuthInfo.runningSha256)
+        assertThat(tokenAuthInfo.getRunningSha256())
                 .isEmpty();
-        assertThat(tokenAuthInfo.sealWrap)
+        assertThat(tokenAuthInfo.isSealWrap())
                 .isFalse();
-        assertThat(tokenAuthInfo.type)
+        assertThat(tokenAuthInfo.getType())
                 .isEqualTo("token");
-        assertThat(tokenAuthInfo.uuid)
+        assertThat(tokenAuthInfo.getUuid())
                 .isNotEmpty();
     }
 
@@ -66,38 +66,38 @@ public class VaultSysAuthTest {
         var tokenAuthInfo = authApi.read("token/")
                 .await().indefinitely();
 
-        assertThat(tokenAuthInfo.accessor)
+        assertThat(tokenAuthInfo.getAccessor())
                 .startsWith("auth_token_");
-        assertThat(tokenAuthInfo.config)
+        assertThat(tokenAuthInfo.getConfig())
                 .isNotNull();
-        assertThat(tokenAuthInfo.config.defaultLeaseTtl)
+        assertThat(tokenAuthInfo.getConfig().getDefaultLeaseTtl())
                 .isEqualTo(0);
-        assertThat(tokenAuthInfo.config.maxLeaseTtl)
+        assertThat(tokenAuthInfo.getConfig().getMaxLeaseTtl())
                 .isEqualTo(0);
-        assertThat(tokenAuthInfo.config.forceNoCache)
+        assertThat(tokenAuthInfo.getConfig().isForceNoCache())
                 .isFalse();
-        assertThat(tokenAuthInfo.config.tokenType)
+        assertThat(tokenAuthInfo.getConfig().getTokenType())
                 .isEqualTo("default-service");
-        assertThat(tokenAuthInfo.deprecationStatus)
+        assertThat(tokenAuthInfo.getDeprecationStatus())
                 .isNull();
-        assertThat(tokenAuthInfo.description)
+        assertThat(tokenAuthInfo.getDescription())
                 .isEqualTo("token based credentials");
-        assertThat(tokenAuthInfo.externalEntropyAccess)
+        assertThat(tokenAuthInfo.isExternalEntropyAccess())
                 .isFalse();
-        assertThat(tokenAuthInfo.local)
+        assertThat(tokenAuthInfo.isLocal())
                 .isFalse();
-        assertThat(tokenAuthInfo.pluginVersion)
+        assertThat(tokenAuthInfo.getPluginVersion())
                 .isEmpty();
-        assertThat(tokenAuthInfo.runningPluginVersion)
+        assertThat(tokenAuthInfo.getRunningPluginVersion())
                 .startsWith("v")
                 .endsWith("+builtin.vault");
-        assertThat(tokenAuthInfo.runningSha256)
+        assertThat(tokenAuthInfo.getRunningSha256())
                 .isEmpty();
-        assertThat(tokenAuthInfo.sealWrap)
+        assertThat(tokenAuthInfo.isSealWrap())
                 .isFalse();
-        assertThat(tokenAuthInfo.type)
+        assertThat(tokenAuthInfo.getType())
                 .isEqualTo("token");
-        assertThat(tokenAuthInfo.uuid)
+        assertThat(tokenAuthInfo.getUuid())
                 .isNotEmpty();
     }
 
@@ -149,25 +149,25 @@ public class VaultSysAuthTest {
         var tokenAuthInfo = authApi.readTune("token")
                 .await().indefinitely();
 
-        assertThat(tokenAuthInfo.description)
+        assertThat(tokenAuthInfo.getDescription())
                 .isEqualTo("token based credentials");
-        assertThat(tokenAuthInfo.defaultLeaseTtl)
+        assertThat(tokenAuthInfo.getDefaultLeaseTtl())
                 .isEqualTo(2764800L);
-        assertThat(tokenAuthInfo.maxLeaseTtl)
+        assertThat(tokenAuthInfo.getMaxLeaseTtl())
                 .isEqualTo(2764800L);
-        assertThat(tokenAuthInfo.forceNoCache)
+        assertThat(tokenAuthInfo.isForceNoCache())
                 .isFalse();
-        assertThat(tokenAuthInfo.auditNonHmacRequestKeys)
+        assertThat(tokenAuthInfo.getAuditNonHmacRequestKeys())
                 .isNull();
-        assertThat(tokenAuthInfo.auditNonHmacResponseKeys)
+        assertThat(tokenAuthInfo.getAuditNonHmacResponseKeys())
                 .isNull();
-        assertThat(tokenAuthInfo.listingVisibility)
+        assertThat(tokenAuthInfo.getListingVisibility())
                 .isNull();
-        assertThat(tokenAuthInfo.passthroughRequestHeaders)
+        assertThat(tokenAuthInfo.getPassthroughRequestHeaders())
                 .isNull();
-        assertThat(tokenAuthInfo.allowedResponseHeaders)
+        assertThat(tokenAuthInfo.getAllowedResponseHeaders())
                 .isNull();
-        assertThat(tokenAuthInfo.tokenType)
+        assertThat(tokenAuthInfo.getTokenType())
                 .isEqualTo("default-service");
     }
 
@@ -193,25 +193,25 @@ public class VaultSysAuthTest {
         var kvTuneInfo = authApi.readTune(path)
                 .await().indefinitely();
 
-        assertThat(kvTuneInfo.defaultLeaseTtl)
+        assertThat(kvTuneInfo.getDefaultLeaseTtl())
                 .isEqualTo(90L);
-        assertThat(kvTuneInfo.maxLeaseTtl)
+        assertThat(kvTuneInfo.getMaxLeaseTtl())
                 .isEqualTo(120L);
-        assertThat(kvTuneInfo.forceNoCache)
+        assertThat(kvTuneInfo.isForceNoCache())
                 .isFalse();
-        assertThat(kvTuneInfo.description)
+        assertThat(kvTuneInfo.getDescription())
                 .isEqualTo("test mount");
-        assertThat(kvTuneInfo.auditNonHmacRequestKeys)
+        assertThat(kvTuneInfo.getAuditNonHmacRequestKeys())
                 .contains("key1", "key2");
-        assertThat(kvTuneInfo.auditNonHmacResponseKeys)
+        assertThat(kvTuneInfo.getAuditNonHmacResponseKeys())
                 .contains("key3", "key4");
-        assertThat(kvTuneInfo.listingVisibility)
+        assertThat(kvTuneInfo.getListingVisibility())
                 .isEqualTo("hidden");
-        assertThat(kvTuneInfo.passthroughRequestHeaders)
+        assertThat(kvTuneInfo.getPassthroughRequestHeaders())
                 .contains("header1", "header2");
-        assertThat(kvTuneInfo.allowedResponseHeaders)
+        assertThat(kvTuneInfo.getAllowedResponseHeaders())
                 .contains("header3", "header4");
-        assertThat(kvTuneInfo.tokenType)
+        assertThat(kvTuneInfo.getTokenType())
                 .isEqualTo("service");
     }
 }

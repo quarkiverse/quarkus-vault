@@ -26,39 +26,39 @@ public class VaultSysMountsTest {
 
         var kvMountInfo = mounts.get("secret/");
 
-        assertThat(kvMountInfo.accessor)
+        assertThat(kvMountInfo.getAccessor())
                 .startsWith("kv_");
-        assertThat(kvMountInfo.config)
+        assertThat(kvMountInfo.getConfig())
                 .isNotNull();
-        assertThat(kvMountInfo.config.defaultLeaseTtl)
+        assertThat(kvMountInfo.getConfig().getDefaultLeaseTtl())
                 .isEqualTo(0);
-        assertThat(kvMountInfo.config.maxLeaseTtl)
+        assertThat(kvMountInfo.getConfig().getMaxLeaseTtl())
                 .isEqualTo(0);
-        assertThat(kvMountInfo.config.forceNoCache)
+        assertThat(kvMountInfo.getConfig().isForceNoCache())
                 .isFalse();
-        assertThat(kvMountInfo.deprecationStatus)
+        assertThat(kvMountInfo.getDeprecationStatus())
                 .isEqualTo("supported");
-        assertThat(kvMountInfo.description)
+        assertThat(kvMountInfo.getDescription())
                 .isEqualTo("key/value secret storage");
-        assertThat(kvMountInfo.externalEntropyAccess)
+        assertThat(kvMountInfo.isExternalEntropyAccess())
                 .isFalse();
-        assertThat(kvMountInfo.local)
+        assertThat(kvMountInfo.isLocal())
                 .isFalse();
-        assertThat(kvMountInfo.options)
+        assertThat(kvMountInfo.getOptions())
                 .isNotNull()
                 .containsEntry("version", "2");
-        assertThat(kvMountInfo.pluginVersion)
+        assertThat(kvMountInfo.getPluginVersion())
                 .isEmpty();
-        assertThat(kvMountInfo.runningPluginVersion)
+        assertThat(kvMountInfo.getRunningPluginVersion())
                 .startsWith("v")
                 .endsWith("+builtin");
-        assertThat(kvMountInfo.runningSha256)
+        assertThat(kvMountInfo.getRunningSha256())
                 .isEmpty();
-        assertThat(kvMountInfo.sealWrap)
+        assertThat(kvMountInfo.isSealWrap())
                 .isFalse();
-        assertThat(kvMountInfo.type)
+        assertThat(kvMountInfo.getType())
                 .isEqualTo("kv");
-        assertThat(kvMountInfo.uuid)
+        assertThat(kvMountInfo.getUuid())
                 .isNotEmpty();
     }
 
@@ -69,39 +69,39 @@ public class VaultSysMountsTest {
         var kvMountInfo = mountApi.read("secret/")
                 .await().indefinitely();
 
-        assertThat(kvMountInfo.accessor)
+        assertThat(kvMountInfo.getAccessor())
                 .startsWith("kv_");
-        assertThat(kvMountInfo.config)
+        assertThat(kvMountInfo.getConfig())
                 .isNotNull();
-        assertThat(kvMountInfo.config.defaultLeaseTtl)
+        assertThat(kvMountInfo.getConfig().getDefaultLeaseTtl())
                 .isEqualTo(0);
-        assertThat(kvMountInfo.config.maxLeaseTtl)
+        assertThat(kvMountInfo.getConfig().getMaxLeaseTtl())
                 .isEqualTo(0);
-        assertThat(kvMountInfo.config.forceNoCache)
+        assertThat(kvMountInfo.getConfig().isForceNoCache())
                 .isFalse();
-        assertThat(kvMountInfo.deprecationStatus)
+        assertThat(kvMountInfo.getDeprecationStatus())
                 .isEqualTo("supported");
-        assertThat(kvMountInfo.description)
+        assertThat(kvMountInfo.getDescription())
                 .isEqualTo("key/value secret storage");
-        assertThat(kvMountInfo.externalEntropyAccess)
+        assertThat(kvMountInfo.isExternalEntropyAccess())
                 .isFalse();
-        assertThat(kvMountInfo.local)
+        assertThat(kvMountInfo.isLocal())
                 .isFalse();
-        assertThat(kvMountInfo.options)
+        assertThat(kvMountInfo.getOptions())
                 .isNotNull()
                 .containsEntry("version", "2");
-        assertThat(kvMountInfo.pluginVersion)
+        assertThat(kvMountInfo.getPluginVersion())
                 .isEmpty();
-        assertThat(kvMountInfo.runningPluginVersion)
+        assertThat(kvMountInfo.getRunningPluginVersion())
                 .startsWith("v")
                 .endsWith("+builtin");
-        assertThat(kvMountInfo.runningSha256)
+        assertThat(kvMountInfo.getRunningSha256())
                 .isEmpty();
-        assertThat(kvMountInfo.sealWrap)
+        assertThat(kvMountInfo.isSealWrap())
                 .isFalse();
-        assertThat(kvMountInfo.type)
+        assertThat(kvMountInfo.getType())
                 .isEqualTo("kv");
-        assertThat(kvMountInfo.uuid)
+        assertThat(kvMountInfo.getUuid())
                 .isNotEmpty();
     }
 
@@ -153,25 +153,25 @@ public class VaultSysMountsTest {
         var kvTuneInfo = mountApi.readTune("secret/")
                 .await().indefinitely();
 
-        assertThat(kvTuneInfo.description)
+        assertThat(kvTuneInfo.getDescription())
                 .isEqualTo("key/value secret storage");
-        assertThat(kvTuneInfo.defaultLeaseTtl)
+        assertThat(kvTuneInfo.getDefaultLeaseTtl())
                 .isEqualTo(2764800L);
-        assertThat(kvTuneInfo.maxLeaseTtl)
+        assertThat(kvTuneInfo.getMaxLeaseTtl())
                 .isEqualTo(2764800L);
-        assertThat(kvTuneInfo.forceNoCache)
+        assertThat(kvTuneInfo.isForceNoCache())
                 .isFalse();
-        assertThat(kvTuneInfo.allowedManagedKeys)
+        assertThat(kvTuneInfo.getAllowedManagedKeys())
                 .isNull();
-        assertThat(kvTuneInfo.auditNonHmacRequestKeys)
+        assertThat(kvTuneInfo.getAuditNonHmacRequestKeys())
                 .isNull();
-        assertThat(kvTuneInfo.auditNonHmacResponseKeys)
+        assertThat(kvTuneInfo.getAuditNonHmacResponseKeys())
                 .isNull();
-        assertThat(kvTuneInfo.listingVisibility)
+        assertThat(kvTuneInfo.getListingVisibility())
                 .isNull();
-        assertThat(kvTuneInfo.passthroughRequestHeaders)
+        assertThat(kvTuneInfo.getPassthroughRequestHeaders())
                 .isNull();
-        assertThat(kvTuneInfo.allowedResponseHeaders)
+        assertThat(kvTuneInfo.getAllowedResponseHeaders())
                 .isNull();
     }
 
@@ -197,25 +197,25 @@ public class VaultSysMountsTest {
         var kvTuneInfo = mountApi.readTune(path)
                 .await().indefinitely();
 
-        assertThat(kvTuneInfo.defaultLeaseTtl)
+        assertThat(kvTuneInfo.getDefaultLeaseTtl())
                 .isEqualTo(90L);
-        assertThat(kvTuneInfo.maxLeaseTtl)
+        assertThat(kvTuneInfo.getMaxLeaseTtl())
                 .isEqualTo(120L);
-        assertThat(kvTuneInfo.forceNoCache)
+        assertThat(kvTuneInfo.isForceNoCache())
                 .isFalse();
-        assertThat(kvTuneInfo.description)
+        assertThat(kvTuneInfo.getDescription())
                 .isEqualTo("test mount");
-        assertThat(kvTuneInfo.auditNonHmacRequestKeys)
+        assertThat(kvTuneInfo.getAuditNonHmacRequestKeys())
                 .contains("key1", "key2");
-        assertThat(kvTuneInfo.auditNonHmacResponseKeys)
+        assertThat(kvTuneInfo.getAuditNonHmacResponseKeys())
                 .contains("key3", "key4");
-        assertThat(kvTuneInfo.listingVisibility)
+        assertThat(kvTuneInfo.getListingVisibility())
                 .isEqualTo("hidden");
-        assertThat(kvTuneInfo.passthroughRequestHeaders)
+        assertThat(kvTuneInfo.getPassthroughRequestHeaders())
                 .contains("header1", "header2");
-        assertThat(kvTuneInfo.allowedResponseHeaders)
+        assertThat(kvTuneInfo.getAllowedResponseHeaders())
                 .contains("header3", "header4");
-        assertThat(kvTuneInfo.allowedManagedKeys)
+        assertThat(kvTuneInfo.getAllowedManagedKeys())
                 .contains("key5", "key6");
     }
 }

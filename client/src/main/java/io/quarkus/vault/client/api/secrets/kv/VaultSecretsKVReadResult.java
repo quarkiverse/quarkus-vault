@@ -4,6 +4,6 @@ import java.util.Map;
 
 public interface VaultSecretsKVReadResult {
 
-    Map<String, Object> getData();
+    Map<String, Object> getValues();
 
 }

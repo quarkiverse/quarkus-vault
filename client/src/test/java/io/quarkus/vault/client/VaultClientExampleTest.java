@@ -74,7 +74,7 @@ public class VaultClientExampleTest {
 
             var secret = kvApi.readSecret("hello")
                     .await().indefinitely();
-            assertEquals(secret.data.get("value"), "world");
+            assertEquals(secret.getData().get("value"), "world");
         }
     }
 

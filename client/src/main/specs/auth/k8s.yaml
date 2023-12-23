@@ -58,7 +58,7 @@ operations:
   path: "config"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: kubernetesHost
       type: String
@@ -111,7 +111,7 @@ operations:
       type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: keys
       type: java.util.List<String>
@@ -125,7 +125,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: boundServiceAccountNames
       type: java.util.List<String>
@@ -158,7 +158,7 @@ operations:
   path: "role"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: keys
       type: java.util.List<String>

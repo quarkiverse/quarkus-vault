@@ -22,21 +22,21 @@ public class VaultSysRemountTest {
 
         assertThat(remount)
                 .isNotNull();
-        assertThat(remount.migrationId)
+        assertThat(remount.getMigrationId())
                 .isNotEmpty();
 
-        var status = remountApi.status(remount.migrationId)
+        var status = remountApi.status(remount.getMigrationId())
                 .await().indefinitely();
 
         assertThat(status)
                 .isNotNull();
-        assertThat(status.migrationInfo)
+        assertThat(status.getMigrationInfo())
                 .isNotNull();
-        assertThat(status.migrationInfo.status)
+        assertThat(status.getMigrationInfo().getStatus())
                 .isEqualTo("success");
-        assertThat(status.migrationInfo.sourceMount)
+        assertThat(status.getMigrationInfo().getSourceMount())
                 .isEqualTo(path + "/");
-        assertThat(status.migrationInfo.targetMount)
+        assertThat(status.getMigrationInfo().getTargetMount())
                 .isEqualTo(newPath + "/");
     }
 

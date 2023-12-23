@@ -24,6 +24,6 @@ public class VaultSecretIdUnwrappingProvider extends VaultUnwrappingValueProvide
 
     @Override
     public String extractClientToken(VaultAuthAppRoleGenerateSecretIdResult vaultAppRoleGenerateNewSecretID) {
-        return vaultAppRoleGenerateNewSecretID.data.secretId;
+        return vaultAppRoleGenerateNewSecretID.getData().getSecretId();
     }
 }

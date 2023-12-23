@@ -48,7 +48,7 @@ public class VaultSysSealTest {
             var info = initApi.status()
                     .await().indefinitely();
 
-            assertThat(info.isInitialized)
+            assertThat(info.isInitialized())
                     .isFalse();
 
             var init = initApi.init(new VaultSysInitParams()
@@ -56,34 +56,34 @@ public class VaultSysSealTest {
                     .setSecretShares(5))
                     .await().indefinitely();
 
-            assertThat(init.keys)
+            assertThat(init.getKeys())
                     .hasSize(5);
-            assertThat(init.keysBase64)
+            assertThat(init.getKeysBase64())
                     .hasSize(5);
-            assertThat(init.rootToken)
+            assertThat(init.getRootToken())
                     .isNotEmpty();
 
             var sealApi = client.sys().seal();
 
-            var unseal1 = sealApi.unseal(init.keys.get(0), false, false)
+            var unseal1 = sealApi.unseal(init.getKeys().get(0), false, false)
                     .await().indefinitely();
-            assertThat(unseal1.isSealed)
+            assertThat(unseal1.isSealed())
                     .isTrue();
-            assertThat(unseal1.progress)
+            assertThat(unseal1.getProgress())
                     .isEqualTo(1);
 
-            var unseal2 = sealApi.unseal(init.keys.get(2), false, false)
+            var unseal2 = sealApi.unseal(init.getKeys().get(2), false, false)
                     .await().indefinitely();
-            assertThat(unseal2.isSealed)
+            assertThat(unseal2.isSealed())
                     .isTrue();
-            assertThat(unseal2.progress)
+            assertThat(unseal2.getProgress())
                     .isEqualTo(2);
 
-            var unseal3 = sealApi.unseal(init.keys.get(4), false, false)
+            var unseal3 = sealApi.unseal(init.getKeys().get(4), false, false)
                     .await().indefinitely();
-            assertThat(unseal3.isSealed)
+            assertThat(unseal3.isSealed())
                     .isFalse();
-            assertThat(unseal3.progress)
+            assertThat(unseal3.getProgress())
                     .isEqualTo(0);
         }
     }
@@ -104,7 +104,7 @@ public class VaultSysSealTest {
             var info = initApi.status()
                     .await().indefinitely();
 
-            assertThat(info.isInitialized)
+            assertThat(info.isInitialized())
                     .isFalse();
 
             var init = initApi.init(new VaultSysInitParams()
@@ -112,33 +112,33 @@ public class VaultSysSealTest {
                     .setSecretShares(3))
                     .await().indefinitely();
 
-            assertThat(init.keys)
+            assertThat(init.getKeys())
                     .hasSize(3);
 
             // Unseal
 
             var sealApi = client.sys().seal();
 
-            var unseal1 = sealApi.unseal(init.keys.get(0), false, false)
+            var unseal1 = sealApi.unseal(init.getKeys().get(0), false, false)
                     .await().indefinitely();
-            assertThat(unseal1.isSealed)
+            assertThat(unseal1.isSealed())
                     .isTrue();
 
-            var unseal2 = sealApi.unseal(init.keys.get(1), false, false)
+            var unseal2 = sealApi.unseal(init.getKeys().get(1), false, false)
                     .await().indefinitely();
-            assertThat(unseal2.isSealed)
+            assertThat(unseal2.isSealed())
                     .isFalse();
 
             // Seal
 
-            sealApi = client.configure().clientToken(init.rootToken).build().sys().seal();
+            sealApi = client.configure().clientToken(init.getRootToken()).build().sys().seal();
 
             sealApi.seal()
                     .await().indefinitely();
 
             var status = sealApi.status()
                     .await().indefinitely();
-            assertThat(status.isSealed)
+            assertThat(status.isSealed())
                     .isTrue();
         }
     }
@@ -157,7 +157,7 @@ public class VaultSysSealTest {
             var info = initApi.status()
                     .await().indefinitely();
 
-            assertThat(info.isInitialized)
+            assertThat(info.isInitialized())
                     .isFalse();
 
             var init = initApi.init(new VaultSysInitParams()
@@ -165,11 +165,11 @@ public class VaultSysSealTest {
                     .setSecretShares(5))
                     .await().indefinitely();
 
-            assertThat(init.keys)
+            assertThat(init.getKeys())
                     .hasSize(5);
-            assertThat(init.keysBase64)
+            assertThat(init.getKeysBase64())
                     .hasSize(5);
-            assertThat(init.rootToken)
+            assertThat(init.getRootToken())
                     .isNotEmpty();
 
             var sealApi = client.sys().seal();
@@ -177,19 +177,19 @@ public class VaultSysSealTest {
             var status = sealApi.backendStatus()
                     .await().indefinitely();
 
-            assertThat(status.healthy)
+            assertThat(status.isHealthy())
                     .isTrue();
 
-            assertThat(status.backends)
+            assertThat(status.getBackends())
                     .hasSize(1);
 
-            var backendStatus = status.backends.get(0);
+            var backendStatus = status.getBackends().get(0);
 
-            assertThat(backendStatus.name)
+            assertThat(backendStatus.getName())
                     .isNotNull();
-            assertThat(backendStatus.healthy)
+            assertThat(backendStatus.isHealthy())
                     .isTrue();
-            assertThat(backendStatus.unhealthySince)
+            assertThat(backendStatus.getUnhealthySince())
                     .isNull();
         }
     }

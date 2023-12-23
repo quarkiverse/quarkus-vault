@@ -28,25 +28,25 @@ public class VaultSysHealthTest {
         var health = healthApi.info()
                 .await().indefinitely();
 
-        assertThat(health.isInitialized)
+        assertThat(health.isInitialized())
                 .isTrue();
-        assertThat(health.isStandby)
+        assertThat(health.isStandby())
                 .isFalse();
-        assertThat(health.isSealed)
+        assertThat(health.isSealed())
                 .isFalse();
-        assertThat(health.performanceStandby)
+        assertThat(health.isPerformanceStandby())
                 .isFalse();
-        assertThat(health.replicationPerformanceMode)
+        assertThat(health.getReplicationPerformanceMode())
                 .isEqualTo("disabled");
-        assertThat(health.replicationDrMode)
+        assertThat(health.getReplicationDrMode())
                 .isEqualTo("disabled");
-        assertThat(health.serverTimeUtc)
+        assertThat(health.getServerTimeUtc())
                 .isBetween(now().minusSeconds(1).getEpochSecond(), now().plusSeconds(1).getEpochSecond());
-        assertThat(health.version)
+        assertThat(health.getVersion())
                 .startsWith("1.");
-        assertThat(health.clusterName)
+        assertThat(health.getClusterName())
                 .startsWith("vault-cluster-");
-        assertThat(health.clusterId)
+        assertThat(health.getClusterId())
                 .isNotNull();
     }
 
@@ -58,7 +58,7 @@ public class VaultSysHealthTest {
         var health = healthApi.info(true, false)
                 .await().indefinitely();
 
-        assertThat(health.isInitialized)
+        assertThat(health.isInitialized())
                 .isTrue();
     }
 

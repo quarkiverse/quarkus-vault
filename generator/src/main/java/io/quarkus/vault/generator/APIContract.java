@@ -146,10 +146,10 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
                 body.add(leasedResult.unwrapUsing().get(), unwrapUsingArguments.toArray());
 
                 body.add(")");
-            } else if (leasedResult.unwrapsData().orElse(false)) {
-                body.add(".map(r -> r.data)");
-            } else if (leasedResult.unwrapsAuth().orElse(false)) {
-                body.add(".map(r -> r.auth)");
+            } else if (leasedResult.unwrapData().orElse(false)) {
+                body.add(".map($T::getData)", typeName("$$.api.common.VaultLeasedResult"));
+            } else if (leasedResult.unwrapAuth().orElse(false)) {
+                body.add(".map($T::getAuth)", typeName("$$.api.common.VaultLeasedResult"));
             }
         }
 
@@ -179,13 +179,13 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
         } else if (result instanceof Operation.LeasedResult leasedResult) {
             if (leasedResult.unwrappedType().isPresent()) {
                 return typeName(leasedResult.unwrappedType().get());
-            } else if (leasedResult.unwrapsData().orElse(false)) {
+            } else if (leasedResult.unwrapData().orElse(false)) {
                 if (leasedResult.dataType().isPresent()) {
                     return typeName(leasedResult.dataType().get());
                 } else {
                     return typeNameFor(capitalize(operation.name()), "ResultData");
                 }
-            } else if (leasedResult.unwrapsAuth().orElse(false)) {
+            } else if (leasedResult.unwrapAuth().orElse(false)) {
                 return typeNameFor(capitalize(operation.name()), "AuthResult");
             } else {
                 return typeNameFor(operation.name(), "Result");

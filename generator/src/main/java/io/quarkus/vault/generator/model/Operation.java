@@ -132,12 +132,12 @@ public record Operation(
     @JsonTypeName("leased")
     public record LeasedResult(
             Kind kind,
-            Optional<Boolean> unwrapsData,
+            Optional<Boolean> unwrapData,
             Optional<List<POJO.Property>> data,
             Optional<String> dataType,
             Optional<List<POJO.Property>> auth,
             Optional<String> authType,
-            Optional<Boolean> unwrapsAuth,
+            Optional<Boolean> unwrapAuth,
             Optional<String> unwrappedType,
             Optional<String> unwrapUsing,
             Optional<List<String>> unwrapUsingArguments,

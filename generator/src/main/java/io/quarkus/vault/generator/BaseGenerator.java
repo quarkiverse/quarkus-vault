@@ -117,15 +117,16 @@ public abstract class BaseGenerator implements Generator {
             String generationPrefix) {
 
         for (var property : properties) {
-            spec.addField(generatePOJOField(spec, property, generationPrefix));
+            spec.addField(generatePOJOField(property, generationPrefix));
         }
 
         for (var property : properties) {
+            spec.addMethod(generatePOJOGetter(property, generationPrefix));
             spec.addMethod(generatePOJOSetter(specName, property, generationPrefix));
         }
     }
 
-    public FieldSpec generatePOJOField(TypeSpec.Builder objSpec, POJO.Property property, String generationPrefix) {
+    public FieldSpec generatePOJOField(POJO.Property property, String generationPrefix) {
         TypeName typeName;
         if (property.type().isPresent()) {
 
@@ -144,7 +145,7 @@ public abstract class BaseGenerator implements Generator {
         }
 
         var spec = FieldSpec.builder(typeName, property.name())
-                .addModifiers(Modifier.PUBLIC);
+                .addModifiers(Modifier.PRIVATE);
 
         var serializedName = property.getSerializedName();
         if (!Objects.equals(serializedName, property.name())) {
@@ -185,6 +186,43 @@ public abstract class BaseGenerator implements Generator {
         }
 
         return spec.build();
+    }
+
+    public MethodSpec generatePOJOGetter(POJO.Property property, String generationPrefix) {
+
+        TypeName typeName;
+        if (property.type().isPresent()) {
+
+            typeName = typeName(property.type().get());
+
+        } else if (property.object().isPresent()) {
+
+            typeName = typeNameFor(capitalize(generationPrefix) + capitalize(property.name()));
+
+        } else {
+            throw OneOfFieldsMissingError.of("No type specified for property " + property.name());
+        }
+
+        String prefix;
+        String name;
+        if (typeName.equals(ClassName.bestGuess("Boolean")) || typeName.equals(TypeName.BOOLEAN)
+                || typeName.equals(TypeName.BOOLEAN.box())) {
+            prefix = "is";
+            if (property.name().startsWith("is")) {
+                name = property.name().substring("is".length());
+            } else {
+                name = property.name();
+            }
+        } else {
+            prefix = "get";
+            name = property.name();
+        }
+
+        return MethodSpec.methodBuilder(prefix + capitalize(name))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(typeName)
+                .addStatement("return this.$L", property.name())
+                .build();
     }
 
     public MethodSpec generatePOJOSetter(TypeName specName, POJO.Property property, String generationPrefix) {

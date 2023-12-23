@@ -10,7 +10,7 @@ operations:
   path: policy
   result:
     kind: leased
-    unwrapUsing: r.data.policies
+    unwrapUsing: r.getData().getPolicies()
     unwrappedType: java.util.List<String>
     data:
     - name: policies
@@ -24,7 +24,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: name
       type: String

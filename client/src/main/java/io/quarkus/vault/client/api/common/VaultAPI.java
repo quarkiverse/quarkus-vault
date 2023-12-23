@@ -27,7 +27,7 @@ public class VaultAPI<F extends VaultRequestFactory> {
         var wrapRequest = request.builder().wrapTTL(wrapTTL)
                 .build(VaultLeasedResultExtractor.of(VaultWrappedResult.class));
         return executor.execute(wrapRequest)
-                .map(r -> r.getResult().wrapInfo);
+                .map(r -> r.getResult().getWrapInfo());
     }
 
 }

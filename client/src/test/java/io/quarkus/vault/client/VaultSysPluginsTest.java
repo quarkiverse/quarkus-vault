@@ -22,28 +22,28 @@ public class VaultSysPluginsTest {
         var plugins = pluginsApi.list()
                 .await().indefinitely();
 
-        assertThat(plugins.auth)
+        assertThat(plugins.getAuth())
                 .contains("approle");
-        assertThat(plugins.secret)
+        assertThat(plugins.getSecret())
                 .contains("kv");
-        assertThat(plugins.database)
+        assertThat(plugins.getDatabase())
                 .contains("mysql-database-plugin");
-        assertThat(plugins.detailed)
+        assertThat(plugins.getDetailed())
                 .isNotNull();
 
-        var details = plugins.detailed.stream().filter(d -> d.name.equals("kv")).findFirst().orElseThrow();
+        var details = plugins.getDetailed().stream().filter(d -> d.getName().equals("kv")).findFirst().orElseThrow();
 
         assertThat(details)
                 .isNotNull();
-        assertThat(details.name)
+        assertThat(details.getName())
                 .isEqualTo("kv");
-        assertThat(details.type)
+        assertThat(details.getType())
                 .isEqualTo("secret");
-        assertThat(details.builtin)
+        assertThat(details.isBuiltin())
                 .isTrue();
-        assertThat(details.deprecationStatus)
+        assertThat(details.getDeprecationStatus())
                 .isEqualTo("supported");
-        assertThat(details.version)
+        assertThat(details.getVersion())
                 .startsWith("v")
                 .endsWith("builtin");
     }
@@ -99,15 +99,15 @@ public class VaultSysPluginsTest {
 
         assertThat(pluginInfo)
                 .isNotNull();
-        assertThat(pluginInfo.name)
+        assertThat(pluginInfo.getName())
                 .isEqualTo(pluginName);
-        assertThat(pluginInfo.command)
+        assertThat(pluginInfo.getCommand())
                 .isEqualTo("test-plugin");
-        assertThat(pluginInfo.sha256)
+        assertThat(pluginInfo.getSha256())
                 .isEqualTo(pluginSha256);
-        assertThat(pluginInfo.version)
+        assertThat(pluginInfo.getVersion())
                 .isEmpty();
-        assertThat(pluginInfo.args)
+        assertThat(pluginInfo.getArgs())
                 .contains("--arg1", "--arg2");
     }
 
@@ -129,15 +129,15 @@ public class VaultSysPluginsTest {
 
         assertThat(pluginInfo)
                 .isNotNull();
-        assertThat(pluginInfo.name)
+        assertThat(pluginInfo.getName())
                 .isEqualTo(pluginName);
-        assertThat(pluginInfo.command)
+        assertThat(pluginInfo.getCommand())
                 .isEqualTo("test-plugin");
-        assertThat(pluginInfo.sha256)
+        assertThat(pluginInfo.getSha256())
                 .isEqualTo(pluginSha256);
-        assertThat(pluginInfo.version)
+        assertThat(pluginInfo.getVersion())
                 .isEqualTo("v1.0.0");
-        assertThat(pluginInfo.args)
+        assertThat(pluginInfo.getArgs())
                 .contains("--arg1", "--arg2");
     }
 

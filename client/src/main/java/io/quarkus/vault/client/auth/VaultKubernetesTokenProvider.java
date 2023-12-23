@@ -40,7 +40,10 @@ public class VaultKubernetesTokenProvider implements VaultTokenProvider {
 
             return executor.execute(VaultAuthKubernetes.FACTORY.login(mountPath, role, jwt))
                     .map(VaultResponse::getResult)
-                    .map(res -> VaultToken.from(res.auth.clientToken, res.auth.renewable, res.auth.leaseDuration));
+                    .map(res -> {
+                        var auth = res.getAuth();
+                        return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration());
+                    });
         });
     }
 

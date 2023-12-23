@@ -98,7 +98,8 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
         return authRequest.executor().execute(request)
                 .map(VaultResponse::getResult)
                 .map(res -> {
-                    var vaultToken = new VaultToken(res.auth.clientToken, res.auth.renewable, res.auth.leaseDuration);
+                    var auth = res.getAuth();
+                    var vaultToken = new VaultToken(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration());
                     sanityCheck(vaultToken);
                     log.fine("extended login token: " + vaultToken.getConfidentialInfo(logLevel));
                     return vaultToken;

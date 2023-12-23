@@ -49,7 +49,7 @@ public class VaultSecretsKV1Test {
 
         assertThat(data)
                 .isNotNull();
-        assertThat(data.keys)
+        assertThat(data.getKeys())
                 .isNotNull()
                 .contains("test1", "test2");
     }

@@ -31,6 +31,6 @@ public class VaultKeyValueUnwrappingValueProvider extends VaultUnwrappingValuePr
 
     @Override
     public String extractClientToken(VaultSecretsKVReadResult result) {
-        return result.getData().get(valueKey).toString();
+        return result.getValues().get(valueKey).toString();
     }
 }

@@ -17,7 +17,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsAuth: true
+    unwrapAuth: true
     auth:
     - name: metadata
       type: String
@@ -62,7 +62,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: bindSecretId
       type: Boolean
@@ -129,7 +129,7 @@ operations:
   path: "users"
   result:
     kind: leased
-    unwrapUsing: r.data.keys
+    unwrapUsing: r.getData().getKeys()
     unwrappedType: java.util.List<String>
     data:
     - name: keys

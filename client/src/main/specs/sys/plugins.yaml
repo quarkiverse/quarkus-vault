@@ -10,7 +10,7 @@ operations:
   path: catalog
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: auth
       type: java.util.List<String>
@@ -27,7 +27,7 @@ operations:
   path: catalog/auth
   result:
     kind: leased
-    unwrapUsing: r.data.keys
+    unwrapUsing: r.getData().getKeys()
     unwrappedType: java.util.List<String>
     data:
     - name: keys
@@ -39,7 +39,7 @@ operations:
   path: catalog/database
   result:
     kind: leased
-    unwrapUsing: r.data.keys
+    unwrapUsing: r.getData().getKeys()
     unwrappedType: java.util.List<String>
     data:
     - name: keys
@@ -51,7 +51,7 @@ operations:
   path: catalog/secret
   result:
     kind: leased
-    unwrapUsing: r.data.keys
+    unwrapUsing: r.getData().getKeys()
     unwrappedType: java.util.List<String>
     data:
     - name: keys
@@ -72,7 +72,7 @@ operations:
     includeNulls: false
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: $PluginInfo
 
 
@@ -86,7 +86,7 @@ operations:
       type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: $PluginInfo
 
 

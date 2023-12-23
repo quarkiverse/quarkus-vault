@@ -10,7 +10,7 @@ operations:
   path: auth
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: java.util.Map<String, $MethodInfo>
 
 
@@ -22,7 +22,7 @@ operations:
       type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: $MethodInfo
 
 
@@ -78,7 +78,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: defaultLeaseTtl
       type: Long

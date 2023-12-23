@@ -30,7 +30,7 @@ public class VaultAuthUserPassTest {
         var login = userPassApi.login(user, "test")
                 .await().indefinitely();
 
-        assertThat(login.clientToken)
+        assertThat(login.getClientToken())
                 .isNotNull();
     }
 
@@ -59,7 +59,7 @@ public class VaultAuthUserPassTest {
         var userInfo = userPassApi.readUser(user)
                 .await().indefinitely();
 
-        assertThat(userInfo.tokenPolicies)
+        assertThat(userInfo.getTokenPolicies())
                 .containsExactly(userPolicy);
     }
 
@@ -92,9 +92,9 @@ public class VaultAuthUserPassTest {
         var userInfo = userPassApi.readUser(user)
                 .await().indefinitely();
 
-        assertThat(userInfo.tokenPolicies)
+        assertThat(userInfo.getTokenPolicies())
                 .contains(userPolicy);
-        assertThat(userInfo.tokenMaxTtl)
+        assertThat(userInfo.getTokenMaxTtl())
                 .isEqualTo("54000");
     }
 
@@ -112,7 +112,7 @@ public class VaultAuthUserPassTest {
         var login = userPassApi.login(user, "test")
                 .await().indefinitely();
 
-        assertThat(login.clientToken)
+        assertThat(login.getClientToken())
                 .isNotNull();
 
         // Update password
@@ -125,7 +125,7 @@ public class VaultAuthUserPassTest {
         var login2 = userPassApi.login(user, "test2")
                 .await().indefinitely();
 
-        assertThat(login2.clientToken)
+        assertThat(login2.getClientToken())
                 .isNotNull();
     }
 
@@ -221,7 +221,7 @@ public class VaultAuthUserPassTest {
         var mountInfo = authClient.sys().mounts().read("secret")
                 .await().indefinitely();
 
-        assertThat(mountInfo.description)
+        assertThat(mountInfo.getDescription())
                 .isNotNull();
     }
 

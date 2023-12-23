@@ -23,41 +23,41 @@ public class VaultSysWrappingTest {
 
         assertThat(wrapInfo)
                 .isNotNull();
-        assertThat(wrapInfo.token)
+        assertThat(wrapInfo.getToken())
                 .isNotEmpty();
-        assertThat(wrapInfo.creationTime)
+        assertThat(wrapInfo.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
-        assertThat(wrapInfo.ttl)
+        assertThat(wrapInfo.getTtl())
                 .isEqualTo(60);
-        assertThat(wrapInfo.creationPath)
+        assertThat(wrapInfo.getCreationPath())
                 .isEqualTo("auth/token/create");
 
-        var unwrapped = client.sys().wrapping().unwrapAs(wrapInfo.token, VaultAuthTokenCreateAuthResult.class)
+        var unwrapped = client.sys().wrapping().unwrapAs(wrapInfo.getToken(), VaultAuthTokenCreateAuthResult.class)
                 .await().indefinitely();
 
         assertThat(unwrapped)
                 .isNotNull();
-        assertThat(unwrapped.clientToken)
+        assertThat(unwrapped.getClientToken())
                 .isNotEmpty();
-        assertThat(unwrapped.accessor)
+        assertThat(unwrapped.getAccessor())
                 .isNotEmpty();
-        assertThat(unwrapped.policies)
+        assertThat(unwrapped.getPolicies())
                 .containsExactly("root");
-        assertThat(unwrapped.tokenPolicies)
+        assertThat(unwrapped.getTokenPolicies())
                 .containsExactly("root");
-        assertThat(unwrapped.metadata)
+        assertThat(unwrapped.getMetadata())
                 .isNull();
-        assertThat(unwrapped.leaseDuration)
+        assertThat(unwrapped.getLeaseDuration())
                 .isEqualTo(0);
-        assertThat(unwrapped.renewable)
+        assertThat(unwrapped.isRenewable())
                 .isFalse();
-        assertThat(unwrapped.entityId)
+        assertThat(unwrapped.getEntityId())
                 .isEmpty();
-        assertThat(unwrapped.tokenType)
+        assertThat(unwrapped.getTokenType())
                 .isEqualTo("service");
-        assertThat(unwrapped.orphan)
+        assertThat(unwrapped.isOrphan())
                 .isFalse();
-        assertThat(unwrapped.numUses)
+        assertThat(unwrapped.getNumUses())
                 .isEqualTo(0);
     }
 
@@ -68,13 +68,13 @@ public class VaultSysWrappingTest {
         var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofSeconds(60))
                 .await().indefinitely();
 
-        assertThat(wrapped.token)
+        assertThat(wrapped.getToken())
                 .isNotEmpty();
-        assertThat(wrapped.creationTime)
+        assertThat(wrapped.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
-        assertThat(wrapped.ttl)
+        assertThat(wrapped.getTtl())
                 .isEqualTo(60);
-        assertThat(wrapped.creationPath)
+        assertThat(wrapped.getCreationPath())
                 .isEqualTo("sys/wrapping/wrap");
     }
 
@@ -85,19 +85,19 @@ public class VaultSysWrappingTest {
         var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofSeconds(60))
                 .await().indefinitely();
 
-        assertThat(wrapped.token)
+        assertThat(wrapped.getToken())
                 .isNotEmpty();
 
-        var lookup = wrappingApi.lookup(wrapped.token)
+        var lookup = wrappingApi.lookup(wrapped.getToken())
                 .await().indefinitely();
 
         assertThat(lookup)
                 .isNotNull();
-        assertThat(lookup.creationTime)
+        assertThat(lookup.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
-        assertThat(lookup.creationTtl)
+        assertThat(lookup.getCreationTtl())
                 .isEqualTo(60);
-        assertThat(lookup.creationPath)
+        assertThat(lookup.getCreationPath())
                 .isEqualTo("sys/wrapping/wrap");
     }
 
@@ -108,12 +108,12 @@ public class VaultSysWrappingTest {
         var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofSeconds(60))
                 .await().indefinitely();
 
-        var unwrapped = wrappingApi.unwrap(wrapped.token)
+        var unwrapped = wrappingApi.unwrap(wrapped.getToken())
                 .await().indefinitely();
 
         assertThat(unwrapped)
                 .isNotNull();
-        assertThat(unwrapped.data)
+        assertThat(unwrapped.getData())
                 .containsKey("data")
                 .hasValueSatisfying(new Condition<>() {
                     @Override
@@ -136,18 +136,18 @@ public class VaultSysWrappingTest {
         var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofSeconds(60))
                 .await().indefinitely();
 
-        var rewrapped = wrappingApi.rewrap(wrapped.token)
+        var rewrapped = wrappingApi.rewrap(wrapped.getToken())
                 .await().indefinitely();
 
         assertThat(rewrapped)
                 .isNotNull();
-        assertThat(rewrapped.token)
+        assertThat(rewrapped.getToken())
                 .isNotEmpty();
-        assertThat(rewrapped.creationTime)
+        assertThat(rewrapped.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
-        assertThat(rewrapped.ttl)
+        assertThat(rewrapped.getTtl())
                 .isEqualTo(60);
-        assertThat(rewrapped.creationPath)
+        assertThat(rewrapped.getCreationPath())
                 .isEqualTo("sys/wrapping/wrap");
     }
 

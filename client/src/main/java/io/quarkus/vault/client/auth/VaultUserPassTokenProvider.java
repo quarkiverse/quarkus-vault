@@ -28,7 +28,10 @@ public class VaultUserPassTokenProvider implements VaultTokenProvider {
         return passwordProvider.apply(authRequest).flatMap(password -> {
             return executor.execute(VaultAuthUserPass.FACTORY.login(mountPath, username, password))
                     .map(VaultResponse::getResult)
-                    .map(res -> VaultToken.from(res.auth.clientToken, res.auth.renewable, res.auth.leaseDuration));
+                    .map(res -> {
+                        var auth = res.getAuth();
+                        return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration());
+                    });
         });
     }
 }

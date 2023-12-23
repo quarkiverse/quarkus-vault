@@ -16,7 +16,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsAuth: true
+    unwrapAuth: true
     auth: []
 
 
@@ -25,7 +25,7 @@ operations:
   path: "role"
   result:
     kind: leased
-    unwrapUsing: r.data.keys
+    unwrapUsing: r.getData().getKeys()
     unwrappedType: java.util.List<String>
     data:
     - name: keys
@@ -79,7 +79,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: bindSecretId
       type: Boolean
@@ -127,7 +127,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapUsing: r.data.roleId
+    unwrapUsing: r.getData().getRoleId()
     unwrappedType: String
     data:
     - name: roleId
@@ -179,7 +179,7 @@ operations:
       type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: secretId
       type: String
@@ -199,7 +199,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapUsing: r.data.keys
+    unwrapUsing: r.getData().getKeys()
     unwrappedType: java.util.List<String>
     data:
     - name: keys
@@ -218,7 +218,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: cidrList
       type: java.util.List<String>
@@ -289,7 +289,7 @@ operations:
       type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: secretId
       type: String
@@ -313,7 +313,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: cidrList
       type: java.util.List<String>
@@ -353,7 +353,7 @@ operations:
   path: "tidy/secret-id"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: Void
     authType: Void
 

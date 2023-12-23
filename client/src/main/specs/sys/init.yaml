@@ -12,8 +12,7 @@ operations:
   result:
     kind: json
     object:
-    - name: isInitialized
-      serializedName: initialized
+    - name: initialized
       type: Boolean
 
 

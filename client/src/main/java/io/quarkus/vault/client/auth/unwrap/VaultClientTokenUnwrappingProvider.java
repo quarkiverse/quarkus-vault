@@ -24,6 +24,6 @@ public class VaultClientTokenUnwrappingProvider extends VaultUnwrappingValueProv
 
     @Override
     public String extractClientToken(VaultAuthTokenCreateResult result) {
-        return result.auth.clientToken;
+        return result.getAuth().getClientToken();
     }
 }

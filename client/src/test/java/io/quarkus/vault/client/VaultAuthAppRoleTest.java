@@ -35,7 +35,7 @@ public class VaultAuthAppRoleTest {
 
         // Generate secret id
         var secretId = appRoleApi.generateSecretId(role, null)
-                .await().indefinitely().secretId;
+                .await().indefinitely().getSecretId();
 
         assertThat(secretId)
                 .isNotNull();
@@ -44,7 +44,7 @@ public class VaultAuthAppRoleTest {
         var loginResult = appRoleApi.login(roleId, secretId)
                 .await().indefinitely();
 
-        assertThat(loginResult.clientToken)
+        assertThat(loginResult.getClientToken())
                 .isNotNull();
     }
 
@@ -79,23 +79,23 @@ public class VaultAuthAppRoleTest {
 
         assertThat(roleInfo)
                 .isNotNull();
-        assertThat(roleInfo.bindSecretId)
+        assertThat(roleInfo.isBindSecretId())
                 .isTrue();
-        assertThat(roleInfo.tokenBoundCidrs)
+        assertThat(roleInfo.getTokenBoundCidrs())
                 .isEmpty();
-        assertThat(roleInfo.tokenExplicitMaxTtl)
+        assertThat(roleInfo.getTokenExplicitMaxTtl())
                 .isEqualTo("0");
-        assertThat(roleInfo.tokenMaxTtl)
+        assertThat(roleInfo.getTokenMaxTtl())
                 .isEqualTo("0");
-        assertThat(roleInfo.tokenNoDefaultPolicy)
+        assertThat(roleInfo.isTokenNoDefaultPolicy())
                 .isFalse();
-        assertThat(roleInfo.tokenNumUses)
+        assertThat(roleInfo.getTokenNumUses())
                 .isEqualTo(0);
-        assertThat(roleInfo.tokenPeriod)
+        assertThat(roleInfo.getTokenPeriod())
                 .isEqualTo(0);
-        assertThat(roleInfo.tokenPolicies)
+        assertThat(roleInfo.getTokenPolicies())
                 .isEmpty();
-        assertThat(roleInfo.tokenType)
+        assertThat(roleInfo.getTokenType())
                 .isEqualTo("default");
     }
 
@@ -186,13 +186,13 @@ public class VaultAuthAppRoleTest {
 
         assertThat(secretIdInfo)
                 .isNotNull();
-        assertThat(secretIdInfo.secretId)
+        assertThat(secretIdInfo.getSecretId())
                 .isNotNull();
-        assertThat(secretIdInfo.secretIdAccessor)
+        assertThat(secretIdInfo.getSecretIdAccessor())
                 .isNotNull();
-        assertThat(secretIdInfo.secretIdNumUses)
+        assertThat(secretIdInfo.getSecretIdNumUses())
                 .isEqualTo(5);
-        assertThat(secretIdInfo.secretIdTtl)
+        assertThat(secretIdInfo.getSecretIdTtl())
                 .isEqualTo(60);
     }
 
@@ -213,36 +213,36 @@ public class VaultAuthAppRoleTest {
 
         assertThat(secretIdInfo)
                 .isNotNull();
-        assertThat(secretIdInfo.secretId)
+        assertThat(secretIdInfo.getSecretId())
                 .isNotNull();
-        assertThat(secretIdInfo.secretIdAccessor)
+        assertThat(secretIdInfo.getSecretIdAccessor())
                 .isNotNull();
-        assertThat(secretIdInfo.secretIdNumUses)
+        assertThat(secretIdInfo.getSecretIdNumUses())
                 .isEqualTo(5);
-        assertThat(secretIdInfo.secretIdTtl)
+        assertThat(secretIdInfo.getSecretIdTtl())
                 .isEqualTo(60);
 
         // Read secret id
-        var secretId = appRoleApi.readSecretId(role, secretIdInfo.secretId)
+        var secretId = appRoleApi.readSecretId(role, secretIdInfo.getSecretId())
                 .await().indefinitely();
 
         assertThat(secretId)
                 .isNotNull();
-        assertThat(secretId.cidrList)
+        assertThat(secretId.getCidrList())
                 .isEmpty();
-        assertThat(secretId.creationTime)
+        assertThat(secretId.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
-        assertThat(secretId.expirationTime)
+        assertThat(secretId.getExpirationTime())
                 .isBetween(now().plusSeconds(59), now().plusSeconds(61));
-        assertThat(secretId.lastUpdatedTime)
+        assertThat(secretId.getLastUpdatedTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
-        assertThat(secretId.metadata)
+        assertThat(secretId.getMetadata())
                 .containsEntry("foo", "bar");
-        assertThat(secretId.secretIdAccessor)
+        assertThat(secretId.getSecretIdAccessor())
                 .isNotNull();
-        assertThat(secretId.secretIdNumUses)
+        assertThat(secretId.getSecretIdNumUses())
                 .isEqualTo(5);
-        assertThat(secretId.secretIdTtl)
+        assertThat(secretId.getSecretIdTtl())
                 .isEqualTo(60);
     }
 
@@ -267,7 +267,7 @@ public class VaultAuthAppRoleTest {
 
         assertThat(accessors)
                 .isNotNull()
-                .contains(secretIdInfo.secretIdAccessor);
+                .contains(secretIdInfo.getSecretIdAccessor());
     }
 
     @Test
@@ -282,22 +282,22 @@ public class VaultAuthAppRoleTest {
         var secretIdInfo = appRoleApi.generateSecretId(role, null)
                 .await().indefinitely();
 
-        assertThat(secretIdInfo.secretId)
+        assertThat(secretIdInfo.getSecretId())
                 .isNotNull();
 
-        var secretIdData = appRoleApi.readSecretId(role, secretIdInfo.secretId)
+        var secretIdData = appRoleApi.readSecretId(role, secretIdInfo.getSecretId())
                 .await().indefinitely();
 
         assertThat(secretIdData)
                 .isNotNull();
 
         // Destroy secret id
-        appRoleApi.destroySecretId(role, secretIdInfo.secretId)
+        appRoleApi.destroySecretId(role, secretIdInfo.getSecretId())
                 .await().indefinitely();
 
         // Validate
 
-        assertThatThrownBy(() -> appRoleApi.readSecretId(role, secretIdInfo.secretId).await().indefinitely())
+        assertThatThrownBy(() -> appRoleApi.readSecretId(role, secretIdInfo.getSecretId()).await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
                 .asString().contains("status=204");
     }
@@ -319,16 +319,16 @@ public class VaultAuthAppRoleTest {
 
         assertThat(secretIdInfo)
                 .isNotNull();
-        assertThat(secretIdInfo.secretId)
+        assertThat(secretIdInfo.getSecretId())
                 .isEqualTo(secretId);
 
         // Read secret id
-        var secretIdData = appRoleApi.readSecretId(role, secretIdInfo.secretId)
+        var secretIdData = appRoleApi.readSecretId(role, secretIdInfo.getSecretId())
                 .await().indefinitely();
 
         assertThat(secretIdData)
                 .isNotNull();
-        assertThat(secretIdData.metadata)
+        assertThat(secretIdData.getMetadata())
                 .containsEntry("foo", "bar");
     }
 
@@ -350,28 +350,28 @@ public class VaultAuthAppRoleTest {
                 .isNotNull();
 
         // Read secret id accessor
-        var secretIdAccessor = appRoleApi.readSecretIdAccessor(role, secretIdInfo.secretIdAccessor)
+        var secretIdAccessor = appRoleApi.readSecretIdAccessor(role, secretIdInfo.getSecretIdAccessor())
                 .await().indefinitely();
 
         assertThat(secretIdAccessor)
                 .isNotNull();
-        assertThat(secretIdAccessor.cidrList)
+        assertThat(secretIdAccessor.getCidrList())
                 .isEmpty();
-        assertThat(secretIdAccessor.creationTime)
+        assertThat(secretIdAccessor.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
-        assertThat(secretIdAccessor.expirationTime)
+        assertThat(secretIdAccessor.getExpirationTime())
                 .isBetween(now().plusSeconds(59), now().plusSeconds(61));
-        assertThat(secretIdAccessor.lastUpdatedTime)
+        assertThat(secretIdAccessor.getLastUpdatedTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
-        assertThat(secretIdAccessor.metadata)
+        assertThat(secretIdAccessor.getMetadata())
                 .containsEntry("foo", "bar");
-        assertThat(secretIdAccessor.secretIdAccessor)
+        assertThat(secretIdAccessor.getSecretIdAccessor())
                 .isNotNull();
-        assertThat(secretIdAccessor.secretIdNumUses)
+        assertThat(secretIdAccessor.getSecretIdNumUses())
                 .isEqualTo(5);
-        assertThat(secretIdAccessor.secretIdTtl)
+        assertThat(secretIdAccessor.getSecretIdTtl())
                 .isEqualTo(60);
-        assertThat(secretIdAccessor.tokenBoundCidrs)
+        assertThat(secretIdAccessor.getTokenBoundCidrs())
                 .isEmpty();
     }
 
@@ -393,12 +393,13 @@ public class VaultAuthAppRoleTest {
                 .isNotNull();
 
         // Destroy secret id accessor
-        appRoleApi.destroySecretIdAccessor(role, secretIdInfo.secretIdAccessor)
+        appRoleApi.destroySecretIdAccessor(role, secretIdInfo.getSecretIdAccessor())
                 .await().indefinitely();
 
         // Validate
 
-        assertThatThrownBy(() -> appRoleApi.readSecretIdAccessor(role, secretIdInfo.secretIdAccessor).await().indefinitely())
+        assertThatThrownBy(() -> appRoleApi.readSecretIdAccessor(role, secretIdInfo.getSecretIdAccessor())
+                .await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
                 .asString().contains("status=404");
     }

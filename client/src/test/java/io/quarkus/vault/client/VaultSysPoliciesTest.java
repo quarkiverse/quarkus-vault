@@ -30,9 +30,9 @@ public class VaultSysPoliciesTest {
 
         assertThat(policy)
                 .isNotNull();
-        assertThat(policy.name)
+        assertThat(policy.getName())
                 .isEqualTo("default");
-        assertThat(policy.rules)
+        assertThat(policy.getRules())
                 .contains("""
                         path "auth/token/lookup-self" {
                             capabilities = ["read"]
@@ -54,7 +54,8 @@ public class VaultSysPoliciesTest {
                 .await().indefinitely();
 
         assertThat(policyApi.read(policy)
-                .await().indefinitely().rules)
+                .await().indefinitely()
+                .getRules())
                 .isEqualTo(rules);
     }
 

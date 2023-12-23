@@ -27,7 +27,7 @@ public class VaultAuthTokenTest {
                 .await().indefinitely();
 
         assertThat(accessors)
-                .contains(createdToken.accessor);
+                .contains(createdToken.getAccessor());
     }
 
     @Test
@@ -40,29 +40,29 @@ public class VaultAuthTokenTest {
 
         assertThat(tokenInfo)
                 .isNotNull();
-        assertThat(tokenInfo.clientToken)
+        assertThat(tokenInfo.getClientToken())
                 .isNotNull();
-        assertThat(tokenInfo.accessor)
+        assertThat(tokenInfo.getAccessor())
                 .isNotNull();
-        assertThat(tokenInfo.policies)
+        assertThat(tokenInfo.getPolicies())
                 .contains("root");
-        assertThat(tokenInfo.tokenPolicies)
+        assertThat(tokenInfo.getTokenPolicies())
                 .contains("root");
-        assertThat(tokenInfo.metadata)
+        assertThat(tokenInfo.getMetadata())
                 .containsEntry("foo", "bar");
-        assertThat(tokenInfo.leaseDuration)
+        assertThat(tokenInfo.getLeaseDuration())
                 .isNotNull();
-        assertThat(tokenInfo.renewable)
+        assertThat(tokenInfo.isRenewable())
                 .isFalse();
-        assertThat(tokenInfo.entityId)
+        assertThat(tokenInfo.getEntityId())
                 .isEmpty();
-        assertThat(tokenInfo.tokenType)
+        assertThat(tokenInfo.getTokenType())
                 .isEqualTo("service");
-        assertThat(tokenInfo.orphan)
+        assertThat(tokenInfo.isOrphan())
                 .isFalse();
-        assertThat(tokenInfo.mfaRequirement)
+        assertThat(tokenInfo.getMfaRequirement())
                 .isNull();
-        assertThat(tokenInfo.numUses)
+        assertThat(tokenInfo.getNumUses())
                 .isEqualTo(0);
     }
 
@@ -78,12 +78,12 @@ public class VaultAuthTokenTest {
                 .setRoleName(role))
                 .await().indefinitely();
 
-        var tokenInfo = tokenApi.lookup(createdToken.clientToken)
+        var tokenInfo = tokenApi.lookup(createdToken.getClientToken())
                 .await().indefinitely();
 
         assertThat(tokenInfo)
                 .isNotNull();
-        assertThat(tokenInfo.role)
+        assertThat(tokenInfo.getRole())
                 .isEqualTo(role);
     }
 
@@ -108,46 +108,46 @@ public class VaultAuthTokenTest {
                 .setNumUses(5))
                 .await().indefinitely();
 
-        var tokenInfo = tokenApi.lookup(createdToken.clientToken)
+        var tokenInfo = tokenApi.lookup(createdToken.getClientToken())
                 .await().indefinitely();
 
         assertThat(tokenInfo)
                 .isNotNull();
-        assertThat(tokenInfo.creationTime)
+        assertThat(tokenInfo.getCreationTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(tokenInfo.creationTtl)
+        assertThat(tokenInfo.getCreationTtl())
                 .isEqualTo(60);
-        assertThat(tokenInfo.displayName)
+        assertThat(tokenInfo.getDisplayName())
                 .isEqualTo("token-My-Token");
-        assertThat(tokenInfo.entityId)
+        assertThat(tokenInfo.getEntityId())
                 .isEmpty();
-        assertThat(tokenInfo.expireTime)
+        assertThat(tokenInfo.getExpireTime())
                 .isBetween(now().plusSeconds(58), now().plusSeconds(62));
-        assertThat(tokenInfo.explicitMaxTtl)
+        assertThat(tokenInfo.getExplicitMaxTtl())
                 .isEqualTo(0);
-        assertThat(tokenInfo.id)
+        assertThat(tokenInfo.getId())
                 .isEqualTo(tokenId);
-        assertThat(tokenInfo.identityPolicies)
+        assertThat(tokenInfo.getIdentityPolicies())
                 .isNull();
-        assertThat(tokenInfo.issueTime)
+        assertThat(tokenInfo.getIssueTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(tokenInfo.meta)
+        assertThat(tokenInfo.getMeta())
                 .containsEntry("foo", "bar");
-        assertThat(tokenInfo.numUses)
+        assertThat(tokenInfo.getNumUses())
                 .isEqualTo(5);
-        assertThat(tokenInfo.orphan)
+        assertThat(tokenInfo.isOrphan())
                 .isFalse();
-        assertThat(tokenInfo.path)
+        assertThat(tokenInfo.getPath())
                 .isEqualTo("auth/token/create");
-        assertThat(tokenInfo.policies)
+        assertThat(tokenInfo.getPolicies())
                 .contains(policy);
-        assertThat(tokenInfo.renewable)
+        assertThat(tokenInfo.isRenewable())
                 .isTrue();
-        assertThat(tokenInfo.ttl)
+        assertThat(tokenInfo.getTtl())
                 .isBetween(57L, 60L);
-        assertThat(tokenInfo.role)
+        assertThat(tokenInfo.getRole())
                 .isNull();
-        assertThat(tokenInfo.type)
+        assertThat(tokenInfo.getType())
                 .isEqualTo("service");
     }
 
@@ -172,44 +172,44 @@ public class VaultAuthTokenTest {
                 .setNumUses(5))
                 .await().indefinitely();
 
-        var tokenClient = client.configure().clientToken(createdToken.clientToken).build();
+        var tokenClient = client.configure().clientToken(createdToken.getClientToken()).build();
 
         var tokenInfo = tokenClient.auth().token().lookupSelf()
                 .await().indefinitely();
 
         assertThat(tokenInfo)
                 .isNotNull();
-        assertThat(tokenInfo.creationTime)
+        assertThat(tokenInfo.getCreationTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(tokenInfo.creationTtl)
+        assertThat(tokenInfo.getCreationTtl())
                 .isEqualTo(60);
-        assertThat(tokenInfo.displayName)
+        assertThat(tokenInfo.getDisplayName())
                 .isEqualTo("token-My-Token");
-        assertThat(tokenInfo.entityId)
+        assertThat(tokenInfo.getEntityId())
                 .isEmpty();
-        assertThat(tokenInfo.expireTime)
+        assertThat(tokenInfo.getExpireTime())
                 .isBetween(now().plusSeconds(58), now().plusSeconds(62));
-        assertThat(tokenInfo.explicitMaxTtl)
+        assertThat(tokenInfo.getExplicitMaxTtl())
                 .isEqualTo(0);
-        assertThat(tokenInfo.id)
+        assertThat(tokenInfo.getId())
                 .isEqualTo(tokenId);
-        assertThat(tokenInfo.identityPolicies)
+        assertThat(tokenInfo.getIdentityPolicies())
                 .isNull();
-        assertThat(tokenInfo.issueTime)
+        assertThat(tokenInfo.getIssueTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(tokenInfo.meta)
+        assertThat(tokenInfo.getMeta())
                 .containsEntry("foo", "bar");
-        assertThat(tokenInfo.numUses)
+        assertThat(tokenInfo.getNumUses())
                 .isEqualTo(4);
-        assertThat(tokenInfo.orphan)
+        assertThat(tokenInfo.isOrphan())
                 .isFalse();
-        assertThat(tokenInfo.path)
+        assertThat(tokenInfo.getPath())
                 .isEqualTo("auth/token/create");
-        assertThat(tokenInfo.policies)
+        assertThat(tokenInfo.getPolicies())
                 .contains(policy);
-        assertThat(tokenInfo.renewable)
+        assertThat(tokenInfo.isRenewable())
                 .isTrue();
-        assertThat(tokenInfo.ttl)
+        assertThat(tokenInfo.getTtl())
                 .isBetween(57L, 60L);
     }
 
@@ -225,44 +225,44 @@ public class VaultAuthTokenTest {
                 .setNumUses(5))
                 .await().indefinitely();
 
-        var accessorInfo = tokenApi.lookupAccessor(createdToken.accessor)
+        var accessorInfo = tokenApi.lookupAccessor(createdToken.getAccessor())
                 .await().indefinitely();
 
         assertThat(accessorInfo)
                 .isNotNull();
-        assertThat(accessorInfo.accessor)
-                .isEqualTo(createdToken.accessor);
-        assertThat(accessorInfo.creationTime)
+        assertThat(accessorInfo.getAccessor())
+                .isEqualTo(createdToken.getAccessor());
+        assertThat(accessorInfo.getCreationTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(accessorInfo.creationTtl)
+        assertThat(accessorInfo.getCreationTtl())
                 .isEqualTo(60);
-        assertThat(accessorInfo.displayName)
+        assertThat(accessorInfo.getDisplayName())
                 .isEqualTo("token-My-Token");
-        assertThat(accessorInfo.entityId)
+        assertThat(accessorInfo.getEntityId())
                 .isEmpty();
-        assertThat(accessorInfo.expireTime)
+        assertThat(accessorInfo.getExpireTime())
                 .isBetween(now().plusSeconds(58), now().plusSeconds(62));
-        assertThat(accessorInfo.explicitMaxTtl)
+        assertThat(accessorInfo.getExplicitMaxTtl())
                 .isEqualTo(0);
-        assertThat(accessorInfo.id)
+        assertThat(accessorInfo.getId())
                 .isEmpty();
-        assertThat(accessorInfo.identityPolicies)
+        assertThat(accessorInfo.getIdentityPolicies())
                 .isNull();
-        assertThat(accessorInfo.issueTime)
+        assertThat(accessorInfo.getIssueTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(accessorInfo.meta)
+        assertThat(accessorInfo.getMeta())
                 .containsEntry("foo", "bar");
-        assertThat(accessorInfo.numUses)
+        assertThat(accessorInfo.getNumUses())
                 .isEqualTo(5);
-        assertThat(accessorInfo.orphan)
+        assertThat(accessorInfo.isOrphan())
                 .isFalse();
-        assertThat(accessorInfo.path)
+        assertThat(accessorInfo.getPath())
                 .isEqualTo("auth/token/create");
-        assertThat(accessorInfo.policies)
+        assertThat(accessorInfo.getPolicies())
                 .contains("root");
-        assertThat(accessorInfo.renewable)
+        assertThat(accessorInfo.isRenewable())
                 .isTrue();
-        assertThat(accessorInfo.ttl)
+        assertThat(accessorInfo.getTtl())
                 .isBetween(57L, 60L);
     }
 
@@ -287,34 +287,34 @@ public class VaultAuthTokenTest {
                 .setNumUses(5))
                 .await().indefinitely();
 
-        var tokenInfo = tokenApi.renew(createdToken.clientToken, "30s")
+        var tokenInfo = tokenApi.renew(createdToken.getClientToken(), "30s")
                 .await().indefinitely();
 
         assertThat(tokenInfo)
                 .isNotNull();
-        assertThat(tokenInfo.clientToken)
+        assertThat(tokenInfo.getClientToken())
                 .isNotNull();
-        assertThat(tokenInfo.accessor)
+        assertThat(tokenInfo.getAccessor())
                 .isNotNull();
-        assertThat(tokenInfo.policies)
+        assertThat(tokenInfo.getPolicies())
                 .contains(policy);
-        assertThat(tokenInfo.tokenPolicies)
+        assertThat(tokenInfo.getTokenPolicies())
                 .contains(policy);
-        assertThat(tokenInfo.metadata)
+        assertThat(tokenInfo.getMetadata())
                 .containsEntry("foo", "bar");
-        assertThat(tokenInfo.leaseDuration)
+        assertThat(tokenInfo.getLeaseDuration())
                 .isEqualTo(30);
-        assertThat(tokenInfo.renewable)
+        assertThat(tokenInfo.isRenewable())
                 .isTrue();
-        assertThat(tokenInfo.entityId)
+        assertThat(tokenInfo.getEntityId())
                 .isEmpty();
-        assertThat(tokenInfo.tokenType)
+        assertThat(tokenInfo.getTokenType())
                 .isEqualTo("service");
-        assertThat(tokenInfo.orphan)
+        assertThat(tokenInfo.isOrphan())
                 .isFalse();
-        assertThat(tokenInfo.mfaRequirement)
+        assertThat(tokenInfo.getMfaRequirement())
                 .isNull();
-        assertThat(tokenInfo.numUses)
+        assertThat(tokenInfo.getNumUses())
                 .isEqualTo(5);
     }
 
@@ -339,36 +339,36 @@ public class VaultAuthTokenTest {
                 .setNumUses(5))
                 .await().indefinitely();
 
-        var tokenClient = client.configure().clientToken(createdToken.clientToken).build();
+        var tokenClient = client.configure().clientToken(createdToken.getClientToken()).build();
 
         var tokenInfo = tokenClient.auth().token().renewSelf("30s")
                 .await().indefinitely();
 
         assertThat(tokenInfo)
                 .isNotNull();
-        assertThat(tokenInfo.clientToken)
+        assertThat(tokenInfo.getClientToken())
                 .isNotNull();
-        assertThat(tokenInfo.accessor)
+        assertThat(tokenInfo.getAccessor())
                 .isNotNull();
-        assertThat(tokenInfo.policies)
+        assertThat(tokenInfo.getPolicies())
                 .contains(policy);
-        assertThat(tokenInfo.tokenPolicies)
+        assertThat(tokenInfo.getTokenPolicies())
                 .contains(policy);
-        assertThat(tokenInfo.metadata)
+        assertThat(tokenInfo.getMetadata())
                 .containsEntry("foo", "bar");
-        assertThat(tokenInfo.leaseDuration)
+        assertThat(tokenInfo.getLeaseDuration())
                 .isEqualTo(30);
-        assertThat(tokenInfo.renewable)
+        assertThat(tokenInfo.isRenewable())
                 .isTrue();
-        assertThat(tokenInfo.entityId)
+        assertThat(tokenInfo.getEntityId())
                 .isEmpty();
-        assertThat(tokenInfo.tokenType)
+        assertThat(tokenInfo.getTokenType())
                 .isEqualTo("service");
-        assertThat(tokenInfo.orphan)
+        assertThat(tokenInfo.isOrphan())
                 .isFalse();
-        assertThat(tokenInfo.mfaRequirement)
+        assertThat(tokenInfo.getMfaRequirement())
                 .isNull();
-        assertThat(tokenInfo.numUses)
+        assertThat(tokenInfo.getNumUses())
                 .isEqualTo(5);
     }
 
@@ -393,34 +393,34 @@ public class VaultAuthTokenTest {
                 .setNumUses(5))
                 .await().indefinitely();
 
-        var tokenInfo = tokenApi.renewAccessor(createdToken.accessor, "30s")
+        var tokenInfo = tokenApi.renewAccessor(createdToken.getAccessor(), "30s")
                 .await().indefinitely();
 
         assertThat(tokenInfo)
                 .isNotNull();
-        assertThat(tokenInfo.clientToken)
+        assertThat(tokenInfo.getClientToken())
                 .isNotNull();
-        assertThat(tokenInfo.accessor)
+        assertThat(tokenInfo.getAccessor())
                 .isNotNull();
-        assertThat(tokenInfo.policies)
+        assertThat(tokenInfo.getPolicies())
                 .contains(policy);
-        assertThat(tokenInfo.tokenPolicies)
+        assertThat(tokenInfo.getTokenPolicies())
                 .contains(policy);
-        assertThat(tokenInfo.metadata)
+        assertThat(tokenInfo.getMetadata())
                 .containsEntry("foo", "bar");
-        assertThat(tokenInfo.leaseDuration)
+        assertThat(tokenInfo.getLeaseDuration())
                 .isEqualTo(30);
-        assertThat(tokenInfo.renewable)
+        assertThat(tokenInfo.isRenewable())
                 .isTrue();
-        assertThat(tokenInfo.entityId)
+        assertThat(tokenInfo.getEntityId())
                 .isEmpty();
-        assertThat(tokenInfo.tokenType)
+        assertThat(tokenInfo.getTokenType())
                 .isEqualTo("service");
-        assertThat(tokenInfo.orphan)
+        assertThat(tokenInfo.isOrphan())
                 .isFalse();
-        assertThat(tokenInfo.mfaRequirement)
+        assertThat(tokenInfo.getMfaRequirement())
                 .isNull();
-        assertThat(tokenInfo.numUses)
+        assertThat(tokenInfo.getNumUses())
                 .isEqualTo(5);
     }
 
@@ -431,10 +431,10 @@ public class VaultAuthTokenTest {
         var createdToken = tokenApi.create(false, null)
                 .await().indefinitely();
 
-        tokenApi.revoke(createdToken.clientToken)
+        tokenApi.revoke(createdToken.getClientToken())
                 .await().indefinitely();
 
-        assertThatThrownBy(() -> tokenApi.lookup(createdToken.clientToken)
+        assertThatThrownBy(() -> tokenApi.lookup(createdToken.getClientToken())
                 .await().indefinitely())
                 .isInstanceOf(VaultException.class)
                 .asString().contains("status=403");
@@ -447,12 +447,12 @@ public class VaultAuthTokenTest {
         var createdToken = tokenApi.create(false, null)
                 .await().indefinitely();
 
-        var tokenClient = client.configure().clientToken(createdToken.clientToken).build();
+        var tokenClient = client.configure().clientToken(createdToken.getClientToken()).build();
 
         tokenClient.auth().token().revokeSelf()
                 .await().indefinitely();
 
-        assertThatThrownBy(() -> client.auth().token().lookup(createdToken.clientToken)
+        assertThatThrownBy(() -> client.auth().token().lookup(createdToken.getClientToken())
                 .await().indefinitely())
                 .isInstanceOf(VaultException.class)
                 .asString().contains("status=403");
@@ -465,10 +465,10 @@ public class VaultAuthTokenTest {
         var createdToken = tokenApi.create(null)
                 .await().indefinitely();
 
-        tokenApi.revoke(true, createdToken.clientToken)
+        tokenApi.revoke(true, createdToken.getClientToken())
                 .await().indefinitely();
 
-        assertThatThrownBy(() -> tokenApi.lookup(createdToken.clientToken)
+        assertThatThrownBy(() -> tokenApi.lookup(createdToken.getClientToken())
                 .await().indefinitely())
                 .isInstanceOf(VaultException.class)
                 .asString().contains("status=403");
@@ -481,17 +481,17 @@ public class VaultAuthTokenTest {
         var createdToken = tokenApi.create(null)
                 .await().indefinitely();
 
-        tokenApi.lookupAccessor(createdToken.accessor)
+        tokenApi.lookupAccessor(createdToken.getAccessor())
                 .await().indefinitely();
 
-        tokenApi.revokeAccessor(createdToken.accessor)
+        tokenApi.revokeAccessor(createdToken.getAccessor())
                 .await().indefinitely();
 
         var accessors = tokenApi.listAccessors()
                 .await().indefinitely();
 
         assertThat(accessors)
-                .doesNotContain(createdToken.accessor);
+                .doesNotContain(createdToken.getAccessor());
     }
 
     @Test
@@ -523,35 +523,35 @@ public class VaultAuthTokenTest {
 
         assertThat(roleInfo)
                 .isNotNull();
-        assertThat(roleInfo.allowedEntityAliases)
+        assertThat(roleInfo.getAllowedEntityAliases())
                 .contains("foo", "bar");
-        assertThat(roleInfo.allowedPolicies)
+        assertThat(roleInfo.getAllowedPolicies())
                 .contains(policy);
-        assertThat(roleInfo.disallowedPolicies)
+        assertThat(roleInfo.getDisallowedPolicies())
                 .contains("default");
-        assertThat(roleInfo.allowedPoliciesGlob)
+        assertThat(roleInfo.getAllowedPoliciesGlob())
                 .contains(policy + "*");
-        assertThat(roleInfo.disallowedPoliciesGlob)
+        assertThat(roleInfo.getDisallowedPoliciesGlob())
                 .contains("default*");
-        assertThat(roleInfo.explicitMaxTtl)
+        assertThat(roleInfo.getExplicitMaxTtl())
                 .isEqualTo(0);
-        assertThat(roleInfo.name)
+        assertThat(roleInfo.getName())
                 .isEqualTo(role);
-        assertThat(roleInfo.orphan)
+        assertThat(roleInfo.isOrphan())
                 .isTrue();
-        assertThat(roleInfo.pathSuffix)
+        assertThat(roleInfo.getPathSuffix())
                 .isEqualTo("foo");
-        assertThat(roleInfo.period)
+        assertThat(roleInfo.getPeriod())
                 .isEqualTo(0);
-        assertThat(roleInfo.renewable)
+        assertThat(roleInfo.isRenewable())
                 .isFalse();
-        assertThat(roleInfo.tokenExplicitMaxTtl)
+        assertThat(roleInfo.getTokenExplicitMaxTtl())
                 .isEqualTo(120);
-        assertThat(roleInfo.tokenNoDefaultPolicy)
+        assertThat(roleInfo.isTokenNoDefaultPolicy())
                 .isTrue();
-        assertThat(roleInfo.tokenPeriod)
+        assertThat(roleInfo.getTokenPeriod())
                 .isEqualTo(90);
-        assertThat(roleInfo.tokenType)
+        assertThat(roleInfo.getTokenType())
                 .isEqualTo("service");
     }
 

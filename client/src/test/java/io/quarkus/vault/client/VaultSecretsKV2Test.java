@@ -27,7 +27,7 @@ public class VaultSecretsKV2Test {
 
         assertThat(config)
                 .isNotNull();
-        assertThat(config.maxVersions)
+        assertThat(config.getMaxVersions())
                 .isEqualTo(0);
     }
 
@@ -48,11 +48,11 @@ public class VaultSecretsKV2Test {
 
         assertThat(config)
                 .isNotNull();
-        assertThat(config.maxVersions)
+        assertThat(config.getMaxVersions())
                 .isEqualTo(3);
-        assertThat(config.deleteVersionAfter)
+        assertThat(config.getDeleteVersionAfter())
                 .isEqualTo("3m0s");
-        assertThat(config.casRequired)
+        assertThat(config.isCasRequired())
                 .isTrue();
     }
 
@@ -69,16 +69,16 @@ public class VaultSecretsKV2Test {
 
         assertThat(secret)
                 .isNotNull();
-        assertThat(secret.data)
+        assertThat(secret.getData())
                 .isNotNull()
                 .hasSize(2)
                 .containsEntry("greeting", "hello")
                 .containsEntry("subject", "world");
-        assertThat(secret.metadata)
+        assertThat(secret.getMetadata())
                 .isNotNull();
-        assertThat(secret.metadata.version)
+        assertThat(secret.getMetadata().getVersion())
                 .isEqualTo(1);
-        assertThat(secret.metadata.createdTime)
+        assertThat(secret.getMetadata().getCreatedTime())
                 .isNotNull()
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
     }
@@ -99,7 +99,7 @@ public class VaultSecretsKV2Test {
 
         assertThat(secret)
                 .isNotNull();
-        assertThat(secret.data)
+        assertThat(secret.getData())
                 .isNotNull()
                 .hasSize(2)
                 .containsEntry("greeting", "hello")
@@ -117,7 +117,7 @@ public class VaultSecretsKV2Test {
         var read = kvApi.readSubkeys(path)
                 .await().indefinitely();
 
-        assertThat(read.subkeys)
+        assertThat(read.getSubkeys())
                 .isNotNull()
                 .containsEntry("greeting", null)
                 .containsEntry("subject", null);
@@ -155,7 +155,7 @@ public class VaultSecretsKV2Test {
 
         assertThat(secret)
                 .isNotNull();
-        assertThat(secret.data)
+        assertThat(secret.getData())
                 .isNotNull()
                 .containsEntry("test", "some-value");
 
@@ -185,15 +185,15 @@ public class VaultSecretsKV2Test {
 
             assertThat(secret)
                     .isNotNull();
-            assertThat(secret.data)
+            assertThat(secret.getData())
                     .isNotNull()
                     .hasSize(1)
                     .containsEntry("initial", "value");
-            assertThat(secret.metadata)
+            assertThat(secret.getMetadata())
                     .isNotNull();
-            assertThat(secret.metadata.version)
+            assertThat(secret.getMetadata().getVersion())
                     .isEqualTo(1);
-            assertThat(secret.metadata.createdTime)
+            assertThat(secret.getMetadata().getCreatedTime())
                     .isNotNull()
                     .isBetween(now().minusSeconds(2), now().plusSeconds(2));
         }
@@ -204,16 +204,16 @@ public class VaultSecretsKV2Test {
 
             assertThat(secret)
                     .isNotNull();
-            assertThat(secret.data)
+            assertThat(secret.getData())
                     .isNotNull()
                     .hasSize(2)
                     .containsEntry("greeting", "hello")
                     .containsEntry("subject", "world");
-            assertThat(secret.metadata)
+            assertThat(secret.getMetadata())
                     .isNotNull();
-            assertThat(secret.metadata.version)
+            assertThat(secret.getMetadata().getVersion())
                     .isEqualTo(2);
-            assertThat(secret.metadata.createdTime)
+            assertThat(secret.getMetadata().getCreatedTime())
                     .isNotNull()
                     .isBetween(now().minusSeconds(2), now().plusSeconds(2));
         }
@@ -232,7 +232,7 @@ public class VaultSecretsKV2Test {
         var read = kvApi.readSubkeys(path, 2, null)
                 .await().indefinitely();
 
-        assertThat(read.subkeys)
+        assertThat(read.getSubkeys())
                 .isNotNull()
                 .containsEntry("greeting", null)
                 .containsEntry("subject", null);
@@ -253,32 +253,32 @@ public class VaultSecretsKV2Test {
 
         assertThat(metadata)
                 .isNotNull();
-        assertThat(metadata.casRequired)
+        assertThat(metadata.isCasRequired())
                 .isFalse();
-        assertThat(metadata.createdTime)
+        assertThat(metadata.getCreatedTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(metadata.currentVersion)
+        assertThat(metadata.getCurrentVersion())
                 .isEqualTo(1);
-        assertThat(metadata.deleteVersionAfter)
+        assertThat(metadata.getDeleteVersionAfter())
                 .isEqualTo("3m0s");
-        assertThat(metadata.maxVersions)
+        assertThat(metadata.getMaxVersions())
                 .isEqualTo(3);
-        assertThat(metadata.oldestVersion)
+        assertThat(metadata.getOldestVersion())
                 .isEqualTo(0);
-        assertThat(metadata.updatedTime)
+        assertThat(metadata.getUpdatedTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(metadata.customMetadata)
+        assertThat(metadata.getCustomMetadata())
                 .isNotNull()
                 .hasSize(1)
                 .containsEntry("owner", "quarkus-vault-client-test");
-        assertThat(metadata.versions)
+        assertThat(metadata.getVersions())
                 .hasSize(1)
                 .containsKey("1");
-        assertThat(metadata.versions.get("1").createdTime)
+        assertThat(metadata.getVersions().get("1").getCreatedTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(metadata.versions.get("1").destroyed)
+        assertThat(metadata.getVersions().get("1").isDestroyed())
                 .isFalse();
-        assertThat(metadata.versions.get("1").deletionTime)
+        assertThat(metadata.getVersions().get("1").getDeletionTime())
                 .isNull();
     }
 
@@ -298,32 +298,32 @@ public class VaultSecretsKV2Test {
 
         assertThat(metadata)
                 .isNotNull();
-        assertThat(metadata.casRequired)
+        assertThat(metadata.isCasRequired())
                 .isFalse();
-        assertThat(metadata.createdTime)
+        assertThat(metadata.getCreatedTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(metadata.currentVersion)
+        assertThat(metadata.getCurrentVersion())
                 .isEqualTo(1);
-        assertThat(metadata.deleteVersionAfter)
+        assertThat(metadata.getDeleteVersionAfter())
                 .isEqualTo("0s");
-        assertThat(metadata.maxVersions)
+        assertThat(metadata.getMaxVersions())
                 .isEqualTo(0);
-        assertThat(metadata.oldestVersion)
+        assertThat(metadata.getOldestVersion())
                 .isEqualTo(0);
-        assertThat(metadata.updatedTime)
+        assertThat(metadata.getUpdatedTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(metadata.customMetadata)
+        assertThat(metadata.getCustomMetadata())
                 .isNotNull()
                 .hasSize(1)
                 .containsEntry("owner", "quarkus-vault-client-test");
-        assertThat(metadata.versions)
+        assertThat(metadata.getVersions())
                 .hasSize(1)
                 .containsKey("1");
-        assertThat(metadata.versions.get("1").createdTime)
+        assertThat(metadata.getVersions().get("1").getCreatedTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
-        assertThat(metadata.versions.get("1").destroyed)
+        assertThat(metadata.getVersions().get("1").isDestroyed())
                 .isFalse();
-        assertThat(metadata.versions.get("1").deletionTime)
+        assertThat(metadata.getVersions().get("1").getDeletionTime())
                 .isNull();
     }
 
@@ -344,11 +344,11 @@ public class VaultSecretsKV2Test {
 
         assertThat(metadata)
                 .isNotNull();
-        assertThat(metadata.versions)
+        assertThat(metadata.getVersions())
                 .isNotNull().containsKey("1");
-        assertThat(metadata.versions.get("1").destroyed)
+        assertThat(metadata.getVersions().get("1").isDestroyed())
                 .isFalse();
-        assertThat(metadata.versions.get("1").deletionTime)
+        assertThat(metadata.getVersions().get("1").getDeletionTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
     }
 
@@ -369,12 +369,12 @@ public class VaultSecretsKV2Test {
 
         assertThat(metadata)
                 .isNotNull();
-        assertThat(metadata.versions)
+        assertThat(metadata.getVersions())
                 .isNotNull()
                 .containsKey("1");
-        assertThat(metadata.versions.get("1").destroyed)
+        assertThat(metadata.getVersions().get("1").isDestroyed())
                 .isFalse();
-        assertThat(metadata.versions.get("1").deletionTime)
+        assertThat(metadata.getVersions().get("1").getDeletionTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
     }
 
@@ -394,12 +394,12 @@ public class VaultSecretsKV2Test {
 
             assertThat(metadata)
                     .isNotNull();
-            assertThat(metadata.versions)
+            assertThat(metadata.getVersions())
                     .isNotNull()
                     .containsKey("1");
-            assertThat(metadata.versions.get("1").destroyed)
+            assertThat(metadata.getVersions().get("1").isDestroyed())
                     .isFalse();
-            assertThat(metadata.versions.get("1").deletionTime)
+            assertThat(metadata.getVersions().get("1").getDeletionTime())
                     .isBetween(now().minusSeconds(2), now().plusSeconds(2));
 
             assertThatThrownBy(() -> kvApi.readSecret(path, 1).await().indefinitely())
@@ -416,12 +416,12 @@ public class VaultSecretsKV2Test {
 
             assertThat(metadata)
                     .isNotNull();
-            assertThat(metadata.versions)
+            assertThat(metadata.getVersions())
                     .isNotNull()
                     .containsKey("1");
-            assertThat(metadata.versions.get("1").destroyed)
+            assertThat(metadata.getVersions().get("1").isDestroyed())
                     .isFalse();
-            assertThat(metadata.versions.get("1").deletionTime)
+            assertThat(metadata.getVersions().get("1").getDeletionTime())
                     .isNull();
 
             assertThatNoException().isThrownBy(() -> kvApi.readSecret(path, 1).await().indefinitely());
@@ -445,12 +445,12 @@ public class VaultSecretsKV2Test {
 
         assertThat(data)
                 .isNotNull();
-        assertThat(data.versions)
+        assertThat(data.getVersions())
                 .isNotNull()
                 .containsKey("1");
-        assertThat(data.versions.get("1").destroyed)
+        assertThat(data.getVersions().get("1").isDestroyed())
                 .isTrue();
-        assertThat(data.versions.get("1").deletionTime)
+        assertThat(data.getVersions().get("1").getDeletionTime())
                 .isNull();
     }
 
@@ -465,7 +465,7 @@ public class VaultSecretsKV2Test {
         var secret = kvApi.readSecret(path)
                 .await().indefinitely();
 
-        assertThat(secret.data)
+        assertThat(secret.getData())
                 .isNotNull();
 
         kvApi.deleteSecretMetadata(path)

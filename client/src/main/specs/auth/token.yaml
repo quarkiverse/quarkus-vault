@@ -10,7 +10,7 @@ operations:
   path: "accessors"
   result:
     kind: leased
-    unwrapUsing: r.data.keys
+    unwrapUsing: r.getData().getKeys()
     unwrappedType: java.util.List<String>
     data:
     - name: keys
@@ -34,7 +34,7 @@ operations:
     type: $CreateTokenParams
   result:
     kind: leased
-    unwrapsAuth: true
+    unwrapAuth: true
     authType: java.util.Map<String, String>
 
 
@@ -47,7 +47,7 @@ operations:
     type: $CreateTokenParams
   result:
     kind: leased
-    unwrapsAuth: true
+    unwrapAuth: true
     authType: java.util.Map<String, String>
 
 
@@ -62,7 +62,7 @@ operations:
     type: $CreateTokenParams
   result:
     kind: leased
-    unwrapsAuth: true
+    unwrapAuth: true
     authType: java.util.Map<String, String>
 
 
@@ -75,7 +75,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: $TokenInfoData
 
 
@@ -84,7 +84,7 @@ operations:
   path: "lookup-self"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: $TokenInfoData
 
 
@@ -97,7 +97,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: $TokenInfoData
 
 
@@ -112,7 +112,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsAuth: true
+    unwrapAuth: true
     authType: java.util.Map<String, String>
 
 
@@ -125,7 +125,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsAuth: true
+    unwrapAuth: true
     authType: java.util.Map<String, String>
 
 
@@ -140,7 +140,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsAuth: true
+    unwrapAuth: true
     authType: java.util.Map<String, String>
 
 
@@ -192,7 +192,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: allowedEntityAliases
       type: java.util.List<String>
@@ -231,7 +231,7 @@ operations:
   path: "roles"
   result:
     kind: leased
-    unwrapUsing: r.data.keys
+    unwrapUsing: r.getData().getKeys()
     unwrappedType: java.util.List<String>
     data:
     - name: keys
@@ -290,7 +290,7 @@ operations:
   path: "tidy"
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: Void
     authType: Void
 

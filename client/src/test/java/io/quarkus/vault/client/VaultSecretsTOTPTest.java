@@ -44,9 +44,9 @@ public class VaultSecretsTOTPTest {
 
         var totpVal = totp.get();
 
-        assertThat(totpVal.url)
+        assertThat(totpVal.getUrl())
                 .isNotEmpty();
-        assertThat(totpVal.barcode)
+        assertThat(totpVal.getBarcode())
                 .isNotEmpty();
     }
 
@@ -66,15 +66,15 @@ public class VaultSecretsTOTPTest {
         assertThat(keyInfo)
                 .isNotNull();
 
-        assertThat(keyInfo.accountName)
+        assertThat(keyInfo.getAccountName())
                 .isEqualTo("test@google.com");
-        assertThat(keyInfo.issuer)
+        assertThat(keyInfo.getIssuer())
                 .isEqualTo("Vault");
-        assertThat(keyInfo.algorithm)
+        assertThat(keyInfo.getAlgorithm())
                 .isEqualTo("SHA256");
-        assertThat(keyInfo.digits)
+        assertThat(keyInfo.getDigits())
                 .isEqualTo(6);
-        assertThat(keyInfo.period)
+        assertThat(keyInfo.getPeriod())
                 .isEqualTo(30);
     }
 

@@ -44,7 +44,7 @@ public class VaultSysInitTest {
             var info = client.sys().init().status()
                     .await().indefinitely();
 
-            assertThat(info.isInitialized)
+            assertThat(info.isInitialized())
                     .isFalse();
 
             var init = client.sys().init().init(new VaultSysInitParams()
@@ -52,11 +52,11 @@ public class VaultSysInitTest {
                     .setSecretShares(9))
                     .await().indefinitely();
 
-            assertThat(init.keys)
+            assertThat(init.getKeys())
                     .hasSize(9);
-            assertThat(init.keysBase64)
+            assertThat(init.getKeysBase64())
                     .hasSize(9);
-            assertThat(init.rootToken)
+            assertThat(init.getRootToken())
                     .isNotEmpty();
         }
     }

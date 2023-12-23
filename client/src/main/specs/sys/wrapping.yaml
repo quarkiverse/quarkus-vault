@@ -14,7 +14,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: creationPath
       type: String
@@ -33,7 +33,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapUsing: r.wrapInfo
+    unwrapUsing: r.getWrapInfo()
     unwrappedType: $$.api.common.VaultWrapInfo
     dataType: Void
     authType: Void
@@ -71,7 +71,7 @@ operations:
     type: java.time.Duration
   result:
     kind: leased
-    unwrapUsing: r.wrapInfo
+    unwrapUsing: r.getWrapInfo()
     unwrappedType: $$.api.common.VaultWrapInfo
     dataType: Void
     authType: Void
@@ -86,7 +86,7 @@ methods:
     type: Class<T>
   body: |
     return unwrap(token).map(r -> {
-      var val = r.auth != null ? r.auth : r.data; 
+      var val = r.getAuth() != null ? r.getAuth() : r.getData(); 
       return $T.convert(val, type);
     });
   bodyArguments:

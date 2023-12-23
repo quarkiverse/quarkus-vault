@@ -28,6 +28,9 @@ public class VaultAppRoleTokenProvider implements VaultTokenProvider {
         return secretIdProvider.apply(authRequest)
                 .flatMap(secretId -> executor.execute(VaultAuthAppRole.FACTORY.login(mountPath, roleId, secretId)))
                 .map(VaultResponse::getResult)
-                .map(res -> VaultToken.from(res.auth.clientToken, res.auth.renewable, res.auth.leaseDuration));
+                .map(res -> {
+                    var auth = res.getAuth();
+                    return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration());
+                });
     }
 }

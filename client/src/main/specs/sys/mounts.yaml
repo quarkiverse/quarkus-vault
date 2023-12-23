@@ -10,7 +10,7 @@ operations:
   path: mounts
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: java.util.Map<String, $MountInfo>
 
 
@@ -22,7 +22,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     dataType: $MountInfo
 
 
@@ -80,7 +80,7 @@ operations:
     type: String
   result:
     kind: leased
-    unwrapsData: true
+    unwrapData: true
     data:
     - name: defaultLeaseTtl
       type: Long
