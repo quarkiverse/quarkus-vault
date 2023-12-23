@@ -11,7 +11,7 @@ import io.quarkus.vault.generator.utils.Strings;
 public record POJO(
         @JsonProperty(required = true) String name,
         @JsonProperty("extends") Optional<String> extendsName,
-        @JsonProperty("implements") Optional<List<String>> implementsNames,
+        @JsonProperty("implements") Optional<List<String>> implementNames,
         Optional<List<POJO>> nested,
         Optional<List<Property>> properties,
         Optional<List<Method>> methods) implements AnyPOJO {
@@ -21,10 +21,11 @@ public record POJO(
             Optional<String> serializedName,
             Optional<Boolean> required,
             Optional<String> type,
+            Optional<List<POJO.Property>> object,
             Optional<List<Annotation>> annotations) {
 
         public record Annotation(
-                @JsonProperty(required = true) String typeName,
+                @JsonProperty(required = true) String type,
                 Optional<Map<String, Member>> members) {
 
             public record Member(
@@ -41,17 +42,15 @@ public record POJO(
             return required.orElse(false);
         }
 
-        public String getImpliedType() {
-            return type.orElse("java.lang.String");
-        }
-
     }
 
     public record Method(
             @JsonProperty(required = true) String name,
             @JsonProperty(required = true) String returnType,
+            Optional<List<String>> typeParameters,
             Optional<Map<String, String>> parameters,
-            @JsonProperty(required = true) String body) {
+            @JsonProperty(required = true) String body,
+            Optional<List<String>> bodyArguments) {
     }
 
 }

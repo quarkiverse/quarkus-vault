@@ -37,13 +37,15 @@ public class VaultUserPassAuthTest {
     @Disabled("updateUserPolicies succeeds but doesnt apply policies, unknown if this is a bug in Vault or the client")
     @Test
     public void testUpdateUserPolicies(VaultClient client, @Random String user) {
-        client = client.configure().traceRequests().build();
         var userPassApi = client.auth().userPass();
 
         var userPolicy = user + "-policy";
 
         // Add policy to read secret/* path
-        client.sys().policy().update(userPolicy, "path \"secret/*\" { capabilities = [ \"read\" ] }")
+        client.sys().policy().update(userPolicy, """
+                path "secret/*" {
+                    capabilities = [ "read" ]
+                }""")
                 .await().indefinitely();
 
         // Create user
@@ -68,7 +70,10 @@ public class VaultUserPassAuthTest {
         var userPolicy = user + "-policy";
 
         // Add policy to read secret/* path
-        client.sys().policy().update(userPolicy, "path \"secret/*\" { capabilities = [ \"read\" ] }")
+        client.sys().policy().update(userPolicy, """
+                path "secret/*" {
+                    capabilities = [ "read" ]
+                }""")
                 .await().indefinitely();
 
         // Create user
@@ -189,7 +194,10 @@ public class VaultUserPassAuthTest {
         var userPolicy = user + "-policy";
 
         // Add policy to read sys/mounts/* path
-        client.sys().policy().update(userPolicy, "path \"sys/mounts/*\" { capabilities = [ \"read\" ] }")
+        client.sys().policy().update(userPolicy, """
+                path "sys/mounts/*" {
+                    capabilities = [ "read" ]
+                }""")
                 .await().indefinitely();
 
         // Create user with policy
@@ -210,7 +218,7 @@ public class VaultUserPassAuthTest {
                 .isInstanceOf(VaultException.class)
                 .asString().contains("permission denied");
 
-        var mountInfo = authClient.sys().mounts().readConfig("secret")
+        var mountInfo = authClient.sys().mounts().read("secret")
                 .await().indefinitely();
 
         assertThat(mountInfo.description)

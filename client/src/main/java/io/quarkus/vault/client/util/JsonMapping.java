@@ -18,4 +18,12 @@ public class JsonMapping {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
+    public static <T> T convert(Object data, Class<T> type) {
+        try {
+            return JsonMapping.mapper.convertValue(data, type);
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting unwrapped result to expected type: " + type, e);
+        }
+    }
+
 }

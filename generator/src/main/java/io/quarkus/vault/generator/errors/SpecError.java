@@ -17,12 +17,28 @@ public class SpecError extends RuntimeException {
         return Optional.empty();
     }
 
-    public void print(String indent) {
-        System.err.println(indent + getMessage());
+    @Override
+    public String getMessage() {
+        return toString();
+    }
+
+    @Override
+    public String toString() {
+        return toString("");
+    }
+
+    public String toString(String indent) {
+        var sb = new StringBuilder();
+        sb.append(indent).append(super.getMessage());
         if (getCause() instanceof SpecError specError) {
-            specError.print(indent + "  ");
+            sb.append("\n").append(specError.toString(indent + "  "));
         } else if (getCause() instanceof Exception cause) {
-            System.err.println(indent + "  " + cause.getMessage());
+            sb.append("\n").append(indent).append("  ").append(cause.getMessage());
         }
+        return sb.toString();
+    }
+
+    public SpecError withoutCause() {
+        return new SpecError(getMessage(), null);
     }
 }

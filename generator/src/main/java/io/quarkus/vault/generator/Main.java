@@ -77,7 +77,7 @@ public class Main {
         } catch (Throwable e) {
             var specError = SpecError.unwrap(e);
             if (specError.isPresent()) {
-                specError.get().print("");
+                throw specError.get().withoutCause();
             } else {
                 throw e;
             }

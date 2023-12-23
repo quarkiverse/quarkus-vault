@@ -8,6 +8,7 @@ operations:
 - name: status
   method: GET
   path: seal-status
+  namespaced: false
   result:
     kind: json
     type: $StatusResult
@@ -16,9 +17,7 @@ operations:
 - name: backendStatus
   method: GET
   path: seal-backend-status
-  parameters:
-  - name: mountPoint
-    type: String
+  namespaced: false
   result:
     kind: json
     object:
@@ -39,10 +38,10 @@ operations:
 - name: unseal
   method: POST
   path: unseal
+  bodyFrom: [key, reset, migrate]
   parameters:
   - name: key
     type: String
-    includeNulls: false
   - name: reset
     type: Boolean
   - name: migrate
@@ -60,9 +59,11 @@ types:
   properties:
   - name: type
     type: String
-  - name: initialized
+  - name: isInitialized
+    serializedName: initialized
     type: Boolean
-  - name: sealed
+  - name: isSealed
+    serializedName: sealed
     type: Boolean
   - name: t
     type: Integer

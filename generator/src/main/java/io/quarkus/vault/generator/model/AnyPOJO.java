@@ -7,7 +7,7 @@ public interface AnyPOJO {
 
     Optional<String> extendsName();
 
-    Optional<List<String>> implementsNames();
+    Optional<List<String>> implementNames();
 
     Optional<List<POJO>> nested();
 

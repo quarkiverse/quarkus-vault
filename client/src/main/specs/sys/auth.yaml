@@ -14,6 +14,18 @@ operations:
     dataType: java.util.Map<String, $MethodInfo>
 
 
+- name: read
+  method: GET
+  path: auth/:path
+  parameters:
+    - name: path
+      type: String
+  result:
+    kind: leased
+    unwrapsData: true
+    dataType: $MethodInfo
+
+
 - name: enable
   method: POST
   status: NO_CONTENT
@@ -27,19 +39,27 @@ operations:
   - name: description
     type: String
   - name: config
-    type: $EnableOptions
-
-
-- name: read
-  method: GET
-  path: auth/:path
-  parameters:
-  - name: path
-    type: String
-  result:
-    kind: leased
-    unwrapsData: true
-    dataType: $MethodInfo
+    object:
+    - name: defaultLeaseTtl
+      type: String
+    - name: maxLeaseTtl
+      type: String
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: String
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: pluginVersion
+      type: String
+    - name: local
+      type: Boolean
+    - name: sealWrap
+      type: Boolean
 
 
 - name: disable
@@ -59,7 +79,27 @@ operations:
   result:
     kind: leased
     unwrapsData: true
-    dataType: $MethodInfo
+    data:
+    - name: defaultLeaseTtl
+      type: Long
+    - name: maxLeaseTtl
+      type: Long
+    - name: forceNoCache
+      type: Boolean
+    - name: description
+      type: String
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: String
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: tokenType
+      type: String
 
 
 - name: tune
@@ -69,10 +109,31 @@ operations:
   parameters:
   - name: path
     type: String
-  - name: description
-    type: String
-  - name: config
-    type: $TuneOptions
+  - name: options
+    body: true
+    object:
+    - name: defaultLeaseTtl
+      type: String
+    - name: maxLeaseTtl
+      type: String
+    - name: description
+      type: String
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: String
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: tokenType
+      type: String
+    - name: pluginVersion
+      type: String
+    - name: userLockoutConfig
+      type: $UserLockoutConfig
 
 
 types:
@@ -115,47 +176,26 @@ types:
   - name: uuid
     type: String
 
-- name: EnableOptions
-  nested:
+- name: UserLockoutConfig
   properties:
-  - name: defaultLeaseTtl
+  - name: lockoutThreshold
+    type: Integer
+    annotations:
+    - type: com.fasterxml.jackson.databind.annotation.JsonSerialize
+      members:
+        using:
+          format: $T.class
+          arguments:
+            - <type>io.quarkus.vault.client.json.NumberToStringSerializer
+    - type: com.fasterxml.jackson.databind.annotation.JsonDeserialize
+      members:
+        using:
+          format: $T.class
+          arguments:
+            - <type>io.quarkus.vault.client.json.StringToNumberDeserializer
+  - name: lockoutDuration
     type: String
-  - name: maxLeaseTtl
+  - name: lockoutCounterReset
     type: String
-  - name: auditNonHmacRequestKeys
-    type: java.util.List<String>
-  - name: auditNonHmacResponseKeys
-    type: java.util.List<String>
-  - name: listingVisibility
-    type: String
-  - name: passthroughRequestHeaders
-    type: java.util.List<String>
-  - name: allowedResponseHeaders
-    type: java.util.List<String>
-  - name: pluginVersion
-    type: String
-  - name: local
+  - name: lockoutDisable
     type: Boolean
-  - name: sealWrap
-    type: Boolean
-
-- name: TuneOptions
-  extends: $EnableOptions
-  properties:
-  - name: description
-    type: String
-  - name: tokenType
-    type: String
-  - name: userLockoutConfig
-    type: Boolean
-  nested:
-  - name: UserLockoutConfig
-    properties:
-    - name: lockoutThreshold
-      type: Integer
-    - name: lockoutDuration
-      type: String
-    - name: lockoutCounterReset
-      type: String
-    - name: lockoutDisable
-      type: Boolean

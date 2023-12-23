@@ -2,6 +2,8 @@ package io.quarkus.vault.generator;
 
 import static io.quarkus.vault.generator.utils.Strings.capitalize;
 
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.Modifier;
@@ -31,6 +33,10 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
         responseTypeName = className(api.getCommonPackageName(), "VaultResponse");
     }
 
+    public String getName() {
+        return "API";
+    }
+
     @Override
     public ClassName typeName() {
         return typeNameFor();
@@ -44,22 +50,19 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
                         FieldSpec.builder(requestFactoryTypeName, "FACTORY")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .initializer("$T.INSTANCE", requestFactoryTypeName)
-                                .build())
-                .addField(
-                        FieldSpec.builder(typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX), "factory")
-                                .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                                 .build());
 
+        var factoryTypeName = typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX);
+
         if (api.isMountable()) {
-            typeSpec.superclass(mountableApiName);
+            typeSpec.superclass(typeName(mountableApiName, factoryTypeName));
             typeSpec.addMethod(
                     MethodSpec.constructorBuilder()
                             .addModifiers(Modifier.PUBLIC)
                             .addParameter(requestExecutorTypeName, "executor")
                             .addParameter(String.class, "mountPath")
-                            .addParameter(typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX), "factory")
-                            .addStatement("super(executor, mountPath)")
-                            .addStatement("this.factory = factory")
+                            .addParameter(factoryTypeName, "factory")
+                            .addStatement("super(executor, factory, mountPath)")
                             .build());
             typeSpec.addMethod(
                     MethodSpec.constructorBuilder()
@@ -69,14 +72,13 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
                             .addStatement("this(executor, mountPath, FACTORY)")
                             .build());
         } else {
-            typeSpec.superclass(apiName);
+            typeSpec.superclass(typeName(apiName, factoryTypeName));
             typeSpec.addMethod(
                     MethodSpec.constructorBuilder()
                             .addModifiers(Modifier.PUBLIC)
                             .addParameter(requestExecutorTypeName, "executor")
                             .addParameter(typeNameFor(APIRequestFactoryContract.TYPE_NAME_SUFFIX), "factory")
-                            .addStatement("super(executor)")
-                            .addStatement("this.factory = factory")
+                            .addStatement("super(executor, factory)")
                             .build());
             typeSpec.addMethod(
                     MethodSpec.constructorBuilder()
@@ -104,12 +106,24 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
 
         var body = CodeBlock.builder();
 
+        Predicate<Operation.Parameter> includedInFactory = parameter -> {
+            if (parameter.includeIn().isPresent()) {
+                return parameter.includeIn().get().contains("Factory");
+            } else {
+                return true;
+            }
+        };
+
         Stream<String> parameterNames;
         if (api.isMountable()) {
             parameterNames = Stream.concat(Stream.of("mountPath"),
-                    operation.getParameters().stream().map(Operation.Parameter::name));
+                    operation.getParameters().stream()
+                            .filter(includedInFactory)
+                            .map(Operation.Parameter::name));
         } else {
-            parameterNames = operation.getParameters().stream().map(Operation.Parameter::name);
+            parameterNames = operation.getParameters().stream()
+                    .filter(includedInFactory)
+                    .map(Operation.Parameter::name);
         }
 
         body.add("$[return executor.execute(factory.$L($L))\n", operation.name(),
@@ -119,7 +133,19 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
 
         if (operation.result().isPresent() && operation.result().get() instanceof Operation.LeasedResult leasedResult) {
             if (leasedResult.unwrapUsing().isPresent()) {
-                body.add(".map(r -> $L)", leasedResult.unwrapUsing().get());
+                body.add(".map(r -> ");
+
+                var unwrapUsingArguments = leasedResult.unwrapUsingArguments().orElse(List.of()).stream()
+                        .map(argument -> {
+                            if (argument.startsWith("<type>")) {
+                                return typeName(argument.substring("<type>".length()));
+                            } else {
+                                return argument;
+                            }
+                        });
+                body.add(leasedResult.unwrapUsing().get(), unwrapUsingArguments.toArray());
+
+                body.add(")");
             } else if (leasedResult.unwrapsData().orElse(false)) {
                 body.add(".map(r -> r.data)");
             } else if (leasedResult.unwrapsAuth().orElse(false)) {

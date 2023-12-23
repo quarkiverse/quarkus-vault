@@ -6,7 +6,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record PartialPOJO(
-        @JsonProperty("implements") Optional<List<String>> implementsNames,
+        @JsonProperty("implements") Optional<List<String>> implementNames,
         Optional<List<POJO>> nested,
         Optional<List<POJO.Property>> properties,
         Optional<List<POJO.Method>> methods) implements AnyPOJO {

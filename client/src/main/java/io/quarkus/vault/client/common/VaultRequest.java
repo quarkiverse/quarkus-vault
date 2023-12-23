@@ -365,7 +365,7 @@ public class VaultRequest<T> {
     }
 
     public Builder<T> builder() {
-        var builder = new Builder(operation, method);
+        var builder = new Builder<T>(operation, method);
         builder.baseUrl = baseUrl;
         builder.apiVersion = apiVersion;
         builder.path = path;

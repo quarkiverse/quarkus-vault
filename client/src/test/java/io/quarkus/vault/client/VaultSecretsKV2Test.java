@@ -9,7 +9,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.secrets.kv2.VaultSecretsKV2SecretMetadataParams;
-import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsEnableOptions;
+import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsEnableConfig;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
 import io.quarkus.vault.client.test.VaultClientTest.Mount;
@@ -34,9 +34,8 @@ public class VaultSecretsKV2Test {
     @Test
     void testUpdateConfig(VaultClient client, @Random String path) {
         // Mount specific engine for testing CAS configuration
-        client.sys().mounts().enable(path, "kv", "KV with CAS enabled",
-                new VaultSysMountsEnableOptions()
-                        .setOptions(Map.of("version", "2")))
+        client.sys().mounts().enable(path, "kv", "KV with CAS enabled", new VaultSysMountsEnableConfig()
+                .setOptions(Map.of("version", "2")))
                 .await().indefinitely();
 
         var kvApi = client.secrets().kv2(path);

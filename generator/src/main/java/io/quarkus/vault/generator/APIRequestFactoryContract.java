@@ -42,6 +42,10 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
         binaryExtractorTypeName = className(api.getCommonPackageName(), "VaultBinaryResultExtractor");
     }
 
+    public String getName() {
+        return "Factory";
+    }
+
     @Override
     public ClassName typeName() {
         return typeNameFor(TYPE_NAME_SUFFIX);
@@ -101,6 +105,10 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
             body.add(".token($L)\n", operation.tokenFrom().get());
         }
 
+        if (operation.namespaced().isPresent() && !operation.namespaced().get()) {
+            body.add(".noNamespace()\n");
+        }
+
         if (operation.wrapTTLFrom().isPresent()) {
             body.add(".wrapTTL($L)\n", operation.wrapTTLFrom().get());
         }
@@ -150,7 +158,7 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
                         .toList();
 
                 var objTypeName = typeNameFor(operation.name(), "Params");
-                addGeneratedType(objTypeName, (name) -> generatePOJO(name, PartialPOJO.of(bodyProperties)));
+                addGeneratedType(objTypeName, (name) -> generatePOJO(name, PartialPOJO.of(bodyProperties), operation.name()));
                 bodyTypeName = objTypeName;
             }
 
@@ -176,7 +184,11 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
 
     private void addPathChoice(CodeBlock.Builder body, Operation operation, Operation.PathChoice pathChoice) {
         var param = operation.getRequiredParameter(pathChoice.param());
-        var paramType = typeName(param.getImpliedType());
+        if (param.type().isEmpty()) {
+            throw OneOfFieldsMissingError.of("Path parameters requires a specific simple type", "type");
+        }
+
+        var paramType = typeName(param.type().get());
 
         body.add(".pathChoice($L,$>\n", param.name());
         if (paramType.unbox().equals(TypeName.BOOLEAN)) {
@@ -297,7 +309,7 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
         } else if (result.object().isPresent()) {
             var resultTypeName = typeNameFor(operation.name(), "Result");
             addGeneratedType(resultTypeName,
-                    (name) -> generatePOJO(name, PartialPOJO.of(result.object().get()),
+                    (name) -> generatePOJO(name, PartialPOJO.of(result.object().get()), operation.name(),
                             s -> s.addSuperinterface(jsonResultTypeName)));
             return resultTypeName;
         } else {
@@ -310,7 +322,7 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
         TypeName dataTypeName;
         if (result.data().isPresent()) {
             ClassName typeName = typeNameFor(operation.name(), "ResultData");
-            addGeneratedType(typeName, (name) -> generatePOJO(name, PartialPOJO.of(result.data().get())));
+            addGeneratedType(typeName, (name) -> generatePOJO(name, PartialPOJO.of(result.data().get()), operation.name()));
             dataTypeName = typeName;
         } else if (result.dataType().isPresent()) {
             dataTypeName = typeName(result.dataType().get());
@@ -325,7 +337,7 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
             TypeName authDataTypeName;
             if (result.auth().isPresent()) {
                 var typeName = typeNameFor(operation.name(), "AuthData");
-                addGeneratedType(typeName, (name) -> generatePOJO(name, PartialPOJO.of(result.auth().get())));
+                addGeneratedType(typeName, (name) -> generatePOJO(name, PartialPOJO.of(result.auth().get()), operation.name()));
                 authDataTypeName = typeName;
             } else {
                 authDataTypeName = typeName(result.authType().get());
@@ -334,7 +346,8 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
             var typeName = typeNameFor(operation.name(), "AuthResult");
             var superclass = typeName(authResultTypeName, authDataTypeName);
 
-            addGeneratedType(typeName, (name) -> generatePOJO(name, AnyPOJO.empty(), s -> s.superclass(superclass)));
+            addGeneratedType(typeName,
+                    (name) -> generatePOJO(name, AnyPOJO.empty(), operation.name(), s -> s.superclass(superclass)));
 
             authTypeName = typeName;
         }
@@ -346,10 +359,12 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
 
             var resultPOJO = result.custom().get();
 
-            addGeneratedType(resultTypeName, (name) -> generatePOJO(name, resultPOJO, s -> s.superclass(baseTypeName)));
+            addGeneratedType(resultTypeName,
+                    (name) -> generatePOJO(name, resultPOJO, operation.name(), s -> s.superclass(baseTypeName)));
         } else {
 
-            addGeneratedType(resultTypeName, (name) -> generatePOJO(name, AnyPOJO.empty(), s -> s.superclass(baseTypeName)));
+            addGeneratedType(resultTypeName,
+                    (name) -> generatePOJO(name, AnyPOJO.empty(), operation.name(), s -> s.superclass(baseTypeName)));
         }
 
         return resultTypeName;

@@ -14,6 +14,7 @@ import io.quarkus.vault.generator.utils.Strings;
 
 public record Operation(
         @JsonProperty(required = true) String name,
+        Optional<List<String>> typeParameters,
         Optional<String> trace,
         Optional<Method> method,
         Optional<Status> status,
@@ -21,6 +22,7 @@ public record Operation(
         Optional<PathChoice> pathChoice,
         Optional<List<Parameter>> parameters,
         Optional<Boolean> authenticated,
+        Optional<Boolean> namespaced,
         Optional<String> tokenFrom,
         Optional<String> wrapTTLFrom,
         Optional<List<String>> bodyFrom,
@@ -56,11 +58,12 @@ public record Operation(
             Optional<Boolean> includeNulls,
             Optional<Boolean> body,
             Optional<String> type,
+            Optional<List<String>> includeIn,
             Optional<List<POJO.Property.Annotation>> annotations,
             Optional<List<POJO.Property>> object) {
 
         public POJO.Property asProperty() {
-            return new POJO.Property(name, serializedName, required, type, annotations);
+            return new POJO.Property(name, serializedName, required, type, object, annotations);
         }
 
         public String getSerializedName() {
@@ -73,14 +76,6 @@ public record Operation(
 
         public boolean isIncludeNulls() {
             return includeNulls.orElse(true);
-        }
-
-        public boolean isTypeImplied() {
-            return type.isPresent() || object.isEmpty();
-        }
-
-        public String getImpliedType() {
-            return type.orElse("java.lang.String");
         }
 
         public boolean isBody() {
@@ -144,6 +139,7 @@ public record Operation(
             Optional<Boolean> unwrapsAuth,
             Optional<String> unwrappedType,
             Optional<String> unwrapUsing,
+            Optional<List<String>> unwrapUsingArguments,
             Optional<PartialPOJO> custom) implements Result {
 
         @Override

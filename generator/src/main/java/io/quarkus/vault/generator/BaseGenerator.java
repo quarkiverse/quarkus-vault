@@ -13,8 +13,10 @@ import jakarta.annotation.Nonnull;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.squareup.javapoet.*;
 
+import io.quarkus.vault.generator.errors.OneOfFieldsMissingError;
 import io.quarkus.vault.generator.model.AnyPOJO;
 import io.quarkus.vault.generator.model.POJO;
+import io.quarkus.vault.generator.model.PartialPOJO;
 import io.quarkus.vault.generator.utils.TypeNames;
 
 public abstract class BaseGenerator implements Generator {
@@ -56,27 +58,27 @@ public abstract class BaseGenerator implements Generator {
         return getTypeNames().typeName(name, parameterTypes);
     }
 
-    public TypeSpec generatePOJO(String name, AnyPOJO pojo) {
-        return generatePOJO(name, pojo, spec -> {
+    public TypeSpec generatePOJO(String name, AnyPOJO pojo, String generationPrefix) {
+        return generatePOJO(name, pojo, generationPrefix, spec -> {
         });
     }
 
-    public TypeSpec generatePOJO(String name, AnyPOJO pojo, Consumer<TypeSpec.Builder> customizer) {
+    public TypeSpec generatePOJO(String name, AnyPOJO pojo, String generationPrefix, Consumer<TypeSpec.Builder> customizer) {
         var spec = startPOJO(name, customizer);
         var specName = getTypeNames().typeName(spec.build());
-        generatePOJO(spec, specName, pojo);
+        generatePOJO(spec, specName, pojo, generationPrefix);
         return spec.build();
     }
 
-    public void generatePOJO(TypeSpec.Builder spec, TypeName specName, AnyPOJO pojo) {
+    public void generatePOJO(TypeSpec.Builder spec, TypeName specName, AnyPOJO pojo, String generationPrefix) {
         pojo.extendsName().ifPresent(extendsName -> spec.superclass(typeName(extendsName)));
-        pojo.implementsNames().ifPresent(implementsNames -> {
-            for (var iface : implementsNames) {
-                spec.addSuperinterface(typeName(iface));
+        pojo.implementNames().ifPresent(implementNames -> {
+            for (var implementName : implementNames) {
+                spec.addSuperinterface(typeName(implementName));
             }
         });
         pojo.nested().ifPresent(nested -> addNestedPOJOs(spec, specName, nested));
-        pojo.properties().ifPresent(properties -> addPOJOProperties(specName, spec, properties));
+        pojo.properties().ifPresent(properties -> addPOJOProperties(specName, spec, properties, generationPrefix));
         pojo.methods().ifPresent(methods -> addPOJOMethods(spec, methods));
     }
 
@@ -100,24 +102,42 @@ public abstract class BaseGenerator implements Generator {
         for (var pojo : nested) {
             var nestedSpec = startPOJO(pojo.name(), s -> s.addModifiers(Modifier.STATIC));
             var nestedSpecName = specClassName.nestedClass(pojo.name());
-            generatePOJO(nestedSpec, nestedSpecName, pojo);
+            generatePOJO(nestedSpec, nestedSpecName, pojo, "");
             spec.addType(nestedSpec.build());
         }
     }
 
-    public void addPOJOProperties(TypeName specName, TypeSpec.Builder spec, List<POJO.Property> properties) {
+    public void addPOJOProperties(TypeName specName, TypeSpec.Builder spec, List<POJO.Property> properties,
+            String generationPrefix) {
 
         for (var property : properties) {
-            spec.addField(generatePOJOField(property));
+            spec.addField(generatePOJOField(property, generationPrefix));
         }
 
         for (var property : properties) {
-            spec.addMethod(generatePOJOSetter(specName, property));
+            spec.addMethod(generatePOJOSetter(specName, property, generationPrefix));
         }
     }
 
-    public FieldSpec generatePOJOField(POJO.Property property) {
-        var spec = FieldSpec.builder(typeName(property.getImpliedType()), property.name())
+    public FieldSpec generatePOJOField(POJO.Property property, String generationPrefix) {
+        TypeName typeName;
+        if (property.type().isPresent()) {
+
+            typeName = typeName(property.type().get());
+
+        } else if (property.object().isPresent()) {
+
+            var name = capitalize(generationPrefix) + capitalize(property.name());
+
+            generatePOJO(name, PartialPOJO.of(property.object().get()), "");
+
+            typeName = typeNameFor(name);
+
+        } else {
+            throw OneOfFieldsMissingError.of("No type specified for property " + property.name());
+        }
+
+        var spec = FieldSpec.builder(typeName, property.name())
                 .addModifiers(Modifier.PUBLIC);
 
         var serializedName = property.getSerializedName();
@@ -132,7 +152,7 @@ public abstract class BaseGenerator implements Generator {
 
             for (var annotation : property.annotations().get()) {
 
-                var annSpec = AnnotationSpec.builder(className(annotation.typeName()));
+                var annSpec = AnnotationSpec.builder(className(annotation.type()));
 
                 if (annotation.members().isPresent()) {
 
@@ -161,14 +181,28 @@ public abstract class BaseGenerator implements Generator {
         return spec.build();
     }
 
-    public MethodSpec generatePOJOSetter(TypeName specName, POJO.Property property) {
-        var parameterSpec = ParameterSpec.builder(typeName(property.getImpliedType()), property.name());
+    public MethodSpec generatePOJOSetter(TypeName specName, POJO.Property property, String generationPrefix) {
+
+        TypeName typeName;
+        if (property.type().isPresent()) {
+
+            typeName = typeName(property.type().get());
+
+        } else if (property.object().isPresent()) {
+
+            typeName = typeNameFor(capitalize(generationPrefix) + capitalize(property.name()));
+
+        } else {
+            throw OneOfFieldsMissingError.of("No type specified for property " + property.name());
+        }
+
+        var parameterSpec = ParameterSpec.builder(typeName, property.name());
         if (!property.isRequired()) {
             parameterSpec.addAnnotation(className(Nonnull.class));
         }
         var spec = MethodSpec.methodBuilder("set" + capitalize(property.name()))
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(typeName(property.getImpliedType()), property.name())
+                .addParameter(typeName, property.name())
                 .returns(specName)
                 .addStatement("this.$L = $L", property.name(), property.name())
                 .addStatement("return this");
@@ -183,9 +217,19 @@ public abstract class BaseGenerator implements Generator {
 
     public MethodSpec generatePOJOMethod(POJO.Method method) {
 
+        var bodyArgs = method.bodyArguments().orElse(List.of()).stream()
+                .map(argument -> {
+                    if (argument.startsWith("<type>")) {
+                        return typeName(argument.substring("<type>".length()));
+                    } else {
+                        return argument;
+                    }
+                })
+                .toArray();
+
         var body = CodeBlock.builder()
                 .indent()
-                .add(method.body())
+                .add(method.body(), bodyArgs)
                 .unindent()
                 .build();
 
@@ -194,11 +238,17 @@ public abstract class BaseGenerator implements Generator {
                 .returns(typeName(method.returnType()))
                 .addCode(body);
 
-        if (method.parameters().isPresent()) {
+        method.typeParameters().ifPresent(typeParameters -> {
+            for (var typeParameter : typeParameters) {
+                spec.addTypeVariable(getTypeNames().typeVariableName(typeParameter));
+            }
+        });
+
+        method.parameters().ifPresent(parameters -> {
             for (var parameter : method.parameters().get().entrySet()) {
                 spec.addParameter(typeName(parameter.getValue()), parameter.getKey());
             }
-        }
+        });
 
         return spec.build();
     }

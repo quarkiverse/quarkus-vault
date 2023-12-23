@@ -157,13 +157,13 @@ operations:
     - name: metadata
       type: java.util.Map<String, String>
       annotations:
-        - typeName: com.fasterxml.jackson.databind.annotation.JsonSerialize
+        - type: com.fasterxml.jackson.databind.annotation.JsonSerialize
           members:
             using:
               format: $T.class
               arguments:
               - <type>io.quarkus.vault.client.json.MapToStringSerializer
-        - typeName: com.fasterxml.jackson.databind.annotation.JsonDeserialize
+        - type: com.fasterxml.jackson.databind.annotation.JsonDeserialize
           members:
             using:
               format: $T.class
@@ -267,13 +267,13 @@ operations:
     - name: metadata
       type: java.util.Map<String, String>
       annotations:
-      - typeName: com.fasterxml.jackson.databind.annotation.JsonSerialize
+      - type: com.fasterxml.jackson.databind.annotation.JsonSerialize
         members:
           using:
             format: $T.class
             arguments:
               - <type>io.quarkus.vault.client.json.MapToStringSerializer
-      - typeName: com.fasterxml.jackson.databind.annotation.JsonDeserialize
+      - type: com.fasterxml.jackson.databind.annotation.JsonDeserialize
         members:
           using:
             format: $T.class

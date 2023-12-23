@@ -14,6 +14,7 @@ operations:
     type: String
   result:
     kind: leased
+    unwrapsData: true
     data:
     - name: creationPath
       type: String
@@ -32,6 +33,11 @@ operations:
     type: String
   result:
     kind: leased
+    unwrapUsing: r.wrapInfo
+    unwrappedType: $$.api.common.VaultWrapInfo
+    dataType: Void
+    authType: Void
+
 
 - name: unwrap
   method: POST
@@ -45,7 +51,6 @@ operations:
   method: POST
   path: wrapping/unwrap
   bodyFrom: [token]
-  authenticated: false
   parameters:
   - name: token
     type: String
@@ -54,10 +59,10 @@ operations:
     dataType: java.util.Map<String, Object>
 
 
-
 - name: wrap
   method: POST
   path: wrapping/wrap
+  bodyFrom: [data]
   wrapTTLFrom: wrapTtl
   parameters:
   - name: data
@@ -66,3 +71,23 @@ operations:
     type: java.time.Duration
   result:
     kind: leased
+    unwrapUsing: r.wrapInfo
+    unwrappedType: $$.api.common.VaultWrapInfo
+    dataType: Void
+    authType: Void
+
+
+methods:
+- name: unwrapAs
+  typeParameters: [T]
+  returnType: Uni<T>
+  parameters:
+    token: String
+    type: Class<T>
+  body: |
+    return unwrap(token).map(r -> {
+      var val = r.auth != null ? r.auth : r.data; 
+      return $T.convert(val, type);
+    });
+  bodyArguments:
+  - <type>io.quarkus.vault.client.util.JsonMapping

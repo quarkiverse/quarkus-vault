@@ -3,7 +3,6 @@ package io.quarkus.vault.client.auth.unwrap;
 import static io.quarkus.vault.client.logging.LogConfidentialityLevel.LOW;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -13,8 +12,6 @@ import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.api.sys.wrapping.VaultSysWrapping;
 import io.quarkus.vault.client.auth.VaultAuthRequest;
-import io.quarkus.vault.client.common.VaultResponse;
-import io.quarkus.vault.client.util.JsonMapping;
 import io.smallrye.mutiny.Uni;
 
 public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements VaultValueProvider {
@@ -37,10 +34,10 @@ public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements Vaul
     public Uni<String> apply(VaultAuthRequest unwrapRequest) {
         return unwrappingCache.get(wrappingToken, (token) -> {
             var executor = unwrapRequest.executor();
-            return executor.execute(VaultSysWrapping.FACTORY.unwrap(token))
-                    .map(VaultResponse::getResult)
+            var api = new VaultSysWrapping(executor);
+            return api.unwrapAs(token, getUnwrapResultType())
                     .map(res -> {
-                        var unwrappedClientToken = extractClientToken(convert(res.data));
+                        var unwrappedClientToken = extractClientToken(res);
 
                         String displayValue = unwrapRequest.request().getLogConfidentialityLevel()
                                 .maskWithTolerance(unwrappedClientToken, LOW);
@@ -62,14 +59,5 @@ public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements Vaul
                     })
                     .memoize().indefinitely();
         });
-    }
-
-    public UnwrapResult convert(Map<String, Object> data) {
-        var resultType = getUnwrapResultType();
-        try {
-            return JsonMapping.mapper.convertValue(data, resultType);
-        } catch (Exception e) {
-            throw new RuntimeException("Error converting unwrapped result to expected type: " + resultType, e);
-        }
     }
 }

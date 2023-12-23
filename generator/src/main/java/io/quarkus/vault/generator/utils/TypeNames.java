@@ -115,7 +115,17 @@ public record TypeNames(API api) {
                 .addTypeVariables(typeVariableNames);
     }
 
-    private TypeVariableName typeVariableName(TypeParameter typeParameter) {
+    public TypeVariableName typeVariableName(String name) {
+
+        String fakeClass = "public class FakeClass<" + name + ">  {}";
+
+        var cu = StaticJavaParser.parse(fakeClass);
+        var clazz = cu.getClassByName("FakeClass").orElseThrow();
+        var typeParameter = clazz.getTypeParameters().get(0);
+        return typeVariableName(typeParameter);
+    }
+
+    public TypeVariableName typeVariableName(TypeParameter typeParameter) {
         var bounds = typeParameter.getTypeBound().stream().flatMap(this::typeNames).toArray(TypeName[]::new);
         return TypeVariableName.get(typeParameter.getNameAsString(), bounds);
     }

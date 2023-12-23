@@ -12,7 +12,8 @@ operations:
   result:
     kind: json
     object:
-    - name: initialized
+    - name: isInitialized
+      serializedName: initialized
       type: Boolean
 
 
@@ -20,6 +21,7 @@ operations:
   method: POST
   path: init
   authenticated: false
+  namespaced: true
   parameters:
   - name: params
     body: true

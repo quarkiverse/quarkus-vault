@@ -15,7 +15,8 @@ public record API(
         Optional<Boolean> mountable,
         Optional<Boolean> namespaced,
         Optional<List<POJO>> types,
-        Optional<List<Operation>> operations) {
+        Optional<List<Operation>> operations,
+        Optional<List<POJO.Method>> methods) {
 
     public String getPrefix() {
         return prefix.orElse("Vault");
@@ -88,6 +89,7 @@ public record API(
     }
 
     public static final API EMPTY = new API(
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

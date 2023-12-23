@@ -68,8 +68,6 @@ public class VaultTokenAuthTest {
 
     @Test
     public void testCreateTokenWithRole(VaultClient client, @Random String role) {
-        client = client.configure().traceRequests().build();
-
         var tokenApi = client.auth().token();
 
         tokenApi.updateRole(role, new VaultAuthTokenUpdateRoleParams()
@@ -95,7 +93,10 @@ public class VaultTokenAuthTest {
 
         var policy = tokenId + "-policy";
 
-        client.sys().policy().update(policy, "path \"secret/*\" { capabilities = [ \"read\" ] }")
+        client.sys().policy().update(policy, """
+                path "secret/*" {
+                    capabilities = [ "read" ]
+                }""")
                 .await().indefinitely();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
@@ -156,7 +157,10 @@ public class VaultTokenAuthTest {
 
         var policy = tokenId + "-policy";
 
-        client.sys().policy().update(policy, "path \"secret/*\" { capabilities = [ \"read\" ] }")
+        client.sys().policy().update(policy, """
+                path "secret/*" {
+                    capabilities = [ "read" ]
+                }""")
                 .await().indefinitely();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
@@ -268,7 +272,10 @@ public class VaultTokenAuthTest {
 
         var policy = tokenId + "-policy";
 
-        client.sys().policy().update(policy, "path \"secret/*\" { capabilities = [ \"read\" ] }")
+        client.sys().policy().update(policy, """
+                path "secret/*" {
+                    capabilities = [ "read" ]
+                }""")
                 .await().indefinitely();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
@@ -317,7 +324,10 @@ public class VaultTokenAuthTest {
 
         var policy = tokenId + "-policy";
 
-        client.sys().policy().update(policy, "path \"secret/*\" { capabilities = [ \"read\" ] }")
+        client.sys().policy().update(policy, """
+                path "secret/*" {
+                    capabilities = [ "read" ]
+                }""")
                 .await().indefinitely();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
@@ -368,7 +378,10 @@ public class VaultTokenAuthTest {
 
         var policy = tokenId + "-policy";
 
-        client.sys().policy().update(policy, "path \"secret/*\" { capabilities = [ \"read\" ] }")
+        client.sys().policy().update(policy, """
+                path "secret/*" {
+                    capabilities = [ "read" ]
+                }""")
                 .await().indefinitely();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()

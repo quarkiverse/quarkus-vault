@@ -1,5 +1,6 @@
 package io.quarkus.vault.generator;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.Modifier;
@@ -20,6 +21,7 @@ import io.quarkus.vault.generator.model.PartialPOJO;
 public class APIGenerator extends BaseAPIGenerator {
 
     public interface Contract extends Generator {
+        String getName();
 
         ClassName typeName();
 
@@ -74,7 +76,7 @@ public class APIGenerator extends BaseAPIGenerator {
 
             var typeName = typeNameFor(type.name());
 
-            addGeneratedType(typeName, (name) -> generatePOJO(name, type));
+            addGeneratedType(typeName, (name) -> generatePOJO(name, type, ""));
         } catch (SpecError e) {
             throw TypeGenerationError.of("POJO", e);
         }
@@ -88,8 +90,12 @@ public class APIGenerator extends BaseAPIGenerator {
 
         var spec = contract.start();
 
-        for (var operation : api.operations().get()) {
+        for (var operation : api.operations().orElse(List.of())) {
             spec.addMethod(generateOperation(operation));
+        }
+
+        if (contract instanceof APIContract) {
+            addPOJOMethods(spec, api.methods().orElse(List.of()));
         }
 
         addGeneratedType(contract.typeName(), (name) -> spec.build());
@@ -123,12 +129,17 @@ public class APIGenerator extends BaseAPIGenerator {
     MethodSpec generateOperation(Operation operation) {
         try {
             var resultType = contract.operationResultTypeName(operation);
-            return MethodSpec.methodBuilder(operation.name())
+            var spec = MethodSpec.methodBuilder(operation.name())
                     .addModifiers(Modifier.PUBLIC)
                     .returns(contract.operationReturnTypeName(resultType))
                     .addParameters(generateRequestFactoryOperationParameters(operation).toList())
-                    .addCode(contract.operationBody(operation))
-                    .build();
+                    .addCode(contract.operationBody(operation));
+            if (operation.typeParameters().isPresent()) {
+                for (var typeParameter : operation.typeParameters().get()) {
+                    spec.addTypeVariable(getTypeNames().typeVariableName(typeParameter));
+                }
+            }
+            return spec.build();
         } catch (SpecError e) {
             throw OperationGenerationError.of(operation.name(), e);
         }
@@ -137,6 +148,13 @@ public class APIGenerator extends BaseAPIGenerator {
     Stream<ParameterSpec> generateRequestFactoryOperationParameters(Operation operation) {
         var includeMountPath = contract.operationNeedsExplicitMountPath(operation);
         var parameters = operation.getParameters().stream()
+                .filter(parameter -> {
+                    if (parameter.includeIn().isPresent()) {
+                        return parameter.includeIn().get().contains(contract.getName());
+                    } else {
+                        return true;
+                    }
+                })
                 .map(parameter -> generateRequestFactoryOperationParameter(operation, parameter));
         if (includeMountPath) {
             parameters = Stream.concat(Stream.of(ParameterSpec.builder(String.class, "mountPath").build()), parameters);
@@ -150,12 +168,13 @@ public class APIGenerator extends BaseAPIGenerator {
         if (parameter.object().isPresent()) {
 
             var typeName = typeNameFor(operation.name(), parameter.name());
-            addGeneratedType(typeName, (name) -> generatePOJO(name, PartialPOJO.of(parameter.object().get())));
+            addGeneratedType(typeName,
+                    (name) -> generatePOJO(name, PartialPOJO.of(parameter.object().get()), operation.name()));
             paramTypeName = typeName;
 
-        } else if (parameter.isTypeImplied()) {
+        } else if (parameter.type().isPresent()) {
 
-            paramTypeName = typeName(parameter.getImpliedType());
+            paramTypeName = typeName(parameter.type().get());
 
         } else {
             throw new RuntimeException("Parameter '" + parameter.name() + "' must have a type or an object");

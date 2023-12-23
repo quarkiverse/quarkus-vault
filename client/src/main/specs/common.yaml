@@ -7,7 +7,7 @@ types:
   - name: ttl
     type: Integer
   - name: creationTime
-    type: String
+    type: java.time.OffsetDateTime
   - name: creationPath
     type: String
 - name: LeasedResult<DATA, AUTH extends $AuthResult<?>>

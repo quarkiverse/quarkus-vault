@@ -56,11 +56,14 @@ types:
   implements:
   - $$.common.VaultJSONResult
   properties:
-  - name: initialized
+  - name: isInitialized
+    serializedName: initialized
     type: Boolean
-  - name: sealed
+  - name: isSealed
+    serializedName: sealed
     type: Boolean
-  - name: standby
+  - name: isStandby
+    serializedName: standby
     type: Boolean
   - name: performanceStandby
     type: Boolean

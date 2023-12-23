@@ -14,8 +14,15 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
 
     private static final java.util.Random random = new java.util.Random();
 
+    public static final String DEFAULT_VAULT_VERSION = "1.15.2";
+
+    public static String getVaultVersion() {
+        var version = System.getenv("VAULT_VERSION");
+        return version != null ? version : DEFAULT_VAULT_VERSION;
+    }
+
     // Generate a random path to avoid conflicts between tests
-    static String getRandomString(int length) {
+    public static String getRandomString(int length) {
         // Generate short random alphanumeric string of given length
         return random.ints(48, 123)
                 .filter(i -> Character.isDigit(i) || Character.isLowerCase(i))
@@ -24,7 +31,7 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
                 .toString();
     }
 
-    private final VaultContainer<?> vaultContainer = new VaultContainer<>("hashicorp/vault:1.15.2")
+    private final VaultContainer<?> vaultContainer = new VaultContainer<>("hashicorp/vault:" + getVaultVersion())
             .withEnv("VAULT_LOG_LEVEL", "debug")
             .withVaultToken("root");
     private final JDKVaultHttpClient httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient());
