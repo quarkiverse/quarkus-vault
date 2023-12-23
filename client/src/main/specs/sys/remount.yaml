@@ -1,0 +1,43 @@
+name: Remount
+category: sys
+mountable: false
+basePath: sys
+
+operations:
+
+- name: remount
+  method: POST
+  status: OK_OR_ACCEPTED
+  path: remount
+  bodyFrom: [from, to]
+  parameters:
+  - name: from
+    type: String
+  - name: to
+    type: String
+  result:
+    kind: json
+    object:
+    - name: migrationId
+      type: String
+
+- name: status
+  method: GET
+  path: remount/status/:migrationId
+  parameters:
+  - name: migrationId
+    type: String
+  result:
+    kind: leased
+    unwrapsData: true
+    data:
+    - name: migrationId
+      type: String
+    - name: migrationInfo
+      object:
+      - name: sourceMount
+        type: String
+      - name: targetMount
+        type: String
+      - name: status
+        type: String

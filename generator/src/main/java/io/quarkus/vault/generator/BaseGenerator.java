@@ -31,7 +31,13 @@ public abstract class BaseGenerator implements Generator {
     }
 
     protected void addGeneratedType(ClassName name, Function<String, TypeSpec> generator) {
-        generatedTypes.computeIfAbsent(name, className -> generator.apply(className.simpleName()));
+        var type = generatedTypes.get(name);
+        if (type != null) {
+            return;
+        }
+
+        var typeSpec = generator.apply(name.simpleName());
+        generatedTypes.put(name, typeSpec);
     }
 
     public ClassName typeNameFor(String... suffixes) {
@@ -111,7 +117,7 @@ public abstract class BaseGenerator implements Generator {
             String generationPrefix) {
 
         for (var property : properties) {
-            spec.addField(generatePOJOField(property, generationPrefix));
+            spec.addField(generatePOJOField(spec, property, generationPrefix));
         }
 
         for (var property : properties) {
@@ -119,7 +125,7 @@ public abstract class BaseGenerator implements Generator {
         }
     }
 
-    public FieldSpec generatePOJOField(POJO.Property property, String generationPrefix) {
+    public FieldSpec generatePOJOField(TypeSpec.Builder objSpec, POJO.Property property, String generationPrefix) {
         TypeName typeName;
         if (property.type().isPresent()) {
 
@@ -127,11 +133,11 @@ public abstract class BaseGenerator implements Generator {
 
         } else if (property.object().isPresent()) {
 
-            var name = capitalize(generationPrefix) + capitalize(property.name());
+            var clsName = typeNameFor(generationPrefix, property.name());
 
-            generatePOJO(name, PartialPOJO.of(property.object().get()), "");
+            addGeneratedType(clsName, className -> generatePOJO(className, PartialPOJO.of(property.object().get()), ""));
 
-            typeName = typeNameFor(name);
+            typeName = clsName;
 
         } else {
             throw OneOfFieldsMissingError.of("No type specified for property " + property.name());
