@@ -160,15 +160,15 @@ operations:
         - type: com.fasterxml.jackson.databind.annotation.JsonSerialize
           members:
             using:
-              format: $T.class
+              format: $serializer:T.class
               arguments:
-              - <type>io.quarkus.vault.client.json.MapToStringSerializer
+                serializer: <type>io.quarkus.vault.client.json.MapToStringSerializer
         - type: com.fasterxml.jackson.databind.annotation.JsonDeserialize
           members:
             using:
-              format: $T.class
+              format: $deserializer:T.class
               arguments:
-              - <type>io.quarkus.vault.client.json.StringToMapDeserializer
+                deserializer: <type>io.quarkus.vault.client.json.StringToMapDeserializer
     - name: cidrList
       type: java.util.List<String>
     - name: tokenBoundCidrs
@@ -270,15 +270,15 @@ operations:
       - type: com.fasterxml.jackson.databind.annotation.JsonSerialize
         members:
           using:
-            format: $T.class
+            format: $serializer:T.class
             arguments:
-              - <type>io.quarkus.vault.client.json.MapToStringSerializer
+              serializer: <type>io.quarkus.vault.client.json.MapToStringSerializer
       - type: com.fasterxml.jackson.databind.annotation.JsonDeserialize
         members:
           using:
-            format: $T.class
+            format: $deserializer:T.class
             arguments:
-              - <type>io.quarkus.vault.client.json.StringToMapDeserializer
+              deserializer: <type>io.quarkus.vault.client.json.StringToMapDeserializer
     - name: cidrList
       type: java.util.List<String>
     - name: tokenBoundCidrs

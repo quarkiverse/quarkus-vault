@@ -15,8 +15,14 @@ public record API(
         Optional<Boolean> mountable,
         Optional<Boolean> namespaced,
         Optional<List<POJO>> types,
+        Optional<List<Enum>> enums,
         Optional<List<Operation>> operations,
         Optional<List<POJO.Method>> methods) {
+
+    public record Enum(
+            String name,
+            List<String> values) {
+    }
 
     public String getPrefix() {
         return prefix.orElse("Vault");
@@ -89,6 +95,7 @@ public record API(
     }
 
     public static final API EMPTY = new API(
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

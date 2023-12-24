@@ -9,6 +9,8 @@ public interface AnyPOJO {
 
     Optional<List<String>> implementNames();
 
+    Optional<List<POJO.Annotation>> annotations();
+
     Optional<List<POJO>> nested();
 
     Optional<List<POJO.Property>> properties();

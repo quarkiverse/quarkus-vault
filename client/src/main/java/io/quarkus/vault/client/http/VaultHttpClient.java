@@ -18,7 +18,7 @@ import io.quarkus.vault.client.common.VaultErrorResponse;
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultRequestExecutor;
 import io.quarkus.vault.client.common.VaultResponse;
-import io.quarkus.vault.client.util.JsonMapping;
+import io.quarkus.vault.client.json.JsonMapping;
 import io.smallrye.mutiny.Uni;
 
 public abstract class VaultHttpClient implements VaultRequestExecutor, AutoCloseable {

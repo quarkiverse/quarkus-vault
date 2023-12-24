@@ -7,8 +7,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-import io.quarkus.vault.client.util.JsonMapping;
-
 public class MapToStringSerializer extends JsonSerializer<Map<String, Object>> {
     @Override
     public void serialize(Map<String, Object> map, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)

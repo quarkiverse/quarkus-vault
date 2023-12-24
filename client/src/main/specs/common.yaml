@@ -1,5 +1,7 @@
 relativePackageName: common
+
 types:
+
 - name: WrapInfo
   properties:
   - name: token
@@ -30,6 +32,8 @@ types:
       type: java.util.List<String>
     - name: auth
       type: AUTH
+
+
 - name: AuthResult<METADATA>
   properties:
     - name: clientToken
@@ -56,3 +60,29 @@ types:
       type: String
     - name: numUses
       type: Integer
+
+
+enums:
+
+- name: Format
+  values:
+  - base64
+  - hex
+
+- name: HashAlgorithm
+  values:
+    - sha1
+    - sha2-256
+    - sha2-384
+    - sha2-512
+    - sha3-224
+    - sha3-256
+    - sha3-384
+    - sha3-512
+    - none
+
+- name: RandomSource
+  values:
+  - platform
+  - seal
+  - all

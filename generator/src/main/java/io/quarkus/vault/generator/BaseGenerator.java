@@ -1,6 +1,7 @@
 package io.quarkus.vault.generator;
 
 import static io.quarkus.vault.generator.utils.Strings.capitalize;
+import static io.quarkus.vault.generator.utils.Strings.kebabCaseToSnakeCase;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.squareup.javapoet.*;
 
 import io.quarkus.vault.generator.errors.OneOfFieldsMissingError;
+import io.quarkus.vault.generator.model.API;
 import io.quarkus.vault.generator.model.AnyPOJO;
 import io.quarkus.vault.generator.model.POJO;
 import io.quarkus.vault.generator.model.PartialPOJO;
@@ -64,6 +66,18 @@ public abstract class BaseGenerator implements Generator {
         return getTypeNames().typeName(name, parameterTypes);
     }
 
+    public Map<String, ?> codeArguments(Map<String, String> arguments) {
+        return arguments.entrySet().stream().map(entry -> {
+            var key = entry.getKey();
+            var value = entry.getValue();
+            if (value.startsWith("<type>")) {
+                return Map.entry(key, typeName(value.substring("<type>".length())));
+            } else {
+                return Map.entry(key, value);
+            }
+        }).collect(LinkedHashMap::new, (map, entry) -> map.put(entry.getKey(), entry.getValue()), Map::putAll);
+    }
+
     public TypeSpec generatePOJO(String name, AnyPOJO pojo, String generationPrefix) {
         return generatePOJO(name, pojo, generationPrefix, spec -> {
         });
@@ -83,6 +97,7 @@ public abstract class BaseGenerator implements Generator {
                 spec.addSuperinterface(typeName(implementName));
             }
         });
+        pojo.annotations().ifPresent(annotations -> addAnnotations(spec, annotations));
         pojo.nested().ifPresent(nested -> addNestedPOJOs(spec, specName, nested));
         pojo.properties().ifPresent(properties -> addPOJOProperties(specName, spec, properties, generationPrefix));
         pojo.methods().ifPresent(methods -> addPOJOMethods(spec, methods));
@@ -155,35 +170,7 @@ public abstract class BaseGenerator implements Generator {
                     .build());
         }
 
-        if (property.annotations().isPresent()) {
-
-            for (var annotation : property.annotations().get()) {
-
-                var annSpec = AnnotationSpec.builder(className(annotation.type()));
-
-                if (annotation.members().isPresent()) {
-
-                    for (var member : annotation.members().get().entrySet()) {
-
-                        var memberName = member.getKey();
-                        var memberValue = member.getValue();
-                        var memberFormat = memberValue.format();
-                        var memberArguments = memberValue.arguments().orElse(List.of()).stream()
-                                .map(argument -> {
-                                    if (argument.startsWith("<type>")) {
-                                        return typeName(argument.substring("<type>".length()));
-                                    } else {
-                                        return argument;
-                                    }
-                                });
-
-                        annSpec.addMember(memberName, memberFormat, memberArguments.toArray());
-                    }
-                }
-
-                spec.addAnnotation(annSpec.build());
-            }
-        }
+        property.annotations().ifPresent(annotations -> addAnnotations(spec, annotations));
 
         return spec.build();
     }
@@ -259,21 +246,44 @@ public abstract class BaseGenerator implements Generator {
         }
     }
 
+    public void addAnnotations(TypeSpec.Builder spec, List<POJO.Annotation> annotations) {
+        for (var annotation : annotations) {
+            spec.addAnnotation(generateAnnotationSpec(annotation));
+        }
+    }
+
+    public void addAnnotations(FieldSpec.Builder spec, List<POJO.Annotation> annotations) {
+        for (var annotation : annotations) {
+            spec.addAnnotation(generateAnnotationSpec(annotation));
+        }
+    }
+
+    private AnnotationSpec generateAnnotationSpec(POJO.Annotation annotation) {
+        var spec = AnnotationSpec.builder(className(annotation.type()));
+
+        if (annotation.members().isPresent()) {
+
+            for (var member : annotation.members().get().entrySet()) {
+
+                var memberName = member.getKey();
+                var memberValue = member.getValue();
+                var memberFormat = memberValue.format();
+                var memberArguments = codeArguments(memberValue.arguments().orElse(Map.of()));
+
+                spec.addMember(memberName, CodeBlock.builder().addNamed(memberFormat, memberArguments).build());
+            }
+        }
+
+        return spec.build();
+    }
+
     public MethodSpec generatePOJOMethod(POJO.Method method) {
 
-        var bodyArgs = method.bodyArguments().orElse(List.of()).stream()
-                .map(argument -> {
-                    if (argument.startsWith("<type>")) {
-                        return typeName(argument.substring("<type>".length()));
-                    } else {
-                        return argument;
-                    }
-                })
-                .toArray();
+        var bodyArgs = codeArguments(method.bodyArguments().orElse(Map.of()));
 
         var body = CodeBlock.builder()
                 .indent()
-                .add(method.body(), bodyArgs)
+                .addNamed(method.body(), bodyArgs)
                 .unindent()
                 .build();
 
@@ -295,6 +305,24 @@ public abstract class BaseGenerator implements Generator {
         });
 
         return spec.build();
+    }
+
+    public void generateEnum(API.Enum e) {
+        addGeneratedType(typeNameFor(capitalize(e.name())), className -> {
+            var spec = TypeSpec.enumBuilder(className)
+                    .addModifiers(Modifier.PUBLIC);
+            for (var value : e.values()) {
+                var valueName = kebabCaseToSnakeCase(value).toUpperCase();
+                var valueSpec = TypeSpec.anonymousClassBuilder("")
+                        .addAnnotation(
+                                AnnotationSpec.builder(className(JsonProperty.class))
+                                        .addMember("value", "$S", value)
+                                        .build())
+                        .build();
+                spec.addEnumConstant(valueName, valueSpec);
+            }
+            return spec.build();
+        });
     }
 
 }

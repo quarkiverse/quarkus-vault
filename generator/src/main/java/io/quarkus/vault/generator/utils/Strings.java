@@ -12,6 +12,10 @@ public class Strings {
         return s.substring(0, 1).toLowerCase() + s.substring(1);
     }
 
+    public static String kebabCaseToSnakeCase(String s) {
+        return s.replace('-', '_');
+    }
+
     public static String camelCaseToSnakeCase(String s) {
         var sb = new StringBuilder();
         for (var i = 0; i < s.length(); i++) {

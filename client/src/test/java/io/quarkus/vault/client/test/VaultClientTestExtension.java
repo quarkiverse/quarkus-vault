@@ -20,11 +20,22 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
 
     private static final java.util.Random random = new java.util.Random();
 
-    public static final String DEFAULT_VAULT_VERSION = "1.15.2";
+    public static final String DEFAULT_VAULT_IMAGE_REPO = "hashicorp/vault";
+    public static final String DEFAULT_VAULT_IMAGE_VER = "1.15.4";
 
-    public static String getVaultVersion() {
-        var version = System.getenv("VAULT_VERSION");
-        return version != null ? version : DEFAULT_VAULT_VERSION;
+    public static String getVaultImageVersion() {
+        var version = System.getenv("VAULT_IMAGE_VER");
+        return version != null ? version : DEFAULT_VAULT_IMAGE_VER;
+    }
+
+    public static String getVaultImageRepo() {
+        var repo = System.getenv("VAULT_IMAGE_REPO");
+        return repo != null ? repo : DEFAULT_VAULT_IMAGE_REPO;
+    }
+
+    public static String getVaultImage() {
+        var tag = System.getenv("VAULT_IMAGE_TAG");
+        return tag != null ? tag : getVaultImageRepo() + ":" + getVaultImageVersion();
     }
 
     // Generate a random path to avoid conflicts between tests
@@ -37,7 +48,7 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
                 .toString();
     }
 
-    private final VaultContainer<?> vaultContainer = new VaultContainer<>("hashicorp/vault:" + getVaultVersion())
+    private final VaultContainer<?> vaultContainer = new VaultContainer<>(getVaultImage())
             .withCommand("server", "-dev", "-dev-root-token-id=root", "-dev-plugin-dir=/vault/plugins")
             .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY)
             .withVaultToken("root")

@@ -12,8 +12,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import io.quarkus.vault.client.VaultException;
+import io.quarkus.vault.client.json.JsonMapping;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
-import io.quarkus.vault.client.util.JsonMapping;
 
 public class VaultRequest<T> {
 
@@ -31,6 +31,7 @@ public class VaultRequest<T> {
     public static List<Integer> NO_CONTENT_STATUS = List.of(204);
     public static List<Integer> ACCEPTED_STATUS = List.of(202);
     public static List<Integer> OK_OR_ACCEPTED_STATUS = List.of(200, 202);
+    public static List<Integer> OK_OR_NO_CONTENT_STATUS = List.of(200, 204);
 
     public static class Builder<T> {
         private URL baseUrl;
@@ -64,17 +65,17 @@ public class VaultRequest<T> {
             return this;
         }
 
-        public Builder<T> path(String... pathSegments) {
+        public Builder<T> path(Object... pathSegments) {
             this.path = joinPath(pathSegments);
             return this;
         }
 
-        public final Builder<T> pathChoice(boolean selector, String[] truePathSegments, String[] falsePathSegments) {
+        public final Builder<T> pathChoice(boolean selector, Object[] truePathSegments, Object[] falsePathSegments) {
             return path(selector ? truePathSegments : falsePathSegments);
         }
 
-        public final Builder<T> pathChoice(Object selector, Map<Object, String[]> options) {
-            for (Map.Entry<Object, String[]> option : options.entrySet()) {
+        public final Builder<T> pathChoice(Object selector, Map<Object, Object[]> options) {
+            for (Map.Entry<Object, Object[]> option : options.entrySet()) {
                 if (option.getKey().equals(selector)) {
                     return path(option.getValue());
                 }
@@ -163,6 +164,10 @@ public class VaultRequest<T> {
 
         public Builder<T> expectOkOrAcceptedStatus() {
             return expectedStatusCodes(OK_OR_ACCEPTED_STATUS);
+        }
+
+        public Builder<T> expectOkOrNoContentStatus() {
+            return expectedStatusCodes(OK_OR_NO_CONTENT_STATUS);
         }
 
         public Builder<T> expectAnyStatus() {
@@ -413,9 +418,10 @@ public class VaultRequest<T> {
         return request(operation, Method.HEAD);
     }
 
-    private static String joinPath(String... pathSegments) {
+    private static String joinPath(Object... pathSegments) {
         return Arrays.stream(pathSegments)
                 .filter(Objects::nonNull)
+                .map(s -> JsonMapping.mapper.convertValue(s, String.class))
                 .map(s -> s.startsWith("/") ? s.substring(1) : s)
                 .map(s -> s.endsWith("/") ? s.substring(0, s.length() - 1) : s)
                 .filter(s -> !s.isEmpty())

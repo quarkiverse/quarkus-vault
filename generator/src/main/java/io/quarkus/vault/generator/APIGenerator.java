@@ -61,6 +61,7 @@ public class APIGenerator extends BaseAPIGenerator {
 
     private void generateTypes() {
         generatePOJOTypes();
+        generateEnumTypes();
         generateAPI();
     }
 
@@ -68,6 +69,13 @@ public class APIGenerator extends BaseAPIGenerator {
 
         for (var type : api.getTypes()) {
             generatePOJOType(type);
+        }
+    }
+
+    private void generateEnumTypes() {
+
+        for (var e : api.enums().orElse(List.of())) {
+            generateEnum(e);
         }
     }
 

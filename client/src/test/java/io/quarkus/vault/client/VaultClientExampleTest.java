@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient;
+import io.quarkus.vault.client.json.JsonMapping;
 import io.quarkus.vault.client.test.Vault;
 import io.quarkus.vault.client.test.VaultClientTest;
-import io.quarkus.vault.client.util.JsonMapping;
 
 @VaultClientTest
 public class VaultClientExampleTest {

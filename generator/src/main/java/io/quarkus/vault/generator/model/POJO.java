@@ -12,6 +12,7 @@ public record POJO(
         @JsonProperty(required = true) String name,
         @JsonProperty("extends") Optional<String> extendsName,
         @JsonProperty("implements") Optional<List<String>> implementNames,
+        Optional<List<POJO.Annotation>> annotations,
         Optional<List<POJO>> nested,
         Optional<List<Property>> properties,
         Optional<List<Method>> methods) implements AnyPOJO {
@@ -23,16 +24,6 @@ public record POJO(
             Optional<String> type,
             Optional<List<POJO.Property>> object,
             Optional<List<Annotation>> annotations) {
-
-        public record Annotation(
-                @JsonProperty(required = true) String type,
-                Optional<Map<String, Member>> members) {
-
-            public record Member(
-                    @JsonProperty(required = true) String format,
-                    Optional<List<String>> arguments) {
-            }
-        }
 
         public String getSerializedName() {
             return serializedName.orElseGet(() -> Strings.camelCaseToSnakeCase(name));
@@ -50,7 +41,17 @@ public record POJO(
             Optional<List<String>> typeParameters,
             Optional<Map<String, String>> parameters,
             @JsonProperty(required = true) String body,
-            Optional<List<String>> bodyArguments) {
+            Optional<Map<String, String>> bodyArguments) {
+    }
+
+    public record Annotation(
+            @JsonProperty(required = true) String type,
+            Optional<Map<String, Member>> members) {
+
+        public record Member(
+                @JsonProperty(required = true) String format,
+                Optional<Map<String, String>> arguments) {
+        }
     }
 
 }

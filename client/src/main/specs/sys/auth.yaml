@@ -184,15 +184,15 @@ types:
     - type: com.fasterxml.jackson.databind.annotation.JsonSerialize
       members:
         using:
-          format: $T.class
+          format: $serializer:T.class
           arguments:
-            - <type>io.quarkus.vault.client.json.NumberToStringSerializer
+            serializer: <type>io.quarkus.vault.client.json.NumberToStringSerializer
     - type: com.fasterxml.jackson.databind.annotation.JsonDeserialize
       members:
         using:
-          format: $T.class
+          format: $deserializer:T.class
           arguments:
-            - <type>io.quarkus.vault.client.json.StringToNumberDeserializer
+            deserializer: <type>io.quarkus.vault.client.json.StringToNumberDeserializer
   - name: lockoutDuration
     type: String
   - name: lockoutCounterReset

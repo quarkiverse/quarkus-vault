@@ -1,0 +1,69 @@
+name: Tools
+category: sys
+mountable: false
+basePath: sys
+
+
+operations:
+
+- name: random
+  method: POST
+  path: tools/random/:source/:bytes
+  bodyFrom: [format]
+  parameters:
+  - name: bytes
+    type: Integer
+  - name: source
+    type: $$.api.common.VaultRandomSource
+  - name: format
+    type: $$.api.common.VaultFormat
+  result:
+    kind: leased
+    unwrapUsing: r.getData().getBytes(format)
+    unwrappedType: byte[]
+    dataType: $RandomData
+
+
+- name: hash
+  method: POST
+  path: tools/hash/:algorithm
+  bodyFrom: [input, format]
+  parameters:
+  - name: algorithm
+    type: $$.api.common.VaultHashAlgorithm
+  - name: input
+    type: byte[]
+  - name: format
+    type: $$.api.common.VaultFormat
+  result:
+    kind: leased
+    unwrapUsing: r.getData().getSum()
+    unwrappedType: String
+    data:
+    - name: sum
+      type: String
+
+
+types:
+
+- name: RandomData
+  properties:
+  - name: randomBytes
+    type: String
+  methods:
+  - name: getBytes
+    returnType: byte[]
+    parameters:
+      format: $$.api.common.VaultFormat
+    body: |
+      if (format == null || format == $format:T.BASE64) {
+        return $base64:T.getDecoder().decode(randomBytes);
+      } else if (format == $format:T.HEX) {
+        return $hex:T.of().parseHex(randomBytes);
+      } else {
+        throw new IllegalArgumentException("Unsupported format: " + format);
+      }
+    bodyArguments:
+      format: <type>$$.api.common.VaultFormat
+      base64: <type>java.util.Base64
+      hex: <type>java.util.HexFormat

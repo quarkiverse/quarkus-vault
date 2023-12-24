@@ -87,7 +87,7 @@ methods:
   body: |
     return unwrap(token).map(r -> {
       var val = r.getAuth() != null ? r.getAuth() : r.getData(); 
-      return $T.convert(val, type);
+      return $mapping:T.convert(val, type);
     });
   bodyArguments:
-  - <type>io.quarkus.vault.client.util.JsonMapping
+    mapping: <type>io.quarkus.vault.client.json.JsonMapping

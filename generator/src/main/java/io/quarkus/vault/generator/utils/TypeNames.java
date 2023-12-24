@@ -166,9 +166,6 @@ public record TypeNames(API api) {
     }
 
     public TypeName typeName(String genericType) {
-        if (!genericType.contains("<")) {
-            return getPrimitive(genericType).orElseGet(() -> className(genericType));
-        }
 
         // Wrap the input within a fake class to create a valid Java file that JavaParser can parse
         String fakeClass = "public class FakeClass { " + genericType + " fakeField; }";

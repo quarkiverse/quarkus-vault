@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import io.quarkus.vault.client.VaultClientException;
-import io.quarkus.vault.client.util.JsonMapping;
+import io.quarkus.vault.client.json.JsonMapping;
 
 public class VaultJSONResultExtractor<T> implements VaultResultExtractor<T> {
 

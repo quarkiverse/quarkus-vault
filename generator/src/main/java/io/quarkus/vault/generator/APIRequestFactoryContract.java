@@ -253,18 +253,11 @@ public class APIRequestFactoryContract extends BaseAPIGenerator implements APIGe
             body.add(".expectAnyStatus()");
         } else {
             switch (operation.getStatus().get()) {
-                case OK:
-                    body.add(".expectOkStatus()");
-                    break;
-                case NO_CONTENT:
-                    body.add(".expectNoContentStatus()");
-                    break;
-                case ACCEPTED:
-                    body.add(".expectAcceptedStatus()");
-                    break;
-                case OK_OR_ACCEPTED:
-                    body.add(".expectOkOrAcceptedStatus()");
-                    break;
+                case OK -> body.add(".expectOkStatus()");
+                case NO_CONTENT -> body.add(".expectNoContentStatus()");
+                case ACCEPTED -> body.add(".expectAcceptedStatus()");
+                case OK_OR_ACCEPTED -> body.add(".expectOkOrAcceptedStatus()");
+                case OK_OR_NO_CONTENT -> body.add(".expectOkOrNoContentStatus()");
             }
         }
         body.add("\n");

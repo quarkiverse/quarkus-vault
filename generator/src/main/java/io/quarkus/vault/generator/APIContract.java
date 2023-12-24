@@ -153,6 +153,20 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
             }
         }
 
+        operation.recoverNotFound().ifPresent(recoverNotFound -> {
+            var recoverArguments = recoverNotFound.arguments().orElse(List.of()).stream()
+                    .map(argument -> {
+                        if (argument.startsWith("<type>")) {
+                            return typeName(argument.substring("<type>".length()));
+                        } else {
+                            return argument;
+                        }
+                    });
+
+            body.add("\n.onFailure($T.INSTANCE)\n", typeName("$$.api.common.VaultNotFoundPredicate"));
+            body.add(".recoverWithItem(() -> " + recoverNotFound.using() + ")", recoverArguments.toArray());
+        });
+
         body.add(";$]");
 
         return body.build();

@@ -14,11 +14,12 @@ import org.testcontainers.vault.VaultContainer;
 
 import io.quarkus.vault.client.api.sys.init.VaultSysInitParams;
 import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient;
+import io.quarkus.vault.client.test.VaultClientTestExtension;
 
 @Testcontainers
 public class VaultSysSealTest {
 
-    VaultContainer<?> container = new VaultContainer<>("hashicorp/vault:1.15.2")
+    VaultContainer<?> container = new VaultContainer<>(VaultClientTestExtension.getVaultImage())
             .withEnv("VAULT_LOG_LEVEL", "debug")
             .withClasspathResourceMapping("simple-config.hcl", "/vault/config/vault.hcl", BindMode.READ_ONLY)
             .withCommand("server");

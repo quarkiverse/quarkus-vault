@@ -7,12 +7,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record PartialPOJO(
         @JsonProperty("implements") Optional<List<String>> implementNames,
+        Optional<List<POJO.Annotation>> annotations,
         Optional<List<POJO>> nested,
         Optional<List<POJO.Property>> properties,
         Optional<List<POJO.Method>> methods) implements AnyPOJO {
 
     public static PartialPOJO of(List<POJO.Property> properties) {
-        return new PartialPOJO(Optional.empty(), Optional.empty(), Optional.of(properties), Optional.empty());
+        return new PartialPOJO(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(properties), Optional.empty());
     }
 
     @Override

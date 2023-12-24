@@ -1,4 +1,4 @@
-package io.quarkus.vault.client.util;
+package io.quarkus.vault.client.json;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
@@ -16,6 +16,7 @@ public class JsonMapping {
     static {
         mapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.registerModule(VaultModule.INSTANCE);
     }
 
     public static <T> T convert(Object data, Class<T> type) {

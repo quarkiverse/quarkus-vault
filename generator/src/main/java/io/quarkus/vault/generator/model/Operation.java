@@ -29,7 +29,8 @@ public record Operation(
         Optional<String> bodyType,
         Optional<List<String>> queryFrom,
         Optional<Map<String, String>> headers,
-        Optional<Result> result) {
+        Optional<Result> result,
+        Optional<Recover> recoverNotFound) {
 
     public enum Method {
         GET(false),
@@ -51,6 +52,11 @@ public record Operation(
         }
     }
 
+    public record Recover(
+            @JsonProperty(required = true) String using,
+            Optional<List<String>> arguments) {
+    }
+
     public record Parameter(
             @JsonProperty(required = true) String name,
             Optional<String> serializedName,
@@ -59,7 +65,7 @@ public record Operation(
             Optional<Boolean> body,
             Optional<String> type,
             Optional<List<String>> includeIn,
-            Optional<List<POJO.Property.Annotation>> annotations,
+            Optional<List<POJO.Annotation>> annotations,
             Optional<List<POJO.Property>> object) {
 
         public POJO.Property asProperty() {
