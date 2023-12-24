@@ -17,6 +17,7 @@ operations:
     type: String
   result:
     kind: leased
+    unwrapAuth: true
     auth:
     - name: role
       type: String
@@ -24,7 +25,7 @@ operations:
       type: String
     - name: serviceAccountNamespace
       type: String
-    - name: serviceAccountUID
+    - name: serviceAccountUid
       type: String
     - name: serviceAccountSecretName
       type: String
@@ -97,6 +98,8 @@ operations:
       type: String
     - name: tokenMaxTtl
       type: String
+    - name: tokenPolicies
+      type: java.util.List<String>
     - name: tokenBoundCidrs
       type: java.util.List<String>
     - name: tokenExplicitMaxTtl
@@ -109,12 +112,6 @@ operations:
       type: String
     - name: tokenType
       type: String
-  result:
-    kind: leased
-    unwrapData: true
-    data:
-    - name: keys
-      type: java.util.List<String>
 
 
 - name: readRole
@@ -139,6 +136,8 @@ operations:
       type: String
     - name: tokenMaxTtl
       type: String
+    - name: tokenPolicies
+      type: java.util.List<String>
     - name: tokenBoundCidrs
       type: java.util.List<String>
     - name: tokenExplicitMaxTtl

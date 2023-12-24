@@ -9,6 +9,7 @@ import java.security.MessageDigest;
 import java.util.HexFormat;
 
 import org.junit.jupiter.api.extension.*;
+import org.testcontainers.containers.Network;
 import org.testcontainers.vault.VaultContainer;
 
 import io.quarkus.vault.client.VaultClient;
@@ -52,7 +53,8 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
             .withCommand("server", "-dev", "-dev-root-token-id=root", "-dev-plugin-dir=/vault/plugins")
             .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY)
             .withVaultToken("root")
-            .withEnv("VAULT_ADDR", "http://127.0.0.1:8200");
+            .withEnv("VAULT_ADDR", "http://127.0.0.1:8200")
+            .withNetwork(Network.SHARED);
 
     private final JDKVaultHttpClient httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient());
     private VaultClient vaultClient;
