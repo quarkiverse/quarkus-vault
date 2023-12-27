@@ -1,14 +1,15 @@
 package io.quarkus.vault.client.auth.unwrap;
 
+import java.util.Map;
+
 import io.quarkus.vault.client.api.secrets.kv.VaultSecretsKVReadResult;
-import io.quarkus.vault.client.api.secrets.kv1.VaultSecretsKV1ReadResult;
-import io.quarkus.vault.client.api.secrets.kv2.VaultSecretsKV2ReadSecretResult;
+import io.quarkus.vault.client.api.secrets.kv2.VaultSecretsKV2ReadSecretData;
 
 /**
  * A {@link VaultUnwrappingValueProvider} for Vault KV secrets generated with the KV engine's
  * {@link VaultSecretsKVReadResult Read Secret}.
  */
-public class VaultKeyValueUnwrappingValueProvider extends VaultUnwrappingValueProvider<VaultSecretsKVReadResult> {
+public class VaultKeyValueUnwrappingValueProvider extends VaultUnwrappingValueProvider<Object> {
 
     private final String valueKey;
     private final int version;
@@ -25,12 +26,16 @@ public class VaultKeyValueUnwrappingValueProvider extends VaultUnwrappingValuePr
     }
 
     @Override
-    public Class<? extends VaultSecretsKVReadResult> getUnwrapResultType() {
-        return version == 1 ? VaultSecretsKV1ReadResult.class : VaultSecretsKV2ReadSecretResult.class;
+    public Class<?> getUnwrapResultType() {
+        return version == 1 ? Map.class : VaultSecretsKV2ReadSecretData.class;
     }
 
     @Override
-    public String extractClientToken(VaultSecretsKVReadResult result) {
-        return result.getValues().get(valueKey).toString();
+    public String extractClientToken(Object result) {
+        if (version == 1) {
+            return ((Map<?, ?>) result).get(valueKey).toString();
+        } else {
+            return ((VaultSecretsKV2ReadSecretData) result).getData().get(valueKey).toString();
+        }
     }
 }

@@ -12,6 +12,7 @@ import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.api.sys.wrapping.VaultSysWrapping;
 import io.quarkus.vault.client.auth.VaultAuthRequest;
+import io.quarkus.vault.client.json.JsonMapping;
 import io.smallrye.mutiny.Uni;
 
 public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements VaultValueProvider {
@@ -34,10 +35,16 @@ public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements Vaul
     public Uni<String> apply(VaultAuthRequest unwrapRequest) {
         return unwrappingCache.get(wrappingToken, (token) -> {
             var executor = unwrapRequest.getExecutor();
-            var api = new VaultSysWrapping(executor);
-            return api.unwrapAs(token, getUnwrapResultType())
-                    .map(res -> {
-                        var unwrappedClientToken = extractClientToken(res);
+            var request = VaultSysWrapping.FACTORY.unwrap()
+                    .builder()
+                    .token(token)
+                    .rebuild();
+            return executor.execute(request)
+                    .map(response -> {
+                        var result = response.getResult();
+                        var value = result.getAuth() != null ? result.getAuth() : result.getData();
+                        var unwrappedValue = JsonMapping.mapper.convertValue(value, getUnwrapResultType());
+                        var unwrappedClientToken = extractClientToken(unwrappedValue);
 
                         String displayValue = unwrapRequest.getRequest().getLogConfidentialityLevel()
                                 .maskWithTolerance(unwrappedClientToken, LOW);

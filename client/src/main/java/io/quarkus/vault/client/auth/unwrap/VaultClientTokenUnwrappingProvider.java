@@ -1,12 +1,13 @@
 package io.quarkus.vault.client.auth.unwrap;
 
+import io.quarkus.vault.client.api.auth.token.VaultAuthTokenCreateAuthResult;
 import io.quarkus.vault.client.api.auth.token.VaultAuthTokenCreateResult;
 
 /**
  * A {@link VaultUnwrappingValueProvider} for Vault client tokens generated with the Token engine's
  * {@link VaultAuthTokenCreateResult Create Token}.
  */
-public class VaultClientTokenUnwrappingProvider extends VaultUnwrappingValueProvider<VaultAuthTokenCreateResult> {
+public class VaultClientTokenUnwrappingProvider extends VaultUnwrappingValueProvider<VaultAuthTokenCreateAuthResult> {
 
     public VaultClientTokenUnwrappingProvider(String wrappingToken) {
         super(wrappingToken);
@@ -18,12 +19,12 @@ public class VaultClientTokenUnwrappingProvider extends VaultUnwrappingValueProv
     }
 
     @Override
-    public Class<VaultAuthTokenCreateResult> getUnwrapResultType() {
-        return null;
+    public Class<VaultAuthTokenCreateAuthResult> getUnwrapResultType() {
+        return VaultAuthTokenCreateAuthResult.class;
     }
 
     @Override
-    public String extractClientToken(VaultAuthTokenCreateResult result) {
-        return result.getAuth().getClientToken();
+    public String extractClientToken(VaultAuthTokenCreateAuthResult result) {
+        return result.getClientToken();
     }
 }

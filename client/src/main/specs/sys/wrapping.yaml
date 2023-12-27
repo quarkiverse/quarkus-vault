@@ -51,6 +51,7 @@ operations:
   method: POST
   path: wrapping/unwrap
   bodyFrom: [token]
+  authenticated: false
   parameters:
   - name: token
     type: String

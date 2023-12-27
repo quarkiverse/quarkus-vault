@@ -47,7 +47,7 @@ public class VaultStaticClientTokenAuthOptions extends VaultAuthOptions {
 
     public final Function<VaultAuthRequest, Uni<String>> tokenProvider;
 
-    public VaultStaticClientTokenAuthOptions(Builder builder) {
+    private VaultStaticClientTokenAuthOptions(Builder builder) {
         super(builder.cachingRenewGracePeriod);
         this.tokenProvider = builder.tokenProvider;
     }

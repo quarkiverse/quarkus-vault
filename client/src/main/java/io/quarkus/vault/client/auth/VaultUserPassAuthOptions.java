@@ -34,7 +34,11 @@ public class VaultUserPassAuthOptions extends VaultAuthOptions {
         }
 
         public Builder unwrappingPassword(String wrappingToken, int kvVersion) {
-            this.passwordProvider = new VaultKeyValueUnwrappingValueProvider(wrappingToken, "password", kvVersion);
+            return unwrappingPassword(wrappingToken, "password", kvVersion);
+        }
+
+        public Builder unwrappingPassword(String wrappingToken, String kvPath, int kvVersion) {
+            this.passwordProvider = new VaultKeyValueUnwrappingValueProvider(wrappingToken, kvPath, kvVersion);
             return this;
         }
 
