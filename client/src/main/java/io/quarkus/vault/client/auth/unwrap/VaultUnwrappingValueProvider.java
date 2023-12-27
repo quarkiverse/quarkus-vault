@@ -35,11 +35,7 @@ public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements Vaul
     public Uni<String> apply(VaultAuthRequest unwrapRequest) {
         return unwrappingCache.get(wrappingToken, (token) -> {
             var executor = unwrapRequest.getExecutor();
-            var request = VaultSysWrapping.FACTORY.unwrap()
-                    .builder()
-                    .token(token)
-                    .rebuild();
-            return executor.execute(request)
+            return executor.execute(VaultSysWrapping.FACTORY.unwrap(token))
                     .map(response -> {
                         var result = response.getResult();
                         var value = result.getAuth() != null ? result.getAuth() : result.getData();
