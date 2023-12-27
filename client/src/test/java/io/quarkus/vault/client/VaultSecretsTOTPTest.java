@@ -2,6 +2,8 @@ package io.quarkus.vault.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.secrets.totp.VaultSecretsTOTPCreateKeyParams;
@@ -75,7 +77,7 @@ public class VaultSecretsTOTPTest {
         assertThat(keyInfo.getDigits())
                 .isEqualTo(6);
         assertThat(keyInfo.getPeriod())
-                .isEqualTo(30);
+                .isEqualTo(Duration.ofSeconds(30));
     }
 
     @Test

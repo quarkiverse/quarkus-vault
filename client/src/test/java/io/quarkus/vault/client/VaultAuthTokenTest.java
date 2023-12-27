@@ -3,6 +3,7 @@ package io.quarkus.vault.client;
 import static java.time.OffsetDateTime.now;
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.auth.token.VaultAuthTokenCreateTokenParams;
 import io.quarkus.vault.client.api.auth.token.VaultAuthTokenUpdateRoleParams;
+import io.quarkus.vault.client.api.common.VaultTokenType;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
 
@@ -57,7 +59,7 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.getEntityId())
                 .isEmpty();
         assertThat(tokenInfo.getTokenType())
-                .isEqualTo("service");
+                .isEqualTo(VaultTokenType.SERVICE);
         assertThat(tokenInfo.isOrphan())
                 .isFalse();
         assertThat(tokenInfo.getMfaRequirement())
@@ -104,7 +106,7 @@ public class VaultAuthTokenTest {
                 .setDisplayName("My Token")
                 .setPolicies(List.of(policy))
                 .setMeta(Map.of("foo", "bar"))
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
                 .await().indefinitely();
 
@@ -116,7 +118,7 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.getCreationTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
         assertThat(tokenInfo.getCreationTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(tokenInfo.getDisplayName())
                 .isEqualTo("token-My-Token");
         assertThat(tokenInfo.getEntityId())
@@ -124,7 +126,7 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.getExpireTime())
                 .isBetween(now().plusSeconds(58), now().plusSeconds(62));
         assertThat(tokenInfo.getExplicitMaxTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(tokenInfo.getId())
                 .isEqualTo(tokenId);
         assertThat(tokenInfo.getIdentityPolicies())
@@ -144,11 +146,11 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.isRenewable())
                 .isTrue();
         assertThat(tokenInfo.getTtl())
-                .isBetween(57L, 60L);
+                .isBetween(Duration.ofSeconds(57L), Duration.ofSeconds(60L));
         assertThat(tokenInfo.getRole())
                 .isNull();
         assertThat(tokenInfo.getType())
-                .isEqualTo("service");
+                .isEqualTo(VaultTokenType.SERVICE);
     }
 
     @Test
@@ -168,7 +170,7 @@ public class VaultAuthTokenTest {
                 .setDisplayName("My Token")
                 .setPolicies(List.of(policy))
                 .setMeta(Map.of("foo", "bar"))
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
                 .await().indefinitely();
 
@@ -182,7 +184,7 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.getCreationTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
         assertThat(tokenInfo.getCreationTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(tokenInfo.getDisplayName())
                 .isEqualTo("token-My-Token");
         assertThat(tokenInfo.getEntityId())
@@ -190,7 +192,7 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.getExpireTime())
                 .isBetween(now().plusSeconds(58), now().plusSeconds(62));
         assertThat(tokenInfo.getExplicitMaxTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(tokenInfo.getId())
                 .isEqualTo(tokenId);
         assertThat(tokenInfo.getIdentityPolicies())
@@ -210,7 +212,7 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.isRenewable())
                 .isTrue();
         assertThat(tokenInfo.getTtl())
-                .isBetween(57L, 60L);
+                .isBetween(Duration.ofSeconds(57L), Duration.ofSeconds(60L));
     }
 
     @Test
@@ -221,7 +223,7 @@ public class VaultAuthTokenTest {
                 .setId(tokenId)
                 .setDisplayName("My Token")
                 .setMeta(Map.of("foo", "bar"))
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
                 .await().indefinitely();
 
@@ -235,7 +237,7 @@ public class VaultAuthTokenTest {
         assertThat(accessorInfo.getCreationTime())
                 .isBetween(now().minusSeconds(2), now().plusSeconds(2));
         assertThat(accessorInfo.getCreationTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(accessorInfo.getDisplayName())
                 .isEqualTo("token-My-Token");
         assertThat(accessorInfo.getEntityId())
@@ -243,7 +245,7 @@ public class VaultAuthTokenTest {
         assertThat(accessorInfo.getExpireTime())
                 .isBetween(now().plusSeconds(58), now().plusSeconds(62));
         assertThat(accessorInfo.getExplicitMaxTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(accessorInfo.getId())
                 .isEmpty();
         assertThat(accessorInfo.getIdentityPolicies())
@@ -263,7 +265,7 @@ public class VaultAuthTokenTest {
         assertThat(accessorInfo.isRenewable())
                 .isTrue();
         assertThat(accessorInfo.getTtl())
-                .isBetween(57L, 60L);
+                .isBetween(Duration.ofSeconds(57L), Duration.ofSeconds(60L));
     }
 
     @Test
@@ -283,7 +285,7 @@ public class VaultAuthTokenTest {
                 .setDisplayName("My Token")
                 .setPolicies(List.of(policy))
                 .setMeta(Map.of("foo", "bar"))
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
                 .await().indefinitely();
 
@@ -303,13 +305,13 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.getMetadata())
                 .containsEntry("foo", "bar");
         assertThat(tokenInfo.getLeaseDuration())
-                .isEqualTo(30);
+                .isEqualTo(Duration.ofSeconds(30));
         assertThat(tokenInfo.isRenewable())
                 .isTrue();
         assertThat(tokenInfo.getEntityId())
                 .isEmpty();
         assertThat(tokenInfo.getTokenType())
-                .isEqualTo("service");
+                .isEqualTo(VaultTokenType.SERVICE);
         assertThat(tokenInfo.isOrphan())
                 .isFalse();
         assertThat(tokenInfo.getMfaRequirement())
@@ -335,7 +337,7 @@ public class VaultAuthTokenTest {
                 .setDisplayName("My Token")
                 .setPolicies(List.of(policy))
                 .setMeta(Map.of("foo", "bar"))
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
                 .await().indefinitely();
 
@@ -357,13 +359,13 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.getMetadata())
                 .containsEntry("foo", "bar");
         assertThat(tokenInfo.getLeaseDuration())
-                .isEqualTo(30);
+                .isEqualTo(Duration.ofSeconds(30));
         assertThat(tokenInfo.isRenewable())
                 .isTrue();
         assertThat(tokenInfo.getEntityId())
                 .isEmpty();
         assertThat(tokenInfo.getTokenType())
-                .isEqualTo("service");
+                .isEqualTo(VaultTokenType.SERVICE);
         assertThat(tokenInfo.isOrphan())
                 .isFalse();
         assertThat(tokenInfo.getMfaRequirement())
@@ -389,7 +391,7 @@ public class VaultAuthTokenTest {
                 .setDisplayName("My Token")
                 .setPolicies(List.of(policy))
                 .setMeta(Map.of("foo", "bar"))
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
                 .await().indefinitely();
 
@@ -409,13 +411,13 @@ public class VaultAuthTokenTest {
         assertThat(tokenInfo.getMetadata())
                 .containsEntry("foo", "bar");
         assertThat(tokenInfo.getLeaseDuration())
-                .isEqualTo(30);
+                .isEqualTo(Duration.ofSeconds(30));
         assertThat(tokenInfo.isRenewable())
                 .isTrue();
         assertThat(tokenInfo.getEntityId())
                 .isEmpty();
         assertThat(tokenInfo.getTokenType())
-                .isEqualTo("service");
+                .isEqualTo(VaultTokenType.SERVICE);
         assertThat(tokenInfo.isOrphan())
                 .isFalse();
         assertThat(tokenInfo.getMfaRequirement())
@@ -511,11 +513,11 @@ public class VaultAuthTokenTest {
                 .setPathSuffix("foo")
                 .setAllowedEntityAliases(List.of("foo", "bar"))
                 .setTokenBoundCidrs(List.of("127.0.0.1/32"))
-                .setTokenExplicitMaxTtl(120L)
+                .setTokenExplicitMaxTtl(Duration.ofMinutes(2))
                 .setTokenNoDefaultPolicy(true)
                 .setTokenNumUses(5)
-                .setTokenPeriod("90s")
-                .setTokenType("service"))
+                .setTokenPeriod(Duration.ofSeconds(90))
+                .setTokenType(VaultTokenType.SERVICE))
                 .await().indefinitely();
 
         var roleInfo = tokenApi.readRole(role)
@@ -534,7 +536,7 @@ public class VaultAuthTokenTest {
         assertThat(roleInfo.getDisallowedPoliciesGlob())
                 .contains("default*");
         assertThat(roleInfo.getExplicitMaxTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(roleInfo.getName())
                 .isEqualTo(role);
         assertThat(roleInfo.isOrphan())
@@ -542,17 +544,17 @@ public class VaultAuthTokenTest {
         assertThat(roleInfo.getPathSuffix())
                 .isEqualTo("foo");
         assertThat(roleInfo.getPeriod())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(roleInfo.isRenewable())
                 .isFalse();
         assertThat(roleInfo.getTokenExplicitMaxTtl())
-                .isEqualTo(120);
+                .isEqualTo(Duration.ofMinutes(2));
         assertThat(roleInfo.isTokenNoDefaultPolicy())
                 .isTrue();
         assertThat(roleInfo.getTokenPeriod())
-                .isEqualTo(90);
+                .isEqualTo(Duration.ofSeconds(90));
         assertThat(roleInfo.getTokenType())
-                .isEqualTo("service");
+                .isEqualTo(VaultTokenType.SERVICE);
     }
 
     @Test

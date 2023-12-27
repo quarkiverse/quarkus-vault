@@ -2,6 +2,7 @@ package io.quarkus.vault.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -31,9 +32,9 @@ public class VaultSysMountsTest {
         assertThat(kvMountInfo.getConfig())
                 .isNotNull();
         assertThat(kvMountInfo.getConfig().getDefaultLeaseTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(kvMountInfo.getConfig().getMaxLeaseTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(kvMountInfo.getConfig().isForceNoCache())
                 .isFalse();
         assertThat(kvMountInfo.getDeprecationStatus())
@@ -74,9 +75,9 @@ public class VaultSysMountsTest {
         assertThat(kvMountInfo.getConfig())
                 .isNotNull();
         assertThat(kvMountInfo.getConfig().getDefaultLeaseTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(kvMountInfo.getConfig().getMaxLeaseTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(kvMountInfo.getConfig().isForceNoCache())
                 .isFalse();
         assertThat(kvMountInfo.getDeprecationStatus())
@@ -156,9 +157,9 @@ public class VaultSysMountsTest {
         assertThat(kvTuneInfo.getDescription())
                 .isEqualTo("key/value secret storage");
         assertThat(kvTuneInfo.getDefaultLeaseTtl())
-                .isEqualTo(2764800L);
+                .isEqualTo(Duration.ofDays(32));
         assertThat(kvTuneInfo.getMaxLeaseTtl())
-                .isEqualTo(2764800L);
+                .isEqualTo(Duration.ofDays(32));
         assertThat(kvTuneInfo.isForceNoCache())
                 .isFalse();
         assertThat(kvTuneInfo.getAllowedManagedKeys())
@@ -184,8 +185,8 @@ public class VaultSysMountsTest {
 
         mountApi.tune(path, new VaultSysMountsTuneOptions()
                 .setDescription("test mount")
-                .setDefaultLeaseTtl("90s")
-                .setMaxLeaseTtl("120s")
+                .setDefaultLeaseTtl(Duration.ofSeconds(90))
+                .setMaxLeaseTtl(Duration.ofMinutes(2))
                 .setAuditNonHmacRequestKeys(List.of("key1", "key2"))
                 .setAuditNonHmacResponseKeys(List.of("key3", "key4"))
                 .setListingVisibility("hidden")
@@ -198,9 +199,9 @@ public class VaultSysMountsTest {
                 .await().indefinitely();
 
         assertThat(kvTuneInfo.getDefaultLeaseTtl())
-                .isEqualTo(90L);
+                .isEqualTo(Duration.ofSeconds(90));
         assertThat(kvTuneInfo.getMaxLeaseTtl())
-                .isEqualTo(120L);
+                .isEqualTo(Duration.ofMinutes(2));
         assertThat(kvTuneInfo.isForceNoCache())
                 .isFalse();
         assertThat(kvTuneInfo.getDescription())

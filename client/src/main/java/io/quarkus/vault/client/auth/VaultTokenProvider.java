@@ -11,4 +11,7 @@ public interface VaultTokenProvider extends Function<VaultAuthRequest, Uni<Vault
         return new VaultCachingTokenProvider(this, renewGracePeriod);
     }
 
+    default void invalidateCache() {
+    }
+
 }

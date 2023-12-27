@@ -4,17 +4,18 @@ import java.util.List;
 
 public class VaultClientException extends VaultException {
 
-    private String operationName;
-    private String requestPath;
-    private int status;
-    private List<String> errors;
-    private String body;
+    private final String operationName;
+    private final String requestPath;
+    private final int status;
+    private final List<String> errors;
+    private final String body;
 
     public VaultClientException(String operationName, String requestPath, int status, String body) {
         this.operationName = operationName;
         this.requestPath = requestPath;
         this.status = status;
         this.body = body;
+        this.errors = List.of();
     }
 
     public VaultClientException(String operationName, String requestPath, int status, List<String> errors) {
@@ -22,6 +23,7 @@ public class VaultClientException extends VaultException {
         this.requestPath = requestPath;
         this.status = status;
         this.errors = errors;
+        this.body = null;
     }
 
     public String getOperationName() {
@@ -44,6 +46,10 @@ public class VaultClientException extends VaultException {
         return body;
     }
 
+    public boolean isPermissionDenied() {
+        return status == 403;
+    }
+
     @Override
     public String toString() {
         return "VaultClientException{" +
@@ -53,5 +59,9 @@ public class VaultClientException extends VaultException {
                 (errors != null ? ", errors=" + errors : "") +
                 (body != null ? ", body='" + body + '\'' : "") +
                 '}';
+    }
+
+    public boolean hasErrorContaining(String message) {
+        return errors != null && errors.stream().anyMatch(e -> e.contains(message));
     }
 }

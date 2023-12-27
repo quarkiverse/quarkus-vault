@@ -24,13 +24,14 @@ public class VaultUserPassTokenProvider implements VaultTokenProvider {
 
     @Override
     public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
-        var executor = authRequest.executor();
+        var executor = authRequest.getExecutor();
         return passwordProvider.apply(authRequest).flatMap(password -> {
             return executor.execute(VaultAuthUserPass.FACTORY.login(mountPath, username, password))
                     .map(VaultResponse::getResult)
                     .map(res -> {
                         var auth = res.getAuth();
-                        return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration());
+                        return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration(),
+                                authRequest.getInstantSource());
                     });
         });
     }

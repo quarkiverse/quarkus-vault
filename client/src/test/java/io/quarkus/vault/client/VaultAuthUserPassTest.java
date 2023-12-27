@@ -2,12 +2,14 @@ package io.quarkus.vault.client;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.auth.userpass.VaultAuthUserPassUpdateUserParams;
+import io.quarkus.vault.client.api.common.VaultTokenType;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
 import io.quarkus.vault.client.test.VaultClientTest.Mount;
@@ -32,6 +34,46 @@ public class VaultAuthUserPassTest {
 
         assertThat(login.getClientToken())
                 .isNotNull();
+    }
+
+    @Test
+    public void testUpdateUser(VaultClient client, @Random String user) {
+        var userPassApi = client.auth().userPass();
+
+        userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
+                .setTokenBoundCidrs(List.of("127.0.0.1"))
+                .setTokenTtl(Duration.ofHours(1))
+                .setTokenMaxTtl(Duration.ofHours(2))
+                .setTokenPolicies(List.of("default"))
+                .setTokenNoDefaultPolicy(true)
+                .setTokenNumUses(5)
+                .setTokenPeriod(Duration.ofMinutes(10))
+                .setTokenExplicitMaxTtl(Duration.ofHours(3))
+                .setPassword("test")
+                .setTokenType(VaultTokenType.DEFAULT))
+                .await().indefinitely();
+
+        var userInfo = userPassApi.readUser(user)
+                .await().indefinitely();
+
+        assertThat(userInfo.getTokenBoundCidrs())
+                .contains("127.0.0.1");
+        assertThat(userInfo.getTokenTtl())
+                .isEqualTo(Duration.ofHours(1));
+        assertThat(userInfo.getTokenMaxTtl())
+                .isEqualTo(Duration.ofHours(2));
+        assertThat(userInfo.getTokenPolicies())
+                .contains("default");
+        assertThat(userInfo.isTokenNoDefaultPolicy())
+                .isTrue();
+        assertThat(userInfo.getTokenNumUses())
+                .isEqualTo(5);
+        assertThat(userInfo.getTokenPeriod())
+                .isEqualTo(Duration.ofMinutes(10));
+        assertThat(userInfo.getTokenExplicitMaxTtl())
+                .isEqualTo(Duration.ofHours(3));
+        assertThat(userInfo.getTokenType())
+                .isEqualTo(VaultTokenType.DEFAULT);
     }
 
     @Disabled("updateUserPolicies succeeds but doesnt apply policies, unknown if this is a bug in Vault or the client")
@@ -79,7 +121,7 @@ public class VaultAuthUserPassTest {
         // Create user
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test")
-                .setTokenMaxTtl("15h"))
+                .setTokenMaxTtl(Duration.ofHours(15)))
                 .await().indefinitely();
 
         // Update user
@@ -95,7 +137,7 @@ public class VaultAuthUserPassTest {
         assertThat(userInfo.getTokenPolicies())
                 .contains(userPolicy);
         assertThat(userInfo.getTokenMaxTtl())
-                .isEqualTo("54000");
+                .isEqualTo(Duration.ofHours(15));
     }
 
     @Test

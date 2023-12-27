@@ -3,6 +3,7 @@ package io.quarkus.vault.client;
 import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.InstantSource;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -16,6 +17,7 @@ import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.common.VaultTracingExecutor;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.operators.uni.UniRetryAtMost;
 
 public class VaultClient implements VaultRequestExecutor {
 
@@ -28,6 +30,7 @@ public class VaultClient implements VaultRequestExecutor {
         private String namespace;
         private Duration requestTimeout;
         private LogConfidentialityLevel logConfidentialityLevel;
+        private InstantSource instantSource = InstantSource.system();
 
         public Builder baseUrl(URL baseUrl) {
             this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl is required");
@@ -44,6 +47,7 @@ public class VaultClient implements VaultRequestExecutor {
 
         public Builder apiVersion(String apiVersion) {
             this.apiVersion = Objects.requireNonNull(apiVersion, "apiVersion is required");
+            assert apiVersion.startsWith("v");
             return this;
         }
 
@@ -122,6 +126,19 @@ public class VaultClient implements VaultRequestExecutor {
             return this;
         }
 
+        /**
+         * Sets the {@link InstantSource} to use for time-based operations.
+         * <p>
+         * This is for testing.
+         *
+         * @param instantSource the instant source
+         * @return this builder
+         */
+        public Builder instantSource(InstantSource instantSource) {
+            this.instantSource = instantSource;
+            return this;
+        }
+
         public VaultClient build() {
             return new VaultClient(this);
         }
@@ -141,6 +158,7 @@ public class VaultClient implements VaultRequestExecutor {
     private final LogConfidentialityLevel logConfidentialityLevel;
     private final VaultTokenProvider tokenProvider;
     private final String namespace;
+    private final InstantSource instantSource;
 
     private VaultClient(Builder builder) {
         this.baseUrl = Objects.requireNonNull(builder.baseUrl, "baseUrl is required");
@@ -150,6 +168,7 @@ public class VaultClient implements VaultRequestExecutor {
         this.requestTimeout = builder.requestTimeout;
         this.tokenProvider = builder.tokenProvider;
         this.namespace = builder.namespace;
+        this.instantSource = builder.instantSource;
     }
 
     public VaultSecretsAccessor secrets() {
@@ -168,6 +187,34 @@ public class VaultClient implements VaultRequestExecutor {
 
     public VaultSysAccessor sys() {
         return new VaultSysAccessor(this);
+    }
+
+    public URL getBaseUrl() {
+        return baseUrl;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public VaultRequestExecutor getExecutor() {
+        return executor;
+    }
+
+    public Duration getRequestTimeout() {
+        return requestTimeout;
+    }
+
+    public LogConfidentialityLevel getLogConfidentialityLevel() {
+        return logConfidentialityLevel;
+    }
+
+    public VaultTokenProvider getTokenProvider() {
+        return tokenProvider;
+    }
+
+    public String getNamespace() {
+        return namespace;
     }
 
     @Override
@@ -194,17 +241,29 @@ public class VaultClient implements VaultRequestExecutor {
             return executor.execute(requestBuilder.rebuild());
         }
 
-        return tokenProvider.apply(VaultAuthRequest.of(this, request))
+        var appliedToken = new AtomicReference<VaultToken>(null);
+
+        var response = tokenProvider.apply(VaultAuthRequest.of(this, request, instantSource))
                 .flatMap(token -> {
+
+                    appliedToken.set(token);
 
                     if (token == null) {
                         requestBuilder.noToken();
                     } else {
-                        requestBuilder.token(token.clientToken);
+                        requestBuilder.token(token.getClientToken());
                     }
 
                     return executor.execute(requestBuilder.rebuild());
                 });
+
+        return new UniRetryAtMost<>(response, e -> {
+            if (e instanceof VaultClientException ve) {
+                var token = appliedToken.get();
+                return ve.isPermissionDenied() && token != null && token.isFromCache();
+            }
+            return false;
+        }, 1).invoke(tokenProvider::invalidateCache);
     }
 
     public VaultClient.Builder configure() {

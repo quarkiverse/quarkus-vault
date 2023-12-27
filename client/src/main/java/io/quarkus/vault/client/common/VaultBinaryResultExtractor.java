@@ -1,9 +1,11 @@
 package io.quarkus.vault.client.common;
 
-class VaultBinaryResultExtractor implements VaultResultExtractor<byte[]> {
+import java.util.Optional;
+
+public class VaultBinaryResultExtractor implements VaultResultExtractor<byte[]> {
 
     @Override
-    public byte[] extract(VaultResponse<byte[]> response) {
-        return response.body;
+    public Optional<byte[]> extract(VaultResponse<byte[]> response) {
+        return response.getBody();
     }
 }

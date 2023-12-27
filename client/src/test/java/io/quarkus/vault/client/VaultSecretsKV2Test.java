@@ -142,6 +142,18 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
+    void testListEmpty(VaultClient client, @Random String path) {
+
+        var kvApi = client.secrets().kv2("kv-v2");
+
+        var keys = kvApi.listSecrets(path)
+                .await().indefinitely();
+
+        assertThat(keys)
+                .isEmpty();
+    }
+
+    @Test
     void testDelete(VaultClient client, @Random String path) {
 
         var kvApi = client.secrets().kv2("kv-v2");

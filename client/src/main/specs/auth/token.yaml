@@ -205,7 +205,7 @@ operations:
     - name: disallowedPoliciesGlob
       type: java.util.List<String>
     - name: explicitMaxTtl
-      type: Long
+      type: java.time.Duration
     - name: name
       type: String
     - name: orphan
@@ -213,17 +213,17 @@ operations:
     - name: pathSuffix
       type: String
     - name: period
-      type: Long
+      type: java.time.Duration
     - name: renewable
       type: Boolean
     - name: tokenExplicitMaxTtl
-      type: Long
+      type: java.time.Duration
     - name: tokenNoDefaultPolicy
       type: Boolean
     - name: tokenPeriod
-      type: Long
+      type: java.time.Duration
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
 
 
 - name: listRoles
@@ -266,15 +266,15 @@ operations:
     - name: tokenBoundCidrs
       type: java.util.List<String>
     - name: tokenExplicitMaxTtl
-      type: Long
+      type: java.time.Duration
     - name: tokenNoDefaultPolicy
       type: Boolean
     - name: tokenNumUses
       type: Integer
     - name: tokenPeriod
-      type: String
+      type: java.time.Duration
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
 
 
 - name: deleteRole
@@ -304,7 +304,7 @@ types:
   - name: creationTime
     type: java.time.OffsetDateTime
   - name: creationTtl
-    type: Long
+    type: java.time.Duration
   - name: displayName
     type: String
   - name: entityId
@@ -312,7 +312,7 @@ types:
   - name: expireTime
     type: java.time.OffsetDateTime
   - name: explicitMaxTtl
-    type: Long
+    type: java.time.Duration
   - name: id
     type: String
   - name: identityPolicies
@@ -334,9 +334,9 @@ types:
   - name: role
     type: String
   - name: ttl
-    type: Long
+    type: java.time.Duration
   - name: type
-    type: String
+    type: $$.api.common.VaultTokenType
 
 
 - name: CreateTokenParams
@@ -358,16 +358,16 @@ types:
   - name: lease
     type: String
   - name: ttl
-    type: String
+    type: java.time.Duration
   - name: type
-    type: String
+    type: $$.api.common.VaultTokenType
   - name: explicitMaxTtl
-    type: String
+    type: java.time.Duration
   - name: displayName
     type: String
   - name: numUses
     type: Integer
   - name: period
-    type: String
+    type: java.time.Duration
   - name: entityAlias
     type: String

@@ -1,5 +1,8 @@
 package io.quarkus.vault.client.auth;
 
+import static io.quarkus.vault.client.util.OptionalUnis.flatMapEmptyGet;
+import static io.quarkus.vault.client.util.OptionalUnis.flatMapPresent;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -7,8 +10,6 @@ import java.util.logging.Logger;
 
 import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.api.auth.token.VaultAuthToken;
-import io.quarkus.vault.client.api.auth.token.VaultAuthTokenLookupSelfResult;
-import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.smallrye.mutiny.Uni;
 
@@ -18,50 +19,59 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
 
     private static final Logger log = Logger.getLogger(VaultCachingTokenProvider.class.getName());
 
-    private final VaultTokenProvider provider;
+    private final VaultTokenProvider delegate;
     private final Duration renewGracePeriod;
     private final AtomicReference<VaultToken> cachedToken = new AtomicReference<>(null);
 
-    public VaultCachingTokenProvider(VaultTokenProvider provider, Duration renewGracePeriod) {
-        this.provider = provider;
+    public VaultCachingTokenProvider(VaultTokenProvider delegate, Duration renewGracePeriod) {
+        this.delegate = delegate;
         this.renewGracePeriod = renewGracePeriod;
     }
 
     @Override
     public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
-        return Uni.createFrom().item(Optional.ofNullable(cachedToken.get()))
-                // check clientToken is still valid
-                .flatMap(vaultToken -> validate(authRequest, vaultToken))
-                // extend clientToken if necessary
-                .flatMap(vaultToken -> {
-                    if (vaultToken.isPresent() && vaultToken.get().shouldExtend(renewGracePeriod)) {
-                        return extend(authRequest, vaultToken.get().clientToken).map(Optional::of);
+
+        var cachedToken = Optional.ofNullable(this.cachedToken.get())
+                .map(token -> {
+                    if (token.isExpired()) {
+                        log.fine("cached token " + token.getClientToken() + " has expired");
+                        return null;
                     }
-                    return Uni.createFrom().item(vaultToken);
-                })
-                // create new clientToken if necessary
-                .flatMap(vaultToken -> {
-                    if (vaultToken.isEmpty() || vaultToken.get().isExpired()
-                            || vaultToken.get().expiresSoon(renewGracePeriod)) {
-                        return login(authRequest);
+                    log.fine("using cached token " + token.getClientToken() + " (expires at " + token.getExpiresAt() + ")");
+                    return token;
+                });
+
+        return Uni.createFrom().item(cachedToken)
+                // if present, extend token if necessary
+                .plug(flatMapPresent(token -> {
+                    if (token.shouldExtend(renewGracePeriod)) {
+                        return extend(authRequest, token.getClientToken());
                     }
-                    return Uni.createFrom().item(vaultToken.get());
-                })
+                    return Uni.createFrom().item(token);
+                }))
+                // if empty, request new token from delegate
+                .plug(flatMapEmptyGet(() -> request(authRequest)))
+                // cache token
                 .map(vaultToken -> {
-                    cachedToken.set(vaultToken);
+                    this.cachedToken.set(vaultToken.cached());
                     return vaultToken;
                 });
     }
 
     @Override
+    public void invalidateCache() {
+        cachedToken.set(null);
+    }
+
+    @Override
     public VaultTokenProvider caching(Duration renewGracePeriod) {
-        // no caching for cached token
+        // no caching for caching token provider
         return this;
     }
 
-    private Uni<VaultToken> login(VaultAuthRequest authRequest) {
-        var logLevel = authRequest.request().getLogConfidentialityLevel();
-        return provider.apply(authRequest)
+    public Uni<VaultToken> request(VaultAuthRequest authRequest) {
+        var logLevel = authRequest.getRequest().getLogConfidentialityLevel();
+        return delegate.apply(authRequest)
                 .map(vaultToken -> {
                     sanityCheck(vaultToken);
                     log.fine("created new login token: " + vaultToken.getConfidentialInfo(logLevel));
@@ -69,40 +79,30 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
                 });
     }
 
-    private Uni<Optional<VaultToken>> validate(VaultAuthRequest authRequest, Optional<VaultToken> vaultToken) {
-        if (vaultToken.isEmpty()) {
-            return Uni.createFrom().item(Optional.empty());
-        }
-        VaultRequest<VaultAuthTokenLookupSelfResult> request = VaultAuthToken.FACTORY.lookupSelf()
-                .builder()
-                .token(vaultToken.get().clientToken)
-                .rebuild();
-        return authRequest.executor().execute(request)
-                .map(i -> vaultToken)
-                .onFailure(VaultClientException.class).recoverWithUni(e -> {
-                    if (((VaultClientException) e).getStatus() == 403) { // forbidden
-                        log.fine("login token " + vaultToken.get().clientToken + " has become invalid");
-                        return Uni.createFrom().item(Optional.empty());
-                    } else {
-                        return Uni.createFrom().failure(e);
-                    }
-                });
-    }
-
-    private Uni<VaultToken> extend(VaultAuthRequest authRequest, String clientToken) {
-        var logLevel = authRequest.request().getLogConfidentialityLevel();
+    public Uni<VaultToken> extend(VaultAuthRequest authRequest, String clientToken) {
+        var logLevel = authRequest.getRequest().getLogConfidentialityLevel();
         var request = VaultAuthToken.FACTORY.renewSelf(null)
                 .builder()
                 .token(clientToken)
                 .rebuild();
-        return authRequest.executor().execute(request)
+        return authRequest.getExecutor().execute(request)
                 .map(VaultResponse::getResult)
                 .map(res -> {
                     var auth = res.getAuth();
-                    var vaultToken = new VaultToken(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration());
+                    var vaultToken = VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration(),
+                            authRequest.getInstantSource());
                     sanityCheck(vaultToken);
                     log.fine("extended login token: " + vaultToken.getConfidentialInfo(logLevel));
                     return vaultToken;
+                })
+                .onFailure(VaultClientException.class).recoverWithUni(e -> {
+                    var ve = (VaultClientException) e;
+                    if (ve.isPermissionDenied() || ve.hasErrorContaining("lease is not renewable")) {
+                        // token is invalid
+                        log.fine("login token " + clientToken + " has become invalid");
+                        return Uni.createFrom().nullItem();
+                    }
+                    return Uni.createFrom().failure(e);
                 });
     }
 

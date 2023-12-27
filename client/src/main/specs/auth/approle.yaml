@@ -48,27 +48,27 @@ operations:
     - name: secretIdNumUses
       type: Integer
     - name: secretIdTtl
-      type: String
+      type: java.time.Duration
     - name: localSecretIds
       type: Boolean
     - name: tokenTtl
-      type: String
+      type: java.time.Duration
     - name: tokenMaxTtl
-      type: String
+      type: java.time.Duration
     - name: tokenPolicies
       type: java.util.List<String>
     - name: tokenBoundCidrs
       type: java.util.List<String>
     - name: tokenExplicitMaxTtl
-      type: String
+      type: java.time.Duration
     - name: tokenNoDefaultPolicy
       type: Boolean
     - name: tokenNumUses
       type: Integer
     - name: tokenPeriod
-      type: Integer
+      type: java.time.Duration
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
 
 
 - name: readRole
@@ -88,27 +88,27 @@ operations:
     - name: secretIdNumUses
       type: Integer
     - name: secretIdTtl
-      type: String
+      type: java.time.Duration
     - name: localSecretIds
       type: Boolean
     - name: tokenTtl
-      type: String
+      type: java.time.Duration
     - name: tokenMaxTtl
-      type: String
+      type: java.time.Duration
     - name: tokenPolicies
       type: java.util.List<String>
     - name: tokenBoundCidrs
       type: java.util.List<String>
     - name: tokenExplicitMaxTtl
-      type: String
+      type: java.time.Duration
     - name: tokenNoDefaultPolicy
       type: Boolean
     - name: tokenNumUses
       type: Integer
     - name: tokenPeriod
-      type: Integer
+      type: java.time.Duration
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
 
 
 - name: deleteRole
@@ -176,7 +176,7 @@ operations:
     - name: numUses
       type: Integer
     - name: ttl
-      type: String
+      type: java.time.Duration
   result:
     kind: leased
     unwrapData: true
@@ -186,7 +186,7 @@ operations:
     - name: secretIdAccessor
       type: String
     - name: secretIdTtl
-      type: Long
+      type: java.time.Duration
     - name: secretIdNumUses
       type: Integer
 
@@ -235,7 +235,7 @@ operations:
     - name: secretIdNumUses
       type: Integer
     - name: secretIdTtl
-      type: Long
+      type: java.time.Duration
     - name: tokenBoundCidrs
       type: java.util.List<String>
 
@@ -286,7 +286,7 @@ operations:
     - name: numUses
       type: Integer
     - name: ttl
-      type: String
+      type: java.time.Duration
   result:
     kind: leased
     unwrapData: true
@@ -296,7 +296,7 @@ operations:
     - name: secretIdAccessor
       type: String
     - name: secretIdTtl
-      type: Long
+      type: java.time.Duration
     - name: secretIdNumUses
       type: Integer
 
@@ -330,7 +330,7 @@ operations:
     - name: secretIdNumUses
       type: Integer
     - name: secretIdTtl
-      type: Long
+      type: java.time.Duration
     - name: tokenBoundCidrs
       type: java.util.List<String>
 

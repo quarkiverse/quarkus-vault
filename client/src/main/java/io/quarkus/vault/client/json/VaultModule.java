@@ -1,5 +1,7 @@
 package io.quarkus.vault.client.json;
 
+import java.time.Duration;
+
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -14,6 +16,8 @@ public class VaultModule extends SimpleModule {
 
     public VaultModule() {
         super("VaultModule");
+        addSerializer(Duration.class, new VaultDurationStringSerializer());
+        addDeserializer(Duration.class, new VaultDurationStringDeserializer());
         setDeserializerModifier(new BeanDeserializerModifier() {
             @Override
             public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc,

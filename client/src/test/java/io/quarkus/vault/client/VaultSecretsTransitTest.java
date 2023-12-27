@@ -13,6 +13,7 @@ import java.security.*;
 import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PSSParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
@@ -51,7 +52,7 @@ public class VaultSecretsTransitTest {
         assertThat(key)
                 .isNotNull()
                 .returns(false, VaultSecretsTransitKeyInfo::isAllowPlaintextBackup)
-                .returns(0L, VaultSecretsTransitKeyInfo::getAutoRotatePeriod)
+                .returns(Duration.ZERO, VaultSecretsTransitKeyInfo::getAutoRotatePeriod)
                 .returns(false, VaultSecretsTransitKeyInfo::isDeletionAllowed)
                 .returns(false, VaultSecretsTransitKeyInfo::isDerived)
                 .returns(false, VaultSecretsTransitKeyInfo::isExportable)
@@ -95,7 +96,7 @@ public class VaultSecretsTransitTest {
         assertThat(key)
                 .isNotNull()
                 .returns(false, VaultSecretsTransitKeyInfo::isAllowPlaintextBackup)
-                .returns(0L, VaultSecretsTransitKeyInfo::getAutoRotatePeriod)
+                .returns(Duration.ZERO, VaultSecretsTransitKeyInfo::getAutoRotatePeriod)
                 .returns(false, VaultSecretsTransitKeyInfo::isDeletionAllowed)
                 .returns(false, VaultSecretsTransitKeyInfo::isDerived)
                 .returns(false, VaultSecretsTransitKeyInfo::isExportable)
@@ -1233,7 +1234,7 @@ public class VaultSecretsTransitTest {
                 .isEqualTo(1);
 
         var signer = Signature.getInstance("SHA512withRSA");
-        signer.initVerify(exportPublicKey(transitApi, keyName, signResult.getKeyVersion(), true));
+        signer.initVerify(exportRSAPublicKey(transitApi, keyName, signResult.getKeyVersion()));
         signer.update(data);
 
         var verifyResult = signer.verify(B64_DEC.decode(signResult.getSignature().substring(9)));
@@ -1268,7 +1269,7 @@ public class VaultSecretsTransitTest {
 
         var signer = Signature.getInstance("RSASSA-PSS");
         signer.setParameter(new PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 23, 1));
-        signer.initVerify(exportPublicKey(transitApi, keyName, signResult.getKeyVersion(), true));
+        signer.initVerify(exportRSAPublicKey(transitApi, keyName, signResult.getKeyVersion()));
         signer.update(data);
 
         var verifyResult = signer.verify(B64_DEC.decode(signResult.getSignature().substring(9)));
@@ -2036,7 +2037,7 @@ public class VaultSecretsTransitTest {
                 .isEqualTo(2);
     }
 
-    private PublicKey exportPublicKey(VaultSecretsTransit transitApi, String keyName, int version, boolean isRSA)
+    private PublicKey exportRSAPublicKey(VaultSecretsTransit transitApi, String keyName, int version)
             throws Exception {
 
         var key = transitApi.exportKey(PUBLIC_KEY, keyName, String.valueOf(version))
@@ -2044,11 +2045,7 @@ public class VaultSecretsTransitTest {
                 .getKeys().get(String.valueOf(version));
 
         var spki = (SubjectPublicKeyInfo) new PEMParser(new StringReader(key)).readObject();
-        if (isRSA) {
-            return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(spki.getEncoded()));
-        } else {
-            return KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(spki.getEncoded()));
-        }
+        return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(spki.getEncoded()));
     }
 
 }

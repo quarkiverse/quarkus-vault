@@ -31,18 +31,19 @@ public class VaultKubernetesTokenProvider implements VaultTokenProvider {
 
     @Override
     public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
-        var executor = authRequest.executor();
+        var executor = authRequest.getExecutor();
 
         return jwtProvider.get().flatMap(jwt -> {
 
             log.fine("authenticating with kubernetes jwt: " +
-                    authRequest.request().getLogConfidentialityLevel().maskWithTolerance(jwt, LOW));
+                    authRequest.getRequest().getLogConfidentialityLevel().maskWithTolerance(jwt, LOW));
 
             return executor.execute(VaultAuthKubernetes.FACTORY.login(mountPath, role, jwt))
                     .map(VaultResponse::getResult)
                     .map(res -> {
                         var auth = res.getAuth();
-                        return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration());
+                        return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration(),
+                                authRequest.getInstantSource());
                     });
         });
     }

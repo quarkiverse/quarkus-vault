@@ -3,12 +3,16 @@ package io.quarkus.vault.client;
 import static java.time.OffsetDateTime.now;
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.auth.approle.VaultAuthAppRoleCreateCustomSecretIdParams;
 import io.quarkus.vault.client.api.auth.approle.VaultAuthAppRoleGenerateSecretIdParams;
+import io.quarkus.vault.client.api.auth.approle.VaultAuthAppRoleUpdateRoleParams;
+import io.quarkus.vault.client.api.common.VaultTokenType;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
 import io.quarkus.vault.client.test.VaultClientTest.Mount;
@@ -84,19 +88,70 @@ public class VaultAuthAppRoleTest {
         assertThat(roleInfo.getTokenBoundCidrs())
                 .isEmpty();
         assertThat(roleInfo.getTokenExplicitMaxTtl())
-                .isEqualTo("0");
+                .isEqualTo(Duration.ZERO);
         assertThat(roleInfo.getTokenMaxTtl())
-                .isEqualTo("0");
+                .isEqualTo(Duration.ZERO);
         assertThat(roleInfo.isTokenNoDefaultPolicy())
                 .isFalse();
         assertThat(roleInfo.getTokenNumUses())
                 .isEqualTo(0);
         assertThat(roleInfo.getTokenPeriod())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(roleInfo.getTokenPolicies())
                 .isEmpty();
         assertThat(roleInfo.getTokenType())
-                .isEqualTo("default");
+                .isEqualTo(VaultTokenType.DEFAULT);
+    }
+
+    @Test
+    void testUpdateRole(VaultClient client, @Random String role) {
+        var appRoleApi = client.auth().appRole();
+
+        var policyName = role + "-policy";
+
+        client.sys().policy().update(policyName, """
+                path "secret/data/%s" {
+                  capabilities = ["create", "read", "update", "delete", "list"]
+                }""".formatted(role))
+                .await().indefinitely();
+
+        // Create role
+        appRoleApi.updateRole(role, new VaultAuthAppRoleUpdateRoleParams()
+                .setBindSecretId(false)
+                .setTokenBoundCidrs(List.of("127.0.0.1"))
+                .setTokenExplicitMaxTtl(Duration.ofMinutes(5))
+                .setTokenMaxTtl(Duration.ofMinutes(10))
+                .setTokenNoDefaultPolicy(true)
+                .setTokenNumUses(5)
+                .setTokenPeriod(Duration.ofMinutes(15))
+                .setTokenPolicies(List.of(policyName))
+                .setTokenType(VaultTokenType.SERVICE))
+                .await().indefinitely();
+
+        // Read role
+        var roleInfo = appRoleApi.readRole(role)
+                .await().indefinitely();
+
+        assertThat(roleInfo)
+                .isNotNull();
+        assertThat(roleInfo.isBindSecretId())
+                .isFalse();
+        assertThat(roleInfo.getTokenBoundCidrs())
+                .isEqualTo(List.of("127.0.0.1"));
+        assertThat(roleInfo.getTokenExplicitMaxTtl())
+                .isEqualTo(Duration.ofMinutes(5));
+        assertThat(roleInfo.getTokenMaxTtl())
+                .isEqualTo(Duration.ofMinutes(10));
+        assertThat(roleInfo.isTokenNoDefaultPolicy())
+                .isTrue();
+        assertThat(roleInfo.getTokenNumUses())
+                .isEqualTo(5);
+        assertThat(roleInfo.getTokenPeriod())
+                .isEqualTo(Duration.ofMinutes(15));
+        assertThat(roleInfo.getTokenPolicies())
+                .isEqualTo(List.of(policyName));
+        assertThat(roleInfo.getTokenType())
+                .isEqualTo(VaultTokenType.SERVICE);
     }
 
     @Test
@@ -134,7 +189,7 @@ public class VaultAuthAppRoleTest {
         appRoleApi.updateRole(role, null)
                 .await().indefinitely();
 
-        // Read role id
+        // Read role id info
         var roleId = appRoleApi.readRoleId(role)
                 .await().indefinitely();
 
@@ -180,7 +235,7 @@ public class VaultAuthAppRoleTest {
 
         // Generate secret id
         var secretIdInfo = appRoleApi.generateSecretId(role, new VaultAuthAppRoleGenerateSecretIdParams()
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
                 .await().indefinitely();
 
@@ -193,7 +248,7 @@ public class VaultAuthAppRoleTest {
         assertThat(secretIdInfo.getSecretIdNumUses())
                 .isEqualTo(5);
         assertThat(secretIdInfo.getSecretIdTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
     }
 
     @Test
@@ -206,7 +261,7 @@ public class VaultAuthAppRoleTest {
 
         // Generate secret id
         var secretIdInfo = appRoleApi.generateSecretId(role, new VaultAuthAppRoleGenerateSecretIdParams()
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5)
                 .setMetadata(Map.of("foo", "bar")))
                 .await().indefinitely();
@@ -220,7 +275,7 @@ public class VaultAuthAppRoleTest {
         assertThat(secretIdInfo.getSecretIdNumUses())
                 .isEqualTo(5);
         assertThat(secretIdInfo.getSecretIdTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
 
         // Read secret id
         var secretId = appRoleApi.readSecretId(role, secretIdInfo.getSecretId())
@@ -243,7 +298,7 @@ public class VaultAuthAppRoleTest {
         assertThat(secretId.getSecretIdNumUses())
                 .isEqualTo(5);
         assertThat(secretId.getSecretIdTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
     }
 
     @Test
@@ -341,7 +396,7 @@ public class VaultAuthAppRoleTest {
 
         // Generate secret id
         var secretIdInfo = appRoleApi.generateSecretId(role, new VaultAuthAppRoleGenerateSecretIdParams()
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5)
                 .setMetadata(Map.of("foo", "bar")))
                 .await().indefinitely();
@@ -370,7 +425,7 @@ public class VaultAuthAppRoleTest {
         assertThat(secretIdAccessor.getSecretIdNumUses())
                 .isEqualTo(5);
         assertThat(secretIdAccessor.getSecretIdTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(secretIdAccessor.getTokenBoundCidrs())
                 .isEmpty();
     }
@@ -384,7 +439,7 @@ public class VaultAuthAppRoleTest {
 
         // Generate secret id
         var secretIdInfo = appRoleApi.generateSecretId(role, new VaultAuthAppRoleGenerateSecretIdParams()
-                .setTtl("1m")
+                .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5)
                 .setMetadata(Map.of("foo", "bar")))
                 .await().indefinitely();

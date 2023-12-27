@@ -39,8 +39,9 @@ public class VaultTracingExecutor implements VaultRequestExecutor {
 
     private String getHTTPFormattedResponse(VaultResponse<?> response) {
         var builder = new StringBuilder();
-        builder.append("HTTP/1.1 ").append(response.statusCode).append("\n");
-        response.headers.forEach((entry) -> builder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n"));
+        builder.append("HTTP/1.1 ").append(response.getStatusCode()).append("\n");
+        response.getHeaders()
+                .forEach((entry) -> builder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n"));
         builder.append("\n");
         response.getBodyAsString().ifPresent(builder::append);
         return builder.toString();

@@ -21,7 +21,7 @@ operations:
     - name: creationTime
       type: java.time.OffsetDateTime
     - name: creationTtl
-      type: Long
+      type: java.time.Duration
 
 
 - name: rewrap

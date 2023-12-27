@@ -6,19 +6,38 @@ import java.util.Optional;
 
 public class VaultResponse<T> {
 
-    public final VaultRequest<T> request;
+    private final VaultRequest<T> request;
 
-    public final int statusCode;
+    private final int statusCode;
 
-    public final List<Entry<String, String>> headers;
+    private final List<Entry<String, String>> headers;
 
-    public final byte[] body;
+    private final byte[] body;
 
     public VaultResponse(VaultRequest<T> request, int statusCode, List<Entry<String, String>> headers, byte[] body) {
         this.request = request;
         this.statusCode = statusCode;
-        this.headers = headers;
+        this.headers = headers != null ? headers : List.of();
         this.body = body;
+    }
+
+    public VaultRequest<T> getRequest() {
+        return request;
+    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public List<Entry<String, String>> getHeaders() {
+        return headers;
+    }
+
+    public Optional<byte[]> getBody() {
+        if (body == null || body.length == 0) {
+            return Optional.empty();
+        }
+        return Optional.of(body);
     }
 
     public boolean isSuccessful() {
@@ -35,7 +54,8 @@ public class VaultResponse<T> {
     }
 
     public T getResult() {
-        return request.getResultExtractor().extract(this);
+        return request.getResultExtractor().extract(this)
+                .orElse(null);
     }
 
     public Optional<String> getBodyAsString() {

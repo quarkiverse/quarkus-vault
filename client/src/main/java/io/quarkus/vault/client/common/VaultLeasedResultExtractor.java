@@ -1,5 +1,6 @@
 package io.quarkus.vault.client.common;
 
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import io.quarkus.vault.client.api.common.VaultLeasedResult;
@@ -19,14 +20,16 @@ public class VaultLeasedResultExtractor<T extends VaultLeasedResult<?, ?>> imple
     }
 
     @Override
-    public T extract(VaultResponse<T> response) {
-        var result = VaultJSONResultExtractor.extract(response, resultClass);
-        if (result != null && result.getWarnings() != null) {
-            for (var warning : result.getWarnings()) {
-                log.warning(warning);
+    public Optional<T> extract(VaultResponse<T> response) {
+        var extracted = VaultJSONResultExtractor.extract(response, resultClass);
+        extracted.ifPresent(result -> {
+            if (result.getWarnings() != null) {
+                for (var warning : result.getWarnings()) {
+                    log.warning(warning);
+                }
             }
-        }
-        return result;
+        });
+        return extracted;
     }
 
 }

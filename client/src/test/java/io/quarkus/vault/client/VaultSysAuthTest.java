@@ -2,10 +2,12 @@ package io.quarkus.vault.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import io.quarkus.vault.client.api.common.VaultTokenType;
 import io.quarkus.vault.client.api.sys.auth.VaultSysAuthTuneOptions;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
@@ -31,9 +33,9 @@ public class VaultSysAuthTest {
         assertThat(tokenAuthInfo.getConfig())
                 .isNotNull();
         assertThat(tokenAuthInfo.getConfig().getDefaultLeaseTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(tokenAuthInfo.getConfig().getMaxLeaseTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(tokenAuthInfo.getConfig().isForceNoCache())
                 .isFalse();
         assertThat(tokenAuthInfo.getDeprecationStatus())
@@ -71,13 +73,13 @@ public class VaultSysAuthTest {
         assertThat(tokenAuthInfo.getConfig())
                 .isNotNull();
         assertThat(tokenAuthInfo.getConfig().getDefaultLeaseTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(tokenAuthInfo.getConfig().getMaxLeaseTtl())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(tokenAuthInfo.getConfig().isForceNoCache())
                 .isFalse();
         assertThat(tokenAuthInfo.getConfig().getTokenType())
-                .isEqualTo("default-service");
+                .isEqualTo(VaultTokenType.DEFAULT_SERVICE);
         assertThat(tokenAuthInfo.getDeprecationStatus())
                 .isNull();
         assertThat(tokenAuthInfo.getDescription())
@@ -152,9 +154,9 @@ public class VaultSysAuthTest {
         assertThat(tokenAuthInfo.getDescription())
                 .isEqualTo("token based credentials");
         assertThat(tokenAuthInfo.getDefaultLeaseTtl())
-                .isEqualTo(2764800L);
+                .isEqualTo(Duration.ofDays(32));
         assertThat(tokenAuthInfo.getMaxLeaseTtl())
-                .isEqualTo(2764800L);
+                .isEqualTo(Duration.ofDays(32));
         assertThat(tokenAuthInfo.isForceNoCache())
                 .isFalse();
         assertThat(tokenAuthInfo.getAuditNonHmacRequestKeys())
@@ -168,7 +170,7 @@ public class VaultSysAuthTest {
         assertThat(tokenAuthInfo.getAllowedResponseHeaders())
                 .isNull();
         assertThat(tokenAuthInfo.getTokenType())
-                .isEqualTo("default-service");
+                .isEqualTo(VaultTokenType.DEFAULT_SERVICE);
     }
 
     @Test
@@ -180,23 +182,23 @@ public class VaultSysAuthTest {
 
         authApi.tune(path, new VaultSysAuthTuneOptions()
                 .setDescription("test mount")
-                .setDefaultLeaseTtl("90s")
-                .setMaxLeaseTtl("120s")
+                .setDefaultLeaseTtl(Duration.ofSeconds(90))
+                .setMaxLeaseTtl(Duration.ofMinutes(2))
                 .setAuditNonHmacRequestKeys(List.of("key1", "key2"))
                 .setAuditNonHmacResponseKeys(List.of("key3", "key4"))
                 .setListingVisibility("hidden")
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
-                .setTokenType("service"))
+                .setTokenType(VaultTokenType.SERVICE))
                 .await().indefinitely();
 
         var kvTuneInfo = authApi.readTune(path)
                 .await().indefinitely();
 
         assertThat(kvTuneInfo.getDefaultLeaseTtl())
-                .isEqualTo(90L);
+                .isEqualTo(Duration.ofSeconds(90));
         assertThat(kvTuneInfo.getMaxLeaseTtl())
-                .isEqualTo(120L);
+                .isEqualTo(Duration.ofMinutes(2));
         assertThat(kvTuneInfo.isForceNoCache())
                 .isFalse();
         assertThat(kvTuneInfo.getDescription())
@@ -212,6 +214,6 @@ public class VaultSysAuthTest {
         assertThat(kvTuneInfo.getAllowedResponseHeaders())
                 .contains("header3", "header4");
         assertThat(kvTuneInfo.getTokenType())
-                .isEqualTo("service");
+                .isEqualTo(VaultTokenType.SERVICE);
     }
 }

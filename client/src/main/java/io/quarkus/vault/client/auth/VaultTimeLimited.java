@@ -2,73 +2,48 @@ package io.quarkus.vault.client.auth;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.function.Supplier;
+import java.time.InstantSource;
 import java.util.logging.Logger;
 
 public abstract class VaultTimeLimited {
 
     private static final Logger log = Logger.getLogger(VaultTimeLimited.class.getName());
 
-    Supplier<Instant> nowSupplier = Instant::now;
-    Instant created = created();
-
+    InstantSource instantSource;
+    Instant created;
     public boolean renewable;
-    public long leaseDurationSecs;
+    public Duration leaseDuration;
 
-    public VaultTimeLimited(boolean renewable, long leaseDurationSecs) {
+    public VaultTimeLimited(boolean renewable, Duration leaseDuration, InstantSource instantSource) {
+        this.instantSource = instantSource;
+        this.created = instantSource.instant();
         this.renewable = renewable;
-        this.leaseDurationSecs = leaseDurationSecs;
-    }
-
-    public VaultTimeLimited(VaultTimeLimited other) {
-        this.renewable = other.renewable;
-        this.leaseDurationSecs = other.leaseDurationSecs;
+        this.leaseDuration = leaseDuration;
     }
 
     public boolean isExpired() {
-        return now().isAfter(getExpireInstant());
+        return instantSource.instant().isAfter(getExpiresAt());
+    }
+
+    public boolean isExpiringWithin(Duration gracePeriod) {
+        return instantSource.instant().plus(gracePeriod).isAfter(getExpiresAt());
     }
 
     public boolean shouldExtend(Duration gracePeriod) {
-        return !isExpired() && renewable && now().plus(gracePeriod).isAfter(getExpireInstant());
+        return !isExpired() && renewable && isExpiringWithin(gracePeriod);
     }
 
-    private Instant created() {
-        return now();
-    }
-
-    private Instant now() {
-        return nowSupplier.get();
-    }
-
-    public Instant getExpireInstant() {
-        return created.plusSeconds(leaseDurationSecs);
-    }
-
-    public Date getExpiredDate() {
-        return new Date(getExpireInstant().toEpochMilli());
-    }
-
-    /**
-     * true if the lease is smaller than the grace period. as long as we are far away fro the ttl, lease durations will
-     * be a constant value (e.g. 3600 secs). if we are less than 'lease duration' away from ttl, lease durations
-     * will start to reduce to not go over the ttl.
-     *
-     * @param gracePeriod
-     * @return
-     */
-    public boolean expiresSoon(Duration gracePeriod) {
-        return leaseDurationSecs < gracePeriod.getSeconds();
+    public Instant getExpiresAt() {
+        return created.plus(leaseDuration);
     }
 
     public String info() {
-        return "renewable: " + renewable + ", leaseDuration: " + leaseDurationSecs + "s, valid_until: " + getExpiredDate();
+        return "renewable: " + renewable + ", leaseDuration: " + leaseDuration + ", valid_until: " + getExpiresAt();
     }
 
     public void leaseDurationSanityCheck(String nickname, Duration gracePeriod) {
-        if (leaseDurationSecs < gracePeriod.getSeconds()) {
-            log.warning(nickname + " lease duration " + leaseDurationSecs
+        if (leaseDuration.compareTo(gracePeriod) < 0) {
+            log.warning(nickname + " lease duration " + leaseDuration
                     + "s is smaller than the renew grace period "
                     + gracePeriod.getSeconds() + "s");
         }

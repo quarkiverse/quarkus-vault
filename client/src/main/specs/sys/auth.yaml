@@ -41,9 +41,9 @@ operations:
   - name: config
     object:
     - name: defaultLeaseTtl
-      type: String
+      type: java.time.Duration
     - name: maxLeaseTtl
-      type: String
+      type: java.time.Duration
     - name: auditNonHmacRequestKeys
       type: java.util.List<String>
     - name: auditNonHmacResponseKeys
@@ -81,9 +81,9 @@ operations:
     unwrapData: true
     data:
     - name: defaultLeaseTtl
-      type: Long
+      type: java.time.Duration
     - name: maxLeaseTtl
-      type: Long
+      type: java.time.Duration
     - name: forceNoCache
       type: Boolean
     - name: description
@@ -99,7 +99,7 @@ operations:
     - name: allowedResponseHeaders
       type: java.util.List<String>
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
 
 
 - name: tune
@@ -113,9 +113,9 @@ operations:
     body: true
     object:
     - name: defaultLeaseTtl
-      type: String
+      type: java.time.Duration
     - name: maxLeaseTtl
-      type: String
+      type: java.time.Duration
     - name: description
       type: String
     - name: auditNonHmacRequestKeys
@@ -129,7 +129,7 @@ operations:
     - name: allowedResponseHeaders
       type: java.util.List<String>
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
     - name: pluginVersion
       type: String
     - name: userLockoutConfig
@@ -143,13 +143,13 @@ types:
   - name: Config
     properties:
     - name: defaultLeaseTtl
-      type: Long
+      type: java.time.Duration
     - name: maxLeaseTtl
-      type: Long
+      type: java.time.Duration
     - name: forceNoCache
       type: Boolean
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
   properties:
   - name: accessor
     type: String

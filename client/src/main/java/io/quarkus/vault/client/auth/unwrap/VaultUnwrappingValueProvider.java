@@ -33,13 +33,13 @@ public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements Vaul
     @Override
     public Uni<String> apply(VaultAuthRequest unwrapRequest) {
         return unwrappingCache.get(wrappingToken, (token) -> {
-            var executor = unwrapRequest.executor();
+            var executor = unwrapRequest.getExecutor();
             var api = new VaultSysWrapping(executor);
             return api.unwrapAs(token, getUnwrapResultType())
                     .map(res -> {
                         var unwrappedClientToken = extractClientToken(res);
 
-                        String displayValue = unwrapRequest.request().getLogConfidentialityLevel()
+                        String displayValue = unwrapRequest.getRequest().getLogConfidentialityLevel()
                                 .maskWithTolerance(unwrappedClientToken, LOW);
                         log.fine("unwrapped " + getType() + ": " + displayValue);
 

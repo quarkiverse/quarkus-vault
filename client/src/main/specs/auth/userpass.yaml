@@ -35,23 +35,23 @@ operations:
     - name: password
       type: String
     - name: tokenTtl
-      type: String
+      type: java.time.Duration
     - name: tokenMaxTtl
-      type: String
+      type: java.time.Duration
     - name: tokenPolicies
       type: java.util.List<String>
     - name: tokenBoundCidrs
       type: java.util.List<String>
     - name: tokenExplicitMaxTtl
-      type: String
+      type: java.time.Duration
     - name: tokenNoDefaultPolicy
       type: Boolean
     - name: tokenNumUses
       type: Integer
     - name: tokenPeriod
-      type: Integer
+      type: java.time.Duration
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
 
 
 - name: readUser
@@ -64,34 +64,24 @@ operations:
     kind: leased
     unwrapData: true
     data:
-    - name: bindSecretId
-      type: Boolean
-    - name: secretIdBoundCidrs
-      type: java.util.List<String>
-    - name: secretIdNumUses
-      type: Integer
-    - name: secretIdTtl
-      type: String
-    - name: localSecretIds
-      type: Boolean
     - name: tokenTtl
-      type: String
+      type: java.time.Duration
     - name: tokenMaxTtl
-      type: String
+      type: java.time.Duration
     - name: tokenPolicies
       type: java.util.List<String>
     - name: tokenBoundCidrs
       type: java.util.List<String>
     - name: tokenExplicitMaxTtl
-      type: String
+      type: java.time.Duration
     - name: tokenNoDefaultPolicy
       type: Boolean
     - name: tokenNumUses
       type: Integer
     - name: tokenPeriod
-      type: Integer
+      type: java.time.Duration
     - name: tokenType
-      type: String
+      type: $$.api.common.VaultTokenType
 
 
 - name: deleteUser

@@ -7,11 +7,13 @@ types:
   - name: token
     type: String
   - name: ttl
-    type: Integer
+    type: java.time.Duration
   - name: creationTime
     type: java.time.OffsetDateTime
   - name: creationPath
     type: String
+
+
 - name: LeasedResult<DATA, AUTH extends $AuthResult<?>>
   implements:
     - $$.common.VaultJSONResult
@@ -23,7 +25,7 @@ types:
     - name: renewable
       type: Boolean
     - name: leaseDuration
-      type: Integer
+      type: java.time.Duration
     - name: data
       type: DATA
     - name: wrapInfo
@@ -47,13 +49,13 @@ types:
     - name: metadata
       type: METADATA
     - name: leaseDuration
-      type: Integer
+      type: java.time.Duration
     - name: renewable
       type: Boolean
     - name: entityId
       type: String
     - name: tokenType
-      type: String
+      type: $TokenType
     - name: orphan
       type: Boolean
     - name: mfaRequirement
@@ -86,3 +88,11 @@ enums:
   - platform
   - seal
   - all
+
+- name: TokenType
+  values:
+  - service
+  - batch
+  - default
+  - default-service
+  - default-batch

@@ -10,6 +10,7 @@ import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.auth.token.VaultAuthTokenCreateAuthResult;
+import io.quarkus.vault.client.api.common.VaultTokenType;
 import io.quarkus.vault.client.test.VaultClientTest;
 
 @VaultClientTest
@@ -18,7 +19,7 @@ public class VaultSysWrappingTest {
     @Test
     public void testApiWrapping(VaultClient client) {
 
-        var wrapInfo = client.auth().token().wrapping(Duration.ofSeconds(60), f -> f.create(null))
+        var wrapInfo = client.auth().token().wrapping(Duration.ofMinutes(1), f -> f.create(null))
                 .await().indefinitely();
 
         assertThat(wrapInfo)
@@ -28,7 +29,7 @@ public class VaultSysWrappingTest {
         assertThat(wrapInfo.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
         assertThat(wrapInfo.getTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(wrapInfo.getCreationPath())
                 .isEqualTo("auth/token/create");
 
@@ -48,13 +49,13 @@ public class VaultSysWrappingTest {
         assertThat(unwrapped.getMetadata())
                 .isNull();
         assertThat(unwrapped.getLeaseDuration())
-                .isEqualTo(0);
+                .isEqualTo(Duration.ZERO);
         assertThat(unwrapped.isRenewable())
                 .isFalse();
         assertThat(unwrapped.getEntityId())
                 .isEmpty();
         assertThat(unwrapped.getTokenType())
-                .isEqualTo("service");
+                .isEqualTo(VaultTokenType.SERVICE);
         assertThat(unwrapped.isOrphan())
                 .isFalse();
         assertThat(unwrapped.getNumUses())
@@ -65,7 +66,7 @@ public class VaultSysWrappingTest {
     public void testWrap(VaultClient client) {
         var wrappingApi = client.sys().wrapping();
 
-        var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofSeconds(60))
+        var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofMinutes(1))
                 .await().indefinitely();
 
         assertThat(wrapped.getToken())
@@ -73,7 +74,7 @@ public class VaultSysWrappingTest {
         assertThat(wrapped.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
         assertThat(wrapped.getTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(wrapped.getCreationPath())
                 .isEqualTo("sys/wrapping/wrap");
     }
@@ -82,7 +83,7 @@ public class VaultSysWrappingTest {
     public void testLookup(VaultClient client) {
         var wrappingApi = client.sys().wrapping();
 
-        var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofSeconds(60))
+        var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofMinutes(1))
                 .await().indefinitely();
 
         assertThat(wrapped.getToken())
@@ -96,7 +97,7 @@ public class VaultSysWrappingTest {
         assertThat(lookup.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
         assertThat(lookup.getCreationTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(lookup.getCreationPath())
                 .isEqualTo("sys/wrapping/wrap");
     }
@@ -105,7 +106,7 @@ public class VaultSysWrappingTest {
     public void testUnwrap(VaultClient client) {
         var wrappingApi = client.sys().wrapping();
 
-        var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofSeconds(60))
+        var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofMinutes(1))
                 .await().indefinitely();
 
         var unwrapped = wrappingApi.unwrap(wrapped.getToken())
@@ -133,7 +134,7 @@ public class VaultSysWrappingTest {
     public void testRewrap(VaultClient client) {
         var wrappingApi = client.sys().wrapping();
 
-        var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofSeconds(60))
+        var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofMinutes(1))
                 .await().indefinitely();
 
         var rewrapped = wrappingApi.rewrap(wrapped.getToken())
@@ -146,7 +147,7 @@ public class VaultSysWrappingTest {
         assertThat(rewrapped.getCreationTime())
                 .isBetween(now().minusSeconds(1), now().plusSeconds(1));
         assertThat(rewrapped.getTtl())
-                .isEqualTo(60);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(rewrapped.getCreationPath())
                 .isEqualTo("sys/wrapping/wrap");
     }

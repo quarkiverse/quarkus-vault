@@ -1,7 +1,9 @@
 package io.quarkus.vault.client.common;
 
+import java.util.Optional;
+
 public interface VaultResultExtractor<T> {
 
-    T extract(VaultResponse<T> response);
+    Optional<T> extract(VaultResponse<T> response);
 
 }

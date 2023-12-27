@@ -41,9 +41,9 @@ operations:
   - name: config
     object:
     - name: defaultLeaseTtl
-      type: String
+      type: java.time.Duration
     - name: maxLeaseTtl
-      type: String
+      type: java.time.Duration
     - name: forceNoCache
       type: Boolean
     - name: auditNonHmacRequestKeys
@@ -83,9 +83,9 @@ operations:
     unwrapData: true
     data:
     - name: defaultLeaseTtl
-      type: Long
+      type: java.time.Duration
     - name: maxLeaseTtl
-      type: Long
+      type: java.time.Duration
     - name: forceNoCache
       type: Boolean
     - name: description
@@ -115,9 +115,9 @@ operations:
     body: true
     object:
     - name: defaultLeaseTtl
-      type: String
+      type: java.time.Duration
     - name: maxLeaseTtl
-      type: String
+      type: java.time.Duration
     - name: description
       type: String
     - name: auditNonHmacRequestKeys
@@ -143,9 +143,9 @@ types:
   - name: Config
     properties:
     - name: defaultLeaseTtl
-      type: Long
+      type: java.time.Duration
     - name: maxLeaseTtl
-      type: Long
+      type: java.time.Duration
     - name: forceNoCache
       type: Boolean
   properties:

@@ -42,8 +42,8 @@ public class VaultRequest<T> {
         private Optional<String> token;
         private Optional<String> namespace;
         private Optional<Duration> wrapTTL;
-        private Map<String, String> queryParams = new HashMap<>();
-        private Map<String, String> headers = new HashMap<>();
+        private Map<String, String> queryParams = new LinkedHashMap<>();
+        private Map<String, String> headers = new LinkedHashMap<>();
         private Object body;
         private VaultResultExtractor<?> resultExtractor;
         private List<Integer> expectedStatusCodes = List.of();
@@ -107,35 +107,31 @@ public class VaultRequest<T> {
             return this;
         }
 
-        public Builder<T> queryParams(Map<String, String> queryParams) {
-            this.queryParams = queryParams;
+        public Builder<T> queryParam(String key, Object value) {
+            Objects.requireNonNull(key, "key is required");
+            var valueStr = JsonMapping.mapper.convertValue(value, String.class);
+            queryParams.put(key, valueStr);
             return this;
         }
 
         public Builder<T> queryParam(boolean condition, String key, Object value) {
             if (condition) {
-                this.queryParams.put(key, value.toString());
+                queryParam(key, value);
             }
             return this;
         }
 
-        public Builder<T> queryParam(String key, Object value) {
-            return queryParam(true, key, value);
-        }
-
-        public Builder headers(Map<String, String> headers) {
-            this.headers = headers;
-            return this;
-        }
-
         public Builder<T> header(String key, Object value) {
-            this.headers.put(key, value.toString());
+            Objects.requireNonNull(key, "key is required");
+            Objects.requireNonNull(value, "value is required");
+            var valueStr = JsonMapping.mapper.convertValue(value, String.class);
+            this.headers.put(key, valueStr);
             return this;
         }
 
         public Builder<T> header(boolean condition, String key, Object value) {
             if (condition) {
-                this.headers.put(key, value.toString());
+                header(key, value);
             }
             return this;
         }
@@ -215,7 +211,7 @@ public class VaultRequest<T> {
     private final LogConfidentialityLevel logConfidentialityLevel;
 
     @SuppressWarnings("unchecked")
-    private VaultRequest(Builder builder) {
+    private VaultRequest(Builder<?> builder) {
         this.baseUrl = builder.baseUrl;
         this.apiVersion = builder.apiVersion;
         this.operation = builder.operation;
@@ -281,10 +277,6 @@ public class VaultRequest<T> {
     @SuppressWarnings("OptionalAssignedToNull")
     public Optional<Duration> getWrapTTL() {
         return wrapTTL != null ? wrapTTL : Optional.empty();
-    }
-
-    public Optional<String> getWrapTTLHeaderValue() {
-        return getWrapTTL().map(ttl -> String.valueOf(ttl.toSeconds()));
     }
 
     public Map<String, String> getHeaders() {
@@ -359,8 +351,11 @@ public class VaultRequest<T> {
         return queryParams.entrySet().stream()
                 .map(e -> {
                     var key = URLEncoder.encode(e.getKey(), UTF_8);
-                    var value = URLEncoder.encode(e.getValue(), UTF_8);
-                    return key + "=" + value;
+                    var value = e.getValue();
+                    if (value == null) {
+                        return key;
+                    }
+                    return key + "=" + URLEncoder.encode(value, UTF_8);
                 })
                 .collect(Collectors.joining("&"));
     }
