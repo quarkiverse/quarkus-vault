@@ -41,7 +41,8 @@ public record POJO(
             Optional<List<String>> typeParameters,
             Optional<Map<String, String>> parameters,
             @JsonProperty(required = true) String body,
-            Optional<Map<String, String>> bodyArguments) {
+            Optional<Map<String, String>> bodyArguments,
+            Optional<List<Annotation>> annotations) {
     }
 
     public record Annotation(

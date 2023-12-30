@@ -287,9 +287,15 @@ public abstract class BaseGenerator implements Generator {
                 .unindent()
                 .build();
 
-        var spec = MethodSpec.methodBuilder(method.name())
-                .addModifiers(Modifier.PUBLIC)
-                .returns(typeName(method.returnType()))
+        MethodSpec.Builder spec;
+        if (method.name().equalsIgnoreCase("constructor")) {
+            spec = MethodSpec.constructorBuilder();
+        } else {
+            spec = MethodSpec.methodBuilder(method.name())
+                    .returns(typeName(method.returnType()));
+        }
+
+        spec.addModifiers(Modifier.PUBLIC)
                 .addCode(body);
 
         method.typeParameters().ifPresent(typeParameters -> {
@@ -301,6 +307,12 @@ public abstract class BaseGenerator implements Generator {
         method.parameters().ifPresent(parameters -> {
             for (var parameter : method.parameters().get().entrySet()) {
                 spec.addParameter(typeName(parameter.getValue()), parameter.getKey());
+            }
+        });
+
+        method.annotations().ifPresent(annotations -> {
+            for (var annotation : annotations) {
+                spec.addAnnotation(generateAnnotationSpec(annotation));
             }
         });
 
