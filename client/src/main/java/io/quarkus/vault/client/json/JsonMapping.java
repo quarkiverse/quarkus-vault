@@ -1,6 +1,7 @@
 package io.quarkus.vault.client.json;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,7 @@ public class JsonMapping {
 
     static {
         mapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(WRITE_DATES_AS_TIMESTAMPS, false);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         mapper.registerModule(VaultModule.INSTANCE);
     }

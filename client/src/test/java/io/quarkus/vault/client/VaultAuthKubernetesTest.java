@@ -166,8 +166,6 @@ public class VaultAuthKubernetesTest {
                 .setDisableLocalCaJwt(true))
                 .await().indefinitely();
 
-        client = client.configure().traceRequests().build();
-
         var config = client.auth().kubernetes().readConfig()
                 .await().indefinitely();
 
