@@ -32,7 +32,7 @@ public class VertxVaultHttpClient extends VaultHttpClient {
         var requestOptions = requestOptions(request);
         var httpRequest = webClient.request(httpMethodFor(request), requestOptions);
         return send(request, httpRequest)
-                .flatMap(res -> buildResponse(request, res.statusCode(), headers(res), res.body().getBytes()));
+                .flatMap(res -> buildResponse(request, res));
     }
 
     private RequestOptions requestOptions(VaultRequest<?> request) {
@@ -61,6 +61,12 @@ public class VertxVaultHttpClient extends VaultHttpClient {
                         return e;
                     }
                 });
+    }
+
+    private <T> Uni<VaultResponse<T>> buildResponse(VaultRequest<T> request, HttpResponse<Buffer> res) {
+        var body = res.body();
+        var bodyData = body != null ? body.getBytes() : null;
+        return buildResponse(request, res.statusCode(), headers(res), bodyData);
     }
 
     private static HttpMethod httpMethodFor(VaultRequest<?> request) {

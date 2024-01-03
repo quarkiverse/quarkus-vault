@@ -14,6 +14,7 @@
   <modules>
     <module>generator</module>
     <module>client</module>
+    <module>client-vertx</module>
     <module>deployment</module>
     <module>model</module>
     <module>runtime</module>

@@ -1,8 +1,7 @@
 package io.quarkus.vault.client.common;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.jboss.logmanager.Level;
 
 import io.smallrye.mutiny.Uni;
 
