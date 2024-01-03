@@ -1,0 +1,121 @@
+name: Leases
+category: sys
+mountable: false
+basePath: sys
+
+operations:
+
+- name: read
+  method: POST
+  path: leases/lookup
+  bodyFrom: [leaseId]
+  parameters:
+  - name: leaseId
+    type: String
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: id
+      type: String
+    - name: issueTime
+      type: java.time.OffsetDateTime
+    - name: expireTime
+      type: java.time.OffsetDateTime
+    - name: lastRenewalTime
+      type: java.time.OffsetDateTime
+    - name: renewable
+      type: Boolean
+    - name: ttl
+      type: java.time.Duration
+
+
+- name: list
+  method: LIST
+  path: leases/lookup/:prefix
+  parameters:
+  - name: prefix
+    type: String
+  result:
+    kind: leased
+    unwrapUsing: r.getData().getKeys()
+    unwrappedType: java.util.List<String>
+    data:
+    - name: keys
+      type: java.util.List<String>
+
+
+- name: renew
+  method: POST
+  path: leases/renew
+  bodyFrom: [leaseId, increment]
+  parameters:
+  - name: leaseId
+    type: String
+  - name: increment
+    type: java.time.Duration
+  result:
+    kind: leased
+    data:
+    - name: id
+      type: String
+    - name: issueTime
+      type: java.time.OffsetDateTime
+    - name: expireTime
+      type: java.time.OffsetDateTime
+    - name: lastRenewalTime
+      type: java.time.OffsetDateTime
+    - name: renewable
+      type: boolean
+    - name: ttl
+      type: java.time.Duration
+
+
+- name: revoke
+  method: POST
+  path: leases/revoke
+  bodyFrom: [leaseId, sync]
+  parameters:
+  - name: leaseId
+    type: String
+  - name: sync
+    type: boolean
+
+
+- name: revokeForce
+  method: POST
+  path: leases/revoke-force/:prefix
+  bodyFrom: [prefix]
+  parameters:
+  - name: prefix
+    type: String
+
+
+- name: revokePrefix
+  method: POST
+  path: leases/revoke-prefix/:prefix
+  bodyFrom: [prefix]
+  parameters:
+  - name: prefix
+    type: String
+
+
+- name: tidy
+  method: POST
+  status: OK_OR_ACCEPTED
+  path: leases/tidy
+
+
+- name: count
+  method: GET
+  path: leases/count
+  parameters:
+  - name: type
+    type: String
+  - name: includeChildNamespaces
+    type: Boolean
+  result:
+    kind: leased
+    data:
+    - name: count
+      type: Integer
