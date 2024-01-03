@@ -48,9 +48,6 @@ public class VaultSecretsKV1Test {
                 .await().indefinitely();
 
         assertThat(data)
-                .isNotNull();
-        assertThat(data.getKeys())
-                .isNotNull()
                 .contains("test1", "test2");
     }
 
