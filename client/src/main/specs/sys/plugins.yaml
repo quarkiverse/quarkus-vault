@@ -179,6 +179,8 @@ types:
     type: String
   - name: version
     type: String
+  - name: sha256
+    type: String
 
 - name: PluginInfo
   properties:

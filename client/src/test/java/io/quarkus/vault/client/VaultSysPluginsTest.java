@@ -16,8 +16,16 @@ import io.quarkus.vault.client.test.VaultClientTestExtension;
 public class VaultSysPluginsTest {
 
     @Test
-    public void testList(VaultClient client) {
+    public void testList(VaultClient client) throws Exception {
         var pluginsApi = client.sys().plugins();
+
+        pluginsApi.register("secret", "test-plugin", new VaultSysPluginsRegisterParams()
+                .setCommand("test-plugin")
+                .setArgs(List.of("--arg1", "--arg2"))
+                .setEnv(List.of("ENV1=VALUE1", "ENV2=VALUE2"))
+                .setSha256(VaultClientTestExtension.getPluginSha256())
+                .setVersion("v1.0.0"))
+                .await().indefinitely();
 
         var plugins = pluginsApi.list()
                 .await().indefinitely();
@@ -31,21 +39,41 @@ public class VaultSysPluginsTest {
         assertThat(plugins.getDetailed())
                 .isNotNull();
 
-        var details = plugins.getDetailed().stream().filter(d -> d.getName().equals("kv")).findFirst().orElseThrow();
+        var kvDetails = plugins.getDetailed().stream().filter(d -> d.getName().equals("kv")).findFirst().orElseThrow();
 
-        assertThat(details)
+        assertThat(kvDetails)
                 .isNotNull();
-        assertThat(details.getName())
+        assertThat(kvDetails.getName())
                 .isEqualTo("kv");
-        assertThat(details.getType())
+        assertThat(kvDetails.getType())
                 .isEqualTo("secret");
-        assertThat(details.isBuiltin())
+        assertThat(kvDetails.isBuiltin())
                 .isTrue();
-        assertThat(details.getDeprecationStatus())
+        assertThat(kvDetails.getDeprecationStatus())
                 .isEqualTo("supported");
-        assertThat(details.getVersion())
+        assertThat(kvDetails.getVersion())
                 .startsWith("v")
                 .endsWith("builtin");
+        assertThat(kvDetails.getSha256())
+                .isNull();
+
+        var testDetails = plugins.getDetailed().stream().filter(d -> d.getName().equals("test-plugin")).findFirst()
+                .orElseThrow();
+
+        assertThat(testDetails)
+                .isNotNull();
+        assertThat(testDetails.getName())
+                .isEqualTo("test-plugin");
+        assertThat(testDetails.getType())
+                .isEqualTo("secret");
+        assertThat(testDetails.isBuiltin())
+                .isFalse();
+        assertThat(testDetails.getDeprecationStatus())
+                .isNull();
+        assertThat(testDetails.getVersion())
+                .isEmpty();
+        assertThat(testDetails.getSha256())
+                .isEqualTo(VaultClientTestExtension.getPluginSha256());
     }
 
     @Test
