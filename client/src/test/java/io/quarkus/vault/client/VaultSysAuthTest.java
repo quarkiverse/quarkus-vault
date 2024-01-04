@@ -8,6 +8,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.common.VaultTokenType;
+import io.quarkus.vault.client.api.sys.auth.VaultSysAuthEnableConfig;
 import io.quarkus.vault.client.api.sys.auth.VaultSysAuthTuneOptions;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
@@ -62,28 +63,49 @@ public class VaultSysAuthTest {
     }
 
     @Test
-    public void testRead(VaultClient client) {
+    public void testRead(VaultClient client, @Random String mount) {
         var authApi = client.sys().auth();
 
-        var tokenAuthInfo = authApi.read("token/")
+        authApi.enable(mount, "userpass", "userpass auth", new VaultSysAuthEnableConfig()
+                .setDefaultLeaseTtl(Duration.ofMinutes(1))
+                .setMaxLeaseTtl(Duration.ofMinutes(10))
+                .setAuditNonHmacRequestKeys(List.of("key1", "key2"))
+                .setAuditNonHmacResponseKeys(List.of("key3", "key4"))
+                .setAllowedResponseHeaders(List.of("header1", "header2"))
+                .setListingVisibility("hidden")
+                .setPassthroughRequestHeaders(List.of("header1", "header2"))
+                .setAllowedResponseHeaders(List.of("header3", "header4")))
+                .await().indefinitely();
+
+        var tokenAuthInfo = authApi.read(mount)
                 .await().indefinitely();
 
         assertThat(tokenAuthInfo.getAccessor())
-                .startsWith("auth_token_");
+                .startsWith("auth_userpass_");
         assertThat(tokenAuthInfo.getConfig())
                 .isNotNull();
         assertThat(tokenAuthInfo.getConfig().getDefaultLeaseTtl())
-                .isEqualTo(Duration.ZERO);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(tokenAuthInfo.getConfig().getMaxLeaseTtl())
-                .isEqualTo(Duration.ZERO);
+                .isEqualTo(Duration.ofMinutes(10));
         assertThat(tokenAuthInfo.getConfig().isForceNoCache())
                 .isFalse();
+        assertThat(tokenAuthInfo.getConfig().getAuditNonHmacRequestKeys())
+                .contains("key1", "key2");
+        assertThat(tokenAuthInfo.getConfig().getAuditNonHmacResponseKeys())
+                .contains("key3", "key4");
+        assertThat(tokenAuthInfo.getConfig().getListingVisibility())
+                .isEqualTo("hidden");
+        assertThat(tokenAuthInfo.getConfig().getPassthroughRequestHeaders())
+                .contains("header1", "header2");
+        assertThat(tokenAuthInfo.getConfig().getAllowedResponseHeaders())
+                .contains("header3", "header4");
         assertThat(tokenAuthInfo.getConfig().getTokenType())
                 .isEqualTo(VaultTokenType.DEFAULT_SERVICE);
         assertThat(tokenAuthInfo.getDeprecationStatus())
-                .isNull();
+                .isEqualTo("supported");
         assertThat(tokenAuthInfo.getDescription())
-                .isEqualTo("token based credentials");
+                .isEqualTo("userpass auth");
         assertThat(tokenAuthInfo.isExternalEntropyAccess())
                 .isFalse();
         assertThat(tokenAuthInfo.isLocal())
@@ -98,7 +120,7 @@ public class VaultSysAuthTest {
         assertThat(tokenAuthInfo.isSealWrap())
                 .isFalse();
         assertThat(tokenAuthInfo.getType())
-                .isEqualTo("token");
+                .isEqualTo("userpass");
         assertThat(tokenAuthInfo.getUuid())
                 .isNotEmpty();
     }

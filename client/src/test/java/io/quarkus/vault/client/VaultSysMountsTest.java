@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsTuneOptions;
+import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsEnableConfig;
+import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsTuneParams;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
 
@@ -64,10 +66,23 @@ public class VaultSysMountsTest {
     }
 
     @Test
-    public void testRead(VaultClient client) {
+    public void testRead(VaultClient client, @Random String mount) {
         var mountApi = client.sys().mounts();
 
-        var kvMountInfo = mountApi.read("secret/")
+        mountApi.enable(mount, "kv", "test kv", new VaultSysMountsEnableConfig()
+                .setDefaultLeaseTtl(Duration.ofMinutes(1))
+                .setMaxLeaseTtl(Duration.ofMinutes(10))
+                .setForceNoCache(true)
+                .setAuditNonHmacRequestKeys(List.of("key1", "key2"))
+                .setAuditNonHmacResponseKeys(List.of("key3", "key4"))
+                .setListingVisibility("hidden")
+                .setPassthroughRequestHeaders(List.of("header1", "header2"))
+                .setAllowedResponseHeaders(List.of("header3", "header4"))
+                .setAllowedManagedKeys(List.of("key5", "key6"))
+                .setOptions(Map.of("version", "2")))
+                .await().indefinitely();
+
+        var kvMountInfo = mountApi.read(mount)
                 .await().indefinitely();
 
         assertThat(kvMountInfo.getAccessor())
@@ -75,22 +90,33 @@ public class VaultSysMountsTest {
         assertThat(kvMountInfo.getConfig())
                 .isNotNull();
         assertThat(kvMountInfo.getConfig().getDefaultLeaseTtl())
-                .isEqualTo(Duration.ZERO);
+                .isEqualTo(Duration.ofMinutes(1));
         assertThat(kvMountInfo.getConfig().getMaxLeaseTtl())
-                .isEqualTo(Duration.ZERO);
+                .isEqualTo(Duration.ofMinutes(10));
         assertThat(kvMountInfo.getConfig().isForceNoCache())
-                .isFalse();
+                .isTrue();
+        assertThat(kvMountInfo.getConfig().getAuditNonHmacRequestKeys())
+                .contains("key1", "key2");
+        assertThat(kvMountInfo.getConfig().getAuditNonHmacResponseKeys())
+                .contains("key3", "key4");
+        assertThat(kvMountInfo.getConfig().getListingVisibility())
+                .contains("hidden");
+        assertThat(kvMountInfo.getConfig().getPassthroughRequestHeaders())
+                .contains("header1", "header2");
+        assertThat(kvMountInfo.getConfig().getAllowedResponseHeaders())
+                .contains("header3", "header4");
+        assertThat(kvMountInfo.getConfig().getAllowedManagedKeys())
+                .contains("key5", "key6");
         assertThat(kvMountInfo.getDeprecationStatus())
                 .isEqualTo("supported");
         assertThat(kvMountInfo.getDescription())
-                .isEqualTo("key/value secret storage");
+                .isEqualTo("test kv");
         assertThat(kvMountInfo.isExternalEntropyAccess())
                 .isFalse();
         assertThat(kvMountInfo.isLocal())
                 .isFalse();
         assertThat(kvMountInfo.getOptions())
-                .isNotNull()
-                .containsEntry("version", "2");
+                .isEmpty();
         assertThat(kvMountInfo.getPluginVersion())
                 .isEmpty();
         assertThat(kvMountInfo.getRunningPluginVersion())
@@ -180,10 +206,11 @@ public class VaultSysMountsTest {
     public void testTune(VaultClient client, @Random String path) {
         var mountApi = client.sys().mounts();
 
-        mountApi.enable(path, "kv", null, null)
+        mountApi.enable(path, "kv", null, new VaultSysMountsEnableConfig()
+                .setOptions(Map.of("version", "1")))
                 .await().indefinitely();
 
-        mountApi.tune(path, new VaultSysMountsTuneOptions()
+        mountApi.tune(path, new VaultSysMountsTuneParams()
                 .setDescription("test mount")
                 .setDefaultLeaseTtl(Duration.ofSeconds(90))
                 .setMaxLeaseTtl(Duration.ofMinutes(2))
@@ -192,7 +219,8 @@ public class VaultSysMountsTest {
                 .setListingVisibility("hidden")
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
-                .setAllowedManagedKeys(List.of("key5", "key6")))
+                .setAllowedManagedKeys(List.of("key5", "key6"))
+                .setOptions(Map.of("version", "2")))
                 .await().indefinitely();
 
         var kvTuneInfo = mountApi.readTune(path)
@@ -218,5 +246,7 @@ public class VaultSysMountsTest {
                 .contains("header3", "header4");
         assertThat(kvTuneInfo.getAllowedManagedKeys())
                 .contains("key5", "key6");
+        assertThat(kvTuneInfo.getOptions())
+                .containsEntry("version", "2");
     }
 }

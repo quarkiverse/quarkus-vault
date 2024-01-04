@@ -23,7 +23,7 @@ operations:
   result:
     kind: leased
     unwrapData: true
-    dataType: $MethodInfo
+    dataType: $FullMethodInfo
 
 
 - name: enable
@@ -155,6 +155,54 @@ types:
     type: String
   - name: config
     type: $MethodInfo.Config
+  - name: deprecationStatus
+    type: String
+  - name: description
+    type: String
+  - name: externalEntropyAccess
+    type: Boolean
+  - name: local
+    type: Boolean
+  - name: pluginVersion
+    type: String
+  - name: runningPluginVersion
+    type: String
+  - name: runningSha256
+    type: String
+  - name: sealWrap
+    type: Boolean
+  - name: type
+    type: String
+  - name: uuid
+    type: String
+
+- name: FullMethodInfo
+  nested:
+  - name: Config
+    properties:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: forceNoCache
+      type: Boolean
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: String
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+  properties:
+  - name: accessor
+    type: String
+  - name: config
+    type: $FullMethodInfo.Config
   - name: deprecationStatus
     type: String
   - name: description
