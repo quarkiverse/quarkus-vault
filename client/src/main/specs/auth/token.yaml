@@ -109,7 +109,7 @@ operations:
   - name: token
     type: String
   - name: increment
-    type: String
+    type: java.time.Duration
   result:
     kind: leased
     unwrapAuth: true
@@ -122,7 +122,7 @@ operations:
   bodyFrom: [increment]
   parameters:
   - name: increment
-    type: String
+    type: java.time.Duration
   result:
     kind: leased
     unwrapAuth: true
@@ -137,7 +137,7 @@ operations:
   - name: accessor
     type: String
   - name: increment
-    type: String
+    type: java.time.Duration
   result:
     kind: leased
     unwrapAuth: true

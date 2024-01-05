@@ -1,5 +1,6 @@
 package io.quarkus.vault.client;
 
+import static io.quarkus.vault.client.api.sys.health.VaultHealthStatus.INITIALIZED_UNSEALED_ACTIVE;
 import static java.time.Instant.now;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -18,7 +19,7 @@ public class VaultSysHealthTest {
                 .await().indefinitely();
 
         assertThat(status)
-                .isEqualTo(200);
+                .isEqualTo(INITIALIZED_UNSEALED_ACTIVE);
     }
 
     @Test

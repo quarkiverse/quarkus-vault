@@ -289,7 +289,7 @@ public class VaultAuthTokenTest {
                 .setNumUses(5))
                 .await().indefinitely();
 
-        var tokenInfo = tokenApi.renew(createdToken.getClientToken(), "30s")
+        var tokenInfo = tokenApi.renew(createdToken.getClientToken(), Duration.ofSeconds(30))
                 .await().indefinitely();
 
         assertThat(tokenInfo)
@@ -343,7 +343,7 @@ public class VaultAuthTokenTest {
 
         var tokenClient = client.configure().clientToken(createdToken.getClientToken()).build();
 
-        var tokenInfo = tokenClient.auth().token().renewSelf("30s")
+        var tokenInfo = tokenClient.auth().token().renewSelf(Duration.ofSeconds(30))
                 .await().indefinitely();
 
         assertThat(tokenInfo)
@@ -395,7 +395,7 @@ public class VaultAuthTokenTest {
                 .setNumUses(5))
                 .await().indefinitely();
 
-        var tokenInfo = tokenApi.renewAccessor(createdToken.getAccessor(), "30s")
+        var tokenInfo = tokenApi.renewAccessor(createdToken.getAccessor(), Duration.ofSeconds(30))
                 .await().indefinitely();
 
         assertThat(tokenInfo)

@@ -9,6 +9,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsEnableConfig;
+import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsListingVisibility;
 import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsTuneParams;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
@@ -75,7 +76,7 @@ public class VaultSysMountsTest {
                 .setForceNoCache(true)
                 .setAuditNonHmacRequestKeys(List.of("key1", "key2"))
                 .setAuditNonHmacResponseKeys(List.of("key3", "key4"))
-                .setListingVisibility("hidden")
+                .setListingVisibility(VaultSysMountsListingVisibility.HIDDEN)
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
                 .setAllowedManagedKeys(List.of("key5", "key6"))
@@ -100,7 +101,7 @@ public class VaultSysMountsTest {
         assertThat(kvMountInfo.getConfig().getAuditNonHmacResponseKeys())
                 .contains("key3", "key4");
         assertThat(kvMountInfo.getConfig().getListingVisibility())
-                .contains("hidden");
+                .isEqualTo(VaultSysMountsListingVisibility.HIDDEN);
         assertThat(kvMountInfo.getConfig().getPassthroughRequestHeaders())
                 .contains("header1", "header2");
         assertThat(kvMountInfo.getConfig().getAllowedResponseHeaders())
@@ -216,7 +217,7 @@ public class VaultSysMountsTest {
                 .setMaxLeaseTtl(Duration.ofMinutes(2))
                 .setAuditNonHmacRequestKeys(List.of("key1", "key2"))
                 .setAuditNonHmacResponseKeys(List.of("key3", "key4"))
-                .setListingVisibility("hidden")
+                .setListingVisibility(VaultSysMountsListingVisibility.HIDDEN)
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
                 .setAllowedManagedKeys(List.of("key5", "key6"))
@@ -239,7 +240,7 @@ public class VaultSysMountsTest {
         assertThat(kvTuneInfo.getAuditNonHmacResponseKeys())
                 .contains("key3", "key4");
         assertThat(kvTuneInfo.getListingVisibility())
-                .isEqualTo("hidden");
+                .isEqualTo(VaultSysMountsListingVisibility.HIDDEN);
         assertThat(kvTuneInfo.getPassthroughRequestHeaders())
                 .contains("header1", "header2");
         assertThat(kvTuneInfo.getAllowedResponseHeaders())

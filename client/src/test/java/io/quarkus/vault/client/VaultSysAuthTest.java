@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.common.VaultTokenType;
 import io.quarkus.vault.client.api.sys.auth.VaultSysAuthEnableConfig;
+import io.quarkus.vault.client.api.sys.auth.VaultSysAuthListingVisibility;
 import io.quarkus.vault.client.api.sys.auth.VaultSysAuthTuneOptions;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
@@ -72,7 +73,7 @@ public class VaultSysAuthTest {
                 .setAuditNonHmacRequestKeys(List.of("key1", "key2"))
                 .setAuditNonHmacResponseKeys(List.of("key3", "key4"))
                 .setAllowedResponseHeaders(List.of("header1", "header2"))
-                .setListingVisibility("hidden")
+                .setListingVisibility(VaultSysAuthListingVisibility.HIDDEN)
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4")))
                 .await().indefinitely();
@@ -95,7 +96,7 @@ public class VaultSysAuthTest {
         assertThat(tokenAuthInfo.getConfig().getAuditNonHmacResponseKeys())
                 .contains("key3", "key4");
         assertThat(tokenAuthInfo.getConfig().getListingVisibility())
-                .isEqualTo("hidden");
+                .isEqualTo(VaultSysAuthListingVisibility.HIDDEN);
         assertThat(tokenAuthInfo.getConfig().getPassthroughRequestHeaders())
                 .contains("header1", "header2");
         assertThat(tokenAuthInfo.getConfig().getAllowedResponseHeaders())
@@ -208,7 +209,7 @@ public class VaultSysAuthTest {
                 .setMaxLeaseTtl(Duration.ofMinutes(2))
                 .setAuditNonHmacRequestKeys(List.of("key1", "key2"))
                 .setAuditNonHmacResponseKeys(List.of("key3", "key4"))
-                .setListingVisibility("hidden")
+                .setListingVisibility(VaultSysAuthListingVisibility.HIDDEN)
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
                 .setTokenType(VaultTokenType.SERVICE))
@@ -230,7 +231,7 @@ public class VaultSysAuthTest {
         assertThat(kvTuneInfo.getAuditNonHmacResponseKeys())
                 .contains("key3", "key4");
         assertThat(kvTuneInfo.getListingVisibility())
-                .isEqualTo("hidden");
+                .isEqualTo(VaultSysAuthListingVisibility.HIDDEN);
         assertThat(kvTuneInfo.getPassthroughRequestHeaders())
                 .contains("header1", "header2");
         assertThat(kvTuneInfo.getAllowedResponseHeaders())

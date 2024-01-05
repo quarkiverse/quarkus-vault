@@ -90,7 +90,7 @@ public class VertxVaultHttpClientTest {
     public void testHead() {
         var health = client.sys().health();
 
-        var result = health.status()
+        var result = health.statusCode()
                 .await().indefinitely();
 
         assertThat(result)

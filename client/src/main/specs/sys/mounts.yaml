@@ -51,7 +51,7 @@ operations:
     - name: auditNonHmacResponseKeys
       type: java.util.List<String>
     - name: listingVisibility
-      type: String
+      type: $ListingVisibility
     - name: passthroughRequestHeaders
       type: java.util.List<String>
     - name: allowedResponseHeaders
@@ -95,7 +95,7 @@ operations:
     - name: auditNonHmacResponseKeys
       type: java.util.List<String>
     - name: listingVisibility
-      type: String
+      type: $ListingVisibility
     - name: passthroughRequestHeaders
       type: java.util.List<String>
     - name: allowedResponseHeaders
@@ -127,7 +127,7 @@ operations:
     - name: auditNonHmacResponseKeys
       type: java.util.List<String>
     - name: listingVisibility
-      type: String
+      type: $ListingVisibility
     - name: passthroughRequestHeaders
       type: java.util.List<String>
     - name: allowedResponseHeaders
@@ -196,7 +196,7 @@ types:
     - name: auditNonHmacResponseKeys
       type: java.util.List<String>
     - name: listingVisibility
-      type: String
+      type: $ListingVisibility
     - name: passthroughRequestHeaders
       type: java.util.List<String>
     - name: allowedResponseHeaders
@@ -230,3 +230,11 @@ types:
     type: String
   - name: uuid
     type: String
+
+
+enums:
+
+- name: ListingVisibility
+  values:
+  - hidden
+  - unauth
