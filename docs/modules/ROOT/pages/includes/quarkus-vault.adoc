@@ -794,7 +794,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_APP_ROLE_AUTH_MOUNT_PATH+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`auth/approle`
+|`approle`
 
 
 a| [[quarkus-vault_quarkus-vault-authentication-userpass-username]]`link:#quarkus-vault_quarkus-vault-authentication-userpass-username[quarkus.vault.authentication.userpass.username]`
@@ -904,7 +904,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_KUBERNETES_AUTH_MOUNT_PATH+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`auth/kubernetes`
+|`kubernetes`
 
 
 h|[[quarkus-vault_quarkus-vault-tls-tls]]link:#quarkus-vault_quarkus-vault-tls-tls[TLS]
