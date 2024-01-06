@@ -2,7 +2,9 @@ package io.quarkus.vault.client.api.secrets.kv;
 
 import java.util.Map;
 
-public interface VaultSecretsKVReadResult {
+import io.quarkus.vault.client.common.VaultModel;
+
+public interface VaultSecretsKVReadResult extends VaultModel {
 
     Map<String, Object> getValues();
 

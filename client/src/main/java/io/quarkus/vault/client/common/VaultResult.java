@@ -1,4 +1,4 @@
 package io.quarkus.vault.client.common;
 
-public interface VaultResult {
+public interface VaultResult extends VaultModel {
 }

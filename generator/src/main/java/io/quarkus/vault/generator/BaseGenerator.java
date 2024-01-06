@@ -107,7 +107,8 @@ public abstract class BaseGenerator implements Generator {
 
     public TypeSpec.Builder startPOJO(String name, Consumer<TypeSpec.Builder> customizer) {
         var spec = getTypeNames().classSpecBuilder(name)
-                .addModifiers(Modifier.PUBLIC);
+                .addModifiers(Modifier.PUBLIC)
+                .addSuperinterface(className(getTypeNames().api().getCommonPackageName(), "VaultModel"));
         customizer.accept(spec);
         return spec;
     }
@@ -322,9 +323,11 @@ public abstract class BaseGenerator implements Generator {
     }
 
     public void generateEnum(API.Enum e) {
-        addGeneratedType(typeNameFor(capitalize(e.name())), className -> {
+        var typeName = typeNameFor(capitalize(e.name()));
+        addGeneratedType(typeName, className -> {
             var spec = TypeSpec.enumBuilder(className)
-                    .addModifiers(Modifier.PUBLIC);
+                    .addModifiers(Modifier.PUBLIC)
+                    .addSuperinterface(className(getTypeNames().api().getCommonPackageName(), "VaultModel"));
             for (var value : e.values()) {
                 var valueName = kebabCaseToSnakeCase(value).toUpperCase();
                 var valueSpec = TypeSpec.anonymousClassBuilder("$S", value)
