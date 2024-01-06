@@ -49,7 +49,6 @@ public class VaultSysMountsTest {
         assertThat(kvMountInfo.isLocal())
                 .isFalse();
         assertThat(kvMountInfo.getOptions())
-                .isNotNull()
                 .containsEntry("version", "2");
         assertThat(kvMountInfo.getPluginVersion())
                 .isEmpty();
@@ -79,8 +78,8 @@ public class VaultSysMountsTest {
                 .setListingVisibility(VaultSysMountsListingVisibility.HIDDEN)
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
-                .setAllowedManagedKeys(List.of("key5", "key6"))
-                .setOptions(Map.of("version", "2")))
+                .setAllowedManagedKeys(List.of("key5", "key6")),
+                Map.of("version", "2"))
                 .await().indefinitely();
 
         var kvMountInfo = mountApi.read(mount)
@@ -117,7 +116,7 @@ public class VaultSysMountsTest {
         assertThat(kvMountInfo.isLocal())
                 .isFalse();
         assertThat(kvMountInfo.getOptions())
-                .isEmpty();
+                .containsEntry("version", "2");
         assertThat(kvMountInfo.getPluginVersion())
                 .isEmpty();
         assertThat(kvMountInfo.getRunningPluginVersion())
@@ -139,7 +138,7 @@ public class VaultSysMountsTest {
 
         var mountPath = path + "/";
 
-        mountApi.enable(path, "kv", null, null)
+        mountApi.enable(path, "kv", null, null, null)
                 .await().indefinitely();
 
         var mounts = mountApi.list()
@@ -155,7 +154,7 @@ public class VaultSysMountsTest {
 
         var mountPath = path + "/";
 
-        mountApi.enable(path, "kv", null, null)
+        mountApi.enable(path, "kv", null, null, null)
                 .await().indefinitely();
 
         var mounts = mountApi.list()
@@ -207,8 +206,7 @@ public class VaultSysMountsTest {
     public void testTune(VaultClient client, @Random String path) {
         var mountApi = client.sys().mounts();
 
-        mountApi.enable(path, "kv", null, new VaultSysMountsEnableConfig()
-                .setOptions(Map.of("version", "1")))
+        mountApi.enable(path, "kv", null, null, Map.of("version", "1"))
                 .await().indefinitely();
 
         mountApi.tune(path, new VaultSysMountsTuneParams()

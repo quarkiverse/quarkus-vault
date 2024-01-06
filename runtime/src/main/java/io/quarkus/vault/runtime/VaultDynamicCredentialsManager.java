@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.quarkus.vault.client.common.VaultModel;
 import jakarta.inject.Singleton;
 
 import org.jboss.logging.Logger;
@@ -124,7 +125,7 @@ public class VaultDynamicCredentialsManager {
                 });
     }
 
-    static class VaultDynamicCredentialsData {
+    static class VaultDynamicCredentialsData implements VaultModel {
         public String username;
         public String password;
     }

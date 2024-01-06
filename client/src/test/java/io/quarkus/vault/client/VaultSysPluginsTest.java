@@ -137,6 +137,31 @@ public class VaultSysPluginsTest {
                 .isEmpty();
         assertThat(pluginInfo.getArgs())
                 .contains("--arg1", "--arg2");
+        assertThat(pluginInfo.getDeprecationStatus())
+                .isNull();
+    }
+
+    @Test
+    public void testReadBuiltin(VaultClient client) {
+        var pluginsApi = client.sys().plugins();
+
+        var pluginInfo = pluginsApi.read("secret", "kv")
+                .await().indefinitely();
+
+        assertThat(pluginInfo)
+                .isNotNull();
+        assertThat(pluginInfo.getName())
+                .isEqualTo("kv");
+        assertThat(pluginInfo.getCommand())
+                .isEmpty();
+        assertThat(pluginInfo.getSha256())
+                .isEmpty();
+        assertThat(pluginInfo.getVersion())
+                .endsWith("builtin");
+        assertThat(pluginInfo.getArgs())
+                .isNull();
+        assertThat(pluginInfo.getDeprecationStatus())
+                .isEqualTo("supported");
     }
 
     @Test
@@ -252,7 +277,7 @@ public class VaultSysPluginsTest {
                 .setVersion("v1.0.0"))
                 .await().indefinitely();
 
-        client.sys().mounts().enable(mount, pluginName, null, null)
+        client.sys().mounts().enable(mount, pluginName, null, null, null)
                 .await().indefinitely();
 
         pluginsApi.reloadPlugin(pluginName, "global")

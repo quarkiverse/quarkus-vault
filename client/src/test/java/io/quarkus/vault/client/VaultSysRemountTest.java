@@ -14,7 +14,7 @@ public class VaultSysRemountTest {
     public void testRemountAndStatus(VaultClient client, @Random String path, @Random String newPath) {
         var remountApi = client.sys().remount();
 
-        client.sys().mounts().enable(path, "kv", null, null)
+        client.sys().mounts().enable(path, "kv", null, null, null)
                 .await().indefinitely();
 
         var remount = remountApi.remount(path, newPath)

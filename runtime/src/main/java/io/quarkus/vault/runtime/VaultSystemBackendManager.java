@@ -1,8 +1,10 @@
 package io.quarkus.vault.runtime;
 
 import static io.quarkus.vault.runtime.DurationHelper.*;
+import static java.util.stream.Collectors.toMap;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.Nullable;
@@ -233,7 +235,9 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                 .setAllowedResponseHeaders(options.allowedResponseHeaders)
                 .setAllowedManagedKeys(options.allowedManagedKeys)
                 .setPluginVersion(options.pluginVersion);
-        return vaultClient.sys().mounts().enable(mount, engineType, description, config);
+        return vaultClient.sys().mounts().enable(mount, engineType, description, config, options.options != null
+                ? options.options.entrySet().stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue))
+                : null);
     }
 
     @Override
@@ -276,11 +280,11 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                 .map(r -> new VaultPluginDetails()
                         .setBuiltin(r.isBuiltin())
                         .setName(r.getName())
-                        .setType(type)
                         .setVersion(r.getVersion())
                         .setSha256(r.getSha256())
                         .setCommand(r.getCommand())
-                        .setArgs(r.getArgs()))
+                        .setArgs(r.getArgs())
+                        .setDeprecationStatus(r.getDeprecationStatus()))
                 .onFailure(VaultClientException.class).recoverWithUni(x -> {
                     VaultClientException vx = (VaultClientException) x;
                     if (vx.getStatus() == 404) {

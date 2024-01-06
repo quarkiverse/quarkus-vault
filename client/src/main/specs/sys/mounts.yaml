@@ -30,7 +30,7 @@ operations:
   method: POST
   status: NO_CONTENT
   path: mounts/:path
-  bodyFrom: [type, description, config]
+  bodyFrom: [type, description, config, options]
   parameters:
   - name: path
     type: String
@@ -60,8 +60,8 @@ operations:
       type: String
     - name: allowedManagedKeys
       type: java.util.List<String>
-    - name: options
-      type: java.util.Map<String, Object>
+  - name: options
+    type: java.util.Map<String, Object>
 
 
 - name: disable

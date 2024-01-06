@@ -141,7 +141,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
         String configKeyName;
         if (config != null) {
             configKeyName = config.name().orElse(keyName);
-            params.setType(config.type().map(VaultSecretsTransitKeyType::valueOf).orElse(null));
+            params.setType(config.type().map(VaultSecretsTransitKeyType::from).orElse(null));
             params.setConvergentEncryption(config.convergentEncryption().map(Boolean::valueOf).orElse(null));
         } else {
             configKeyName = keyName;
@@ -429,7 +429,13 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
         return transit.verifyBatch(configKeyName, params)
                 .map(result -> result.stream()
-                        .map(r -> new VerificationResult(r.isValid(), r.getError()))
+                        .map(r -> {
+                            if (r.getError() != null) {
+                                return new VerificationResult(r.isValid(), r.getError());
+                            } else {
+                                return new VerificationResult(r.isValid(), !r.isValid() ? INVALID_SIGNATURE : null);
+                            }
+                        })
                         .collect(toList()));
     }
 

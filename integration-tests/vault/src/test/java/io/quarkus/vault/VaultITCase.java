@@ -54,7 +54,7 @@ import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.api.common.VaultFormat;
 import io.quarkus.vault.client.api.common.VaultHashAlgorithm;
 import io.quarkus.vault.client.api.common.VaultLeasedResult;
-import io.quarkus.vault.client.api.secrets.kv2.VaultSecretsKV2ReadSecretResult;
+import io.quarkus.vault.client.api.secrets.kv2.VaultSecretsKV2ReadSecretData;
 import io.quarkus.vault.client.api.secrets.transit.*;
 import io.quarkus.vault.runtime.config.VaultAuthenticationType;
 import io.quarkus.vault.runtime.config.VaultConfigSource;
@@ -156,11 +156,11 @@ public class VaultITCase {
         var anotherWrappingToken = ConfigProviderResolver.instance().getConfig()
                 .getValue("vault-test.another-password-kv-v2-wrapping-token", String.class);
         var unwrap = vaultClient.sys().wrapping()
-                .unwrapAs(anotherWrappingToken, VaultSecretsKV2ReadSecretResult.class)
+                .unwrapAs(anotherWrappingToken, VaultSecretsKV2ReadSecretData.class)
                 .await().indefinitely();
-        assertEquals(VAULT_AUTH_USERPASS_PASSWORD, unwrap.getData().getData().get("password"));
+        assertEquals(VAULT_AUTH_USERPASS_PASSWORD, unwrap.getData().get("password"));
         try {
-            vaultClient.sys().wrapping().unwrapAs(anotherWrappingToken, VaultSecretsKV2ReadSecretResult.class)
+            vaultClient.sys().wrapping().unwrapAs(anotherWrappingToken, VaultSecretsKV2ReadSecretData.class)
                     .await().indefinitely();
             fail("expected error 400: wrapping token is not valid or does not exist");
         } catch (VaultClientException e) {

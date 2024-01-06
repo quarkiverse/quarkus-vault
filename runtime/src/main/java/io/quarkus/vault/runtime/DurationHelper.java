@@ -15,7 +15,7 @@ public class DurationHelper {
         if (value.startsWith("PT")) {
             value = value.substring(2);
         }
-        return value;
+        return value.toLowerCase();
     }
 
     public static Integer toDurationSeconds(Duration duration) {

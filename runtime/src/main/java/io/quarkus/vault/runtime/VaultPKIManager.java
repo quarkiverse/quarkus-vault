@@ -1,7 +1,6 @@
 package io.quarkus.vault.runtime;
 
-import static io.quarkus.vault.runtime.DurationHelper.fromVaultDuration;
-import static io.quarkus.vault.runtime.DurationHelper.toVaultDuration;
+import static io.quarkus.vault.runtime.DurationHelper.*;
 import static io.quarkus.vault.runtime.VaultPKIManagerFactory.PKI_ENGINE_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -262,9 +261,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                         options.keyType != null ? VaultSecretsPKIKeyType.from(options.keyType.name().toLowerCase(Locale.ROOT))
                                 : null)
                 .setKeyBits(options.keyBits != null ? VaultSecretsPKIKeyBits.fromBits(options.keyBits) : null)
-                .setKeyUsage(options.keyUsages.stream().map(e -> VaultSecretsPKIKeyUsage.from(e.name())).collect(toList()))
-                .setExtKeyUsage(options.extendedKeyUsages.stream().map(e -> VaultSecretsPKIExtKeyUsage.from(e.name()))
-                        .collect(toList()))
+                .setKeyUsage(mapKeyUsagesToClient(options.keyUsages))
+                .setExtKeyUsage(mapExtKeyUsagesToClient(options.extendedKeyUsages))
                 .setExtKeyUsageOids(options.extendedKeyUsageOIDs)
                 .setUseCsrCommonName(options.useCSRCommonName)
                 .setUseCsrSans(options.useCSRSubjectAlternativeNames)
@@ -291,8 +289,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         return pki.readRole(role)
                 .map(info -> {
                     RoleOptions result = new RoleOptions();
-                    result.timeToLive = toVaultDuration(info.getTtl());
-                    result.maxTimeToLive = toVaultDuration(info.getMaxTtl());
+                    result.timeToLive = toStringDurationSeconds(info.getTtl());
+                    result.maxTimeToLive = toStringDurationSeconds(info.getMaxTtl());
                     result.allowLocalhost = info.isAllowLocalhost();
                     result.allowedDomains = info.getAllowedDomains();
                     result.allowTemplatesInAllowedDomains = info.isAllowedDomainsTemplate();
@@ -310,10 +308,8 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                     result.emailProtectionFlag = info.isEmailProtectionFlag();
                     result.keyType = stringToCertificateKeyType(info.getKeyType());
                     result.keyBits = info.getKeyBits().getBits();
-                    result.keyUsages = info.getKeyUsage() != null ? info.getKeyUsage().stream()
-                            .map(e -> CertificateKeyUsage.valueOf(e.name())).collect(toList()) : null;
-                    result.extendedKeyUsages = info.getExtKeyUsage() != null ? info.getExtKeyUsage().stream()
-                            .map(e -> CertificateExtendedKeyUsage.valueOf(e.name())).collect(toList()) : null;
+                    result.keyUsages = mapKeyUsagesFromClient(info.getKeyUsage());
+                    result.extendedKeyUsages = mapExtKeyUsagesFromClient(info.getExtKeyUsage());
                     result.extendedKeyUsageOIDs = info.getExtKeyUsageOids();
                     result.useCSRCommonName = info.isUseCsrCommonName();
                     result.useCSRSubjectAlternativeNames = info.isUseCsrSans();
@@ -331,7 +327,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                     result.requireCommonName = info.isRequireCn();
                     result.policyOIDs = info.getPolicyIdentifiers();
                     result.basicConstraintsValidForNonCA = info.isBasicConstraintsValidForNonCa();
-                    result.notBeforeDuration = toVaultDuration(info.getNotBefore());
+                    result.notBeforeDuration = toStringDurationSeconds(info.getNotBefore());
                     return result;
                 });
     }
@@ -589,5 +585,33 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
             default:
                 throw new VaultException("Unsupported private key format");
         }
+    }
+
+    private static List<VaultSecretsPKIKeyUsage> mapKeyUsagesToClient(List<CertificateKeyUsage> keyUsages) {
+        if (keyUsages == null) {
+            return null;
+        }
+        return keyUsages.stream().map(e -> VaultSecretsPKIKeyUsage.from(e.name())).collect(toList());
+    }
+
+    private static List<CertificateKeyUsage> mapKeyUsagesFromClient(List<VaultSecretsPKIKeyUsage> keyUsages) {
+        if (keyUsages == null) {
+            return null;
+        }
+        return keyUsages.stream().map(e -> CertificateKeyUsage.valueOf(e.getValue())).collect(toList());
+    }
+
+    private static List<VaultSecretsPKIExtKeyUsage> mapExtKeyUsagesToClient(List<CertificateExtendedKeyUsage> keyUsages) {
+        if (keyUsages == null) {
+            return null;
+        }
+        return keyUsages.stream().map(e -> VaultSecretsPKIExtKeyUsage.from(e.name())).collect(toList());
+    }
+
+    private static List<CertificateExtendedKeyUsage> mapExtKeyUsagesFromClient(List<VaultSecretsPKIExtKeyUsage> keyUsages) {
+        if (keyUsages == null) {
+            return null;
+        }
+        return keyUsages.stream().map(e -> CertificateExtendedKeyUsage.valueOf(e.getValue())).collect(toList());
     }
 }

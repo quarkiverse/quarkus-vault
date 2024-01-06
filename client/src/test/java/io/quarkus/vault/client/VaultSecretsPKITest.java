@@ -39,7 +39,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testIssue(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -75,7 +75,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testIssueViaIssuer(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -111,7 +111,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSign(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -156,7 +156,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSignViaIssuer(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -201,7 +201,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSignVerbatim(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -246,7 +246,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSignVerbatimViaIssuer(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -291,9 +291,9 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSignIntermediate(VaultClient client, @Random String mount1, @Random String mount2) throws IOException {
-        client.sys().mounts().enable(mount1, "pki", null, null)
+        client.sys().mounts().enable(mount1, "pki", null, null, null)
                 .await().indefinitely();
-        client.sys().mounts().enable(mount2, "pki", null, null)
+        client.sys().mounts().enable(mount2, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki1 = client.secrets().pki(mount1);
@@ -331,9 +331,9 @@ public class VaultSecretsPKITest {
     @Test
     public void testSignIntermediateViaIssuer(VaultClient client, @Random String mount1, @Random String mount2)
             throws IOException {
-        client.sys().mounts().enable(mount1, "pki", null, null)
+        client.sys().mounts().enable(mount1, "pki", null, null, null)
                 .await().indefinitely();
-        client.sys().mounts().enable(mount2, "pki", null, null)
+        client.sys().mounts().enable(mount2, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki1 = client.secrets().pki(mount1);
@@ -370,7 +370,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSignSelfIssued(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -395,7 +395,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSignSelfIssuedViaIssuer(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -420,7 +420,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testListCerts(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -447,7 +447,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadCert(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -479,7 +479,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testRevoke(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -507,7 +507,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testRevokeWithKey(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -536,7 +536,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testListRevoked(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -567,7 +567,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadIssuerCa(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -585,7 +585,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadIssuerCaFromIssuer(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -607,7 +607,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadIssuerCaChain(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -625,7 +625,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadIssuerCrl(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -665,7 +665,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadIssuerCrlViaIssuer(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -705,7 +705,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadIssuerDeltaCrl(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -743,7 +743,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadIssuerDeltaCrlViaIssuer(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -782,7 +782,7 @@ public class VaultSecretsPKITest {
     @Disabled("Requires Enterprise Vault")
     @Test
     public void testReadIssuerUnifiedCrl(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -823,7 +823,7 @@ public class VaultSecretsPKITest {
     @Disabled("Requires Enterprise Vault")
     @Test
     public void testReadIssuerUnifiedCrlViaIssuer(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -864,7 +864,7 @@ public class VaultSecretsPKITest {
     @Disabled("Requires Enterprise Vault")
     @Test
     public void testReadIssuerUnifiedDeltaCrl(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -903,7 +903,7 @@ public class VaultSecretsPKITest {
     @Disabled("Requires Enterprise Vault")
     @Test
     public void testReadIssuerUnifiedDeltaCrlViaIssuer(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -941,7 +941,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testConfigUrls(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -964,7 +964,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testConfigCluster(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -982,7 +982,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testConfigCrl(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1023,7 +1023,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testConfigKeys(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1054,7 +1054,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testConfigIssuers(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1091,7 +1091,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testRotateCrl(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1105,7 +1105,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testRotateDeltaCrl(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1124,7 +1124,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testGenerateRoot(VaultClient client, @Random String mount) throws IOException {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1160,7 +1160,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testRotateRoot(VaultClient client, @Random String mount) throws IOException {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1204,7 +1204,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testGenerateIssuerRoot(VaultClient client, @Random String mount) throws IOException {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1243,7 +1243,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testGenerateIntermediateCsr(VaultClient client, @Random String mount) throws IOException {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1261,7 +1261,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testGenerateIssuerIntermediateCsr(VaultClient client, @Random String mount) throws IOException {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1279,7 +1279,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testGenerateCrossSignCsr(VaultClient client, @Random String mount) throws IOException {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1301,9 +1301,9 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSetSignedIntermediate(VaultClient client, @Random String mount1, @Random String mount2) throws IOException {
-        client.sys().mounts().enable(mount1, "pki", null, null)
+        client.sys().mounts().enable(mount1, "pki", null, null, null)
                 .await().indefinitely();
-        client.sys().mounts().enable(mount2, "pki", null, null)
+        client.sys().mounts().enable(mount2, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki1 = client.secrets().pki(mount1);
@@ -1336,9 +1336,9 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testConfigCa(VaultClient client, @Random String mount1, @Random String mount2) {
-        client.sys().mounts().enable(mount1, "pki", null, null)
+        client.sys().mounts().enable(mount1, "pki", null, null, null)
                 .await().indefinitely();
-        client.sys().mounts().enable(mount2, "pki", null, null)
+        client.sys().mounts().enable(mount2, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki1 = client.secrets().pki(mount1);
@@ -1367,9 +1367,9 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testImportIssuerBundle(VaultClient client, @Random String mount1, @Random String mount2) {
-        client.sys().mounts().enable(mount1, "pki", null, null)
+        client.sys().mounts().enable(mount1, "pki", null, null, null)
                 .await().indefinitely();
-        client.sys().mounts().enable(mount2, "pki", null, null)
+        client.sys().mounts().enable(mount2, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki1 = client.secrets().pki(mount1);
@@ -1398,9 +1398,9 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testImportIssuerCert(VaultClient client, @Random String mount1, @Random String mount2) {
-        client.sys().mounts().enable(mount1, "pki", null, null)
+        client.sys().mounts().enable(mount1, "pki", null, null, null)
                 .await().indefinitely();
-        client.sys().mounts().enable(mount2, "pki", null, null)
+        client.sys().mounts().enable(mount2, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki1 = client.secrets().pki(mount1);
@@ -1426,7 +1426,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testRevokeIssuer(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1460,7 +1460,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testDeleteIssuer(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1476,7 +1476,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testListKeys(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1498,7 +1498,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testImportKey(VaultClient client, @Random String mount) throws Exception {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1523,7 +1523,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testReadKey(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1545,7 +1545,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testUpdateKey(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1568,7 +1568,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testDeleteKey(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1590,7 +1590,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testUpdateRole(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1747,7 +1747,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testListRoles(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1768,7 +1768,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testDeleteRole(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);
@@ -1798,7 +1798,7 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testDeleteAll(VaultClient client, @Random String mount) {
-        client.sys().mounts().enable(mount, "pki", null, null)
+        client.sys().mounts().enable(mount, "pki", null, null, null)
                 .await().indefinitely();
 
         var pki = client.secrets().pki(mount);

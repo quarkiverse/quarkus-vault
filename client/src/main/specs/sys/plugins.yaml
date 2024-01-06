@@ -200,3 +200,5 @@ types:
     type: String
   - name: builtin
     type: Boolean
+  - name: deprecationStatus
+    type: String

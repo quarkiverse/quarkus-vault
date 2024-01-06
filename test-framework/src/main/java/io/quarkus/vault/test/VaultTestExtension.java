@@ -49,6 +49,7 @@ import io.quarkus.vault.client.VaultIOException;
 import io.quarkus.vault.client.api.sys.init.VaultSysInitParams;
 import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
 import io.quarkus.vault.runtime.VaultVersions;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
@@ -163,7 +164,10 @@ public class VaultTestExtension {
     }
 
     private VaultClient createVaultClient() {
-        VertxVaultHttpClient httpClient = new VertxVaultHttpClient(WebClient.create(Vertx.vertx()));
+        var webClient = WebClient.create(Vertx.vertx(), new WebClientOptions()
+                .setTrustAll(true)
+                .setVerifyHost(false));
+        VertxVaultHttpClient httpClient = new VertxVaultHttpClient(webClient);
         return VaultClient.builder()
                 .executor(httpClient)
                 .baseUrl(getVaultUrl().orElseThrow())
