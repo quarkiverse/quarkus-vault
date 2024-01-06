@@ -1,7 +1,7 @@
 package io.quarkus.vault.runtime.config;
 
-import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
-import static io.quarkus.vault.runtime.LogConfidentialityLevel.MEDIUM;
+import static io.quarkus.vault.client.logging.LogConfidentialityLevel.LOW;
+import static io.quarkus.vault.client.logging.LogConfidentialityLevel.MEDIUM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
@@ -18,7 +18,7 @@ import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.quarkus.runtime.configuration.DurationConverter;
-import io.quarkus.vault.runtime.LogConfidentialityLevel;
+import io.quarkus.vault.client.logging.LogConfidentialityLevel;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
@@ -39,8 +39,8 @@ public interface VaultRuntimeConfig {
     String DEFAULT_CONNECT_TIMEOUT = "5S";
     String DEFAULT_READ_TIMEOUT = "5S";
     String DEFAULT_TLS_USE_KUBERNETES_CACERT = "true";
-    String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "auth/kubernetes";
-    String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "auth/approle";
+    String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "kubernetes";
+    String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "approle";
 
     /**
      * Microprofile Config ordinal.

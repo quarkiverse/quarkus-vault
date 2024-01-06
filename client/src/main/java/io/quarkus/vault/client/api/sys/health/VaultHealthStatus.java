@@ -2,6 +2,7 @@ package io.quarkus.vault.client.api.sys.health;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+
 import io.quarkus.vault.client.common.VaultModel;
 
 public enum VaultHealthStatus implements VaultModel {

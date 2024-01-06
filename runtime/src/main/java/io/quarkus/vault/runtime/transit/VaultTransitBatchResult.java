@@ -1,6 +1,6 @@
 package io.quarkus.vault.runtime.transit;
 
-import io.quarkus.vault.VaultException;
+import io.quarkus.vault.client.VaultException;
 
 public class VaultTransitBatchResult<K> {
 

@@ -1,6 +1,8 @@
 package io.quarkus.vault.runtime;
 
-import static io.quarkus.vault.runtime.LogConfidentialityLevel.MEDIUM;
+import static io.quarkus.vault.client.logging.LogConfidentialityLevel.MEDIUM;
+
+import io.quarkus.vault.client.logging.LogConfidentialityLevel;
 
 public class LeaseBase extends TimeLimitedBase {
 

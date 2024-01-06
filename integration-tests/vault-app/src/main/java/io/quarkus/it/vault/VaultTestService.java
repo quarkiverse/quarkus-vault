@@ -23,7 +23,7 @@ import io.quarkus.vault.auth.VaultAppRoleAuthRole;
 import io.quarkus.vault.auth.VaultAppRoleSecretId;
 import io.quarkus.vault.auth.VaultAppRoleSecretIdAccessor;
 import io.quarkus.vault.auth.VaultAppRoleSecretIdRequest;
-import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.transit.ClearData;
 import io.quarkus.vault.transit.KeyConfigRequestDetail;
 import io.quarkus.vault.transit.KeyCreationRequestDetail;
@@ -131,7 +131,7 @@ public class VaultTestService {
         // list app roles
         List<String> appRoles = appRoleAuthService.getAppRoles();
         if (appRoles == null || appRoles.size() != 2) {
-            return "invalid approles number after creation " + appRoles == null ? "null" : appRoles.size() + ", expexted: 2";
+            return "invalid approles number after creation " + (appRoles == null ? "null" : appRoles.size()) + ", expexted: 2";
         }
 
         // retrieve app role and checks defaults values have been set

@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.sys.EnableEngineOptions;
 import io.quarkus.vault.sys.EngineListingVisibility;
 import io.quarkus.vault.sys.VaultSealStatus;

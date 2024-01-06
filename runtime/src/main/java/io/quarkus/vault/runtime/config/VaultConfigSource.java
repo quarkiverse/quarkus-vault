@@ -17,9 +17,9 @@ import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
-import io.quarkus.vault.VaultException;
 import io.quarkus.vault.VaultKVSecretReactiveEngine;
-import io.quarkus.vault.runtime.VaultIOException;
+import io.quarkus.vault.client.VaultException;
+import io.quarkus.vault.client.VaultIOException;
 import io.quarkus.vault.runtime.client.Private;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 

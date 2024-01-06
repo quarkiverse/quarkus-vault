@@ -9,7 +9,7 @@ public class VaultTuneInfo {
     private Long defaultLeaseTimeToLive;
     private Long maxLeaseTimeToLive;
     private Boolean forceNoCache;
-    private Map<String, String> options;
+    private Map<String, Object> options;
     private List<String> auditNonHMACRequestKeys;
     private List<String> auditNonHMACResponseKeys;
     private EngineListingVisibility listingVisibility;
@@ -39,7 +39,7 @@ public class VaultTuneInfo {
         return maxLeaseTimeToLive;
     }
 
-    public Map<String, String> getOptions() {
+    public Map<String, Object> getOptions() {
         return options;
     }
 
@@ -81,7 +81,7 @@ public class VaultTuneInfo {
         return this;
     }
 
-    public VaultTuneInfo setOptions(Map<String, String> options) {
+    public VaultTuneInfo setOptions(Map<String, Object> options) {
         this.options = options;
         return this;
     }

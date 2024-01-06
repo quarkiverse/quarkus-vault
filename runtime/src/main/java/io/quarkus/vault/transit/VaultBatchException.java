@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import io.quarkus.vault.VaultException;
+import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.runtime.transit.VaultTransitBatchResult;
 
 /**

@@ -9,7 +9,7 @@ import io.quarkus.vault.auth.VaultAppRoleAuthRole;
 import io.quarkus.vault.auth.VaultAppRoleSecretId;
 import io.quarkus.vault.auth.VaultAppRoleSecretIdAccessor;
 import io.quarkus.vault.auth.VaultAppRoleSecretIdRequest;
-import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.client.VaultClientException;
 
 /**
  * This service provides programmatic access to the AppRole auth method.

@@ -13,10 +13,13 @@ import jakarta.inject.Singleton;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.vault.runtime.client.VaultClient;
-import io.quarkus.vault.runtime.client.VaultClientException;
-import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
-import io.quarkus.vault.runtime.client.secretengine.VaultInternalDynamicCredentialsSecretEngine;
+import io.quarkus.vault.client.VaultClient;
+import io.quarkus.vault.client.VaultClientException;
+import io.quarkus.vault.client.api.common.VaultAuthResult;
+import io.quarkus.vault.client.api.common.VaultLeasedResult;
+import io.quarkus.vault.client.common.VaultLeasedResultExtractor;
+import io.quarkus.vault.client.common.VaultRequest;
+import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.smallrye.mutiny.Uni;
 
@@ -25,22 +28,13 @@ public class VaultDynamicCredentialsManager {
 
     private static final Logger log = Logger.getLogger(VaultDynamicCredentialsManager.class.getName());
 
-    private ConcurrentHashMap<String, VaultDynamicCredentials> credentialsCache = new ConcurrentHashMap<>();
-    private VaultClient vaultClient;
-    private VaultAuthManager vaultAuthManager;
-    private VaultConfigHolder vaultConfigHolder;
-    private VaultInternalSystemBackend vaultInternalSystemBackend;
-    private VaultInternalDynamicCredentialsSecretEngine vaultInternalDynamicCredentialsSecretEngine;
+    private final ConcurrentHashMap<String, VaultDynamicCredentials> credentialsCache = new ConcurrentHashMap<>();
+    private final VaultClient vaultClient;
+    private final VaultConfigHolder vaultConfigHolder;
 
-    public VaultDynamicCredentialsManager(VaultClient vaultClient, VaultConfigHolder vaultConfigHolder,
-            VaultAuthManager vaultAuthManager,
-            VaultInternalSystemBackend vaultInternalSystemBackend,
-            VaultInternalDynamicCredentialsSecretEngine vaultInternalDynamicCredentialsSecretEngine) {
+    public VaultDynamicCredentialsManager(VaultClient vaultClient, VaultConfigHolder vaultConfigHolder) {
         this.vaultClient = vaultClient;
         this.vaultConfigHolder = vaultConfigHolder;
-        this.vaultAuthManager = vaultAuthManager;
-        this.vaultInternalSystemBackend = vaultInternalSystemBackend;
-        this.vaultInternalDynamicCredentialsSecretEngine = vaultInternalDynamicCredentialsSecretEngine;
     }
 
     private String getCredentialsPath(String mount, String requestPath) {
@@ -64,29 +58,27 @@ public class VaultDynamicCredentialsManager {
     }
 
     public Uni<Map<String, String>> getDynamicCredentials(String mount, String requestPath, String role) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            VaultDynamicCredentials currentCredentials = getCachedCredentials(mount, requestPath, role);
-            return getCredentials(currentCredentials, token, mount, requestPath, role)
-                    .map(credentials -> {
-                        putCachedCredentials(mount, requestPath, role, credentials);
-                        Map<String, String> properties = new HashMap<>();
-                        properties.put(USER_PROPERTY_NAME, credentials.username);
-                        properties.put(PASSWORD_PROPERTY_NAME, credentials.password);
-                        properties.put(EXPIRATION_TIMESTAMP_PROPERTY_NAME, credentials.getExpireInstant().toString());
-                        return properties;
-                    });
-        });
+        VaultDynamicCredentials currentCredentials = getCachedCredentials(mount, requestPath, role);
+        return getCredentials(currentCredentials, mount, requestPath, role)
+                .map(credentials -> {
+                    putCachedCredentials(mount, requestPath, role, credentials);
+                    Map<String, String> properties = new HashMap<>();
+                    properties.put(USER_PROPERTY_NAME, credentials.username);
+                    properties.put(PASSWORD_PROPERTY_NAME, credentials.password);
+                    properties.put(EXPIRATION_TIMESTAMP_PROPERTY_NAME, credentials.getExpireInstant().toString());
+                    return properties;
+                });
     }
 
-    public Uni<VaultDynamicCredentials> getCredentials(VaultDynamicCredentials currentCredentials,
-            String clientToken, String mount, String requestPath, String role) {
+    public Uni<VaultDynamicCredentials> getCredentials(VaultDynamicCredentials currentCredentials, String mount,
+            String requestPath, String role) {
         return Uni.createFrom().item(Optional.ofNullable(currentCredentials))
                 // check lease is still valid
-                .flatMap(credentials -> validate(credentials, clientToken))
+                .flatMap(this::validate)
                 // extend lease if necessary
                 .flatMap(credentials -> {
                     if (credentials.isPresent() && credentials.get().shouldExtend(getConfig().renewGracePeriod())) {
-                        return extend(credentials.get(), clientToken, mount, requestPath, role).map(Optional::of);
+                        return extend(credentials.get(), mount, requestPath, role).map(Optional::of);
                     }
                     return Uni.createFrom().item(credentials);
                 })
@@ -94,17 +86,17 @@ public class VaultDynamicCredentialsManager {
                 .flatMap(credentials -> {
                     if (credentials.isEmpty() || credentials.get().isExpired()
                             || credentials.get().expiresSoon(getConfig().renewGracePeriod())) {
-                        return create(clientToken, mount, requestPath, role);
+                        return create(mount, requestPath, role);
                     }
                     return Uni.createFrom().item(credentials.get());
                 });
     }
 
-    private Uni<Optional<VaultDynamicCredentials>> validate(Optional<VaultDynamicCredentials> credentials, String clientToken) {
+    private Uni<Optional<VaultDynamicCredentials>> validate(Optional<VaultDynamicCredentials> credentials) {
         if (credentials.isEmpty()) {
             return Uni.createFrom().item(Optional.empty());
         }
-        return vaultInternalSystemBackend.lookupLease(vaultClient, clientToken, credentials.get().leaseId)
+        return vaultClient.sys().leases().read(credentials.get().leaseId)
                 .map(ignored -> credentials)
                 .onFailure(VaultClientException.class).recoverWithUni(e -> {
                     if (((VaultClientException) e).getStatus() == 400) { // bad request
@@ -116,13 +108,13 @@ public class VaultDynamicCredentialsManager {
                 });
     }
 
-    private Uni<VaultDynamicCredentials> extend(VaultDynamicCredentials currentCredentials, String clientToken,
-            String mount, String requestPath, String role) {
-        return vaultInternalSystemBackend.renewLease(vaultClient, clientToken, currentCredentials.leaseId)
+    private Uni<VaultDynamicCredentials> extend(VaultDynamicCredentials currentCredentials, String mount, String requestPath,
+            String role) {
+        return vaultClient.sys().leases().renew(currentCredentials.leaseId, null)
                 .map(vaultRenewLease -> {
-                    LeaseBase lease = new LeaseBase(vaultRenewLease.leaseId,
-                            vaultRenewLease.renewable,
-                            vaultRenewLease.leaseDurationSecs);
+                    LeaseBase lease = new LeaseBase(vaultRenewLease.getLeaseId(),
+                            vaultRenewLease.isRenewable(),
+                            vaultRenewLease.getLeaseDuration().toSeconds());
                     VaultDynamicCredentials credentials = new VaultDynamicCredentials(lease, currentCredentials.username,
                             currentCredentials.password);
                     sanityCheck(credentials, mount, requestPath, role);
@@ -132,15 +124,26 @@ public class VaultDynamicCredentialsManager {
                 });
     }
 
-    private Uni<VaultDynamicCredentials> create(String clientToken, String mount, String requestPath, String role) {
-        return vaultInternalDynamicCredentialsSecretEngine
-                .generateCredentials(vaultClient, clientToken, mount, requestPath, role)
+    static class VaultDynamicCredentialsData {
+        public String username;
+        public String password;
+    }
+
+    static class VaultDynamicCredentialsResult extends VaultLeasedResult<VaultDynamicCredentialsData, VaultAuthResult<Object>> {
+    }
+
+    private Uni<VaultDynamicCredentials> create(String mount, String requestPath, String role) {
+        var request = VaultRequest.get(String.format("[DYN-CREDS (%s)] Generate for %s", mount, role))
+                .path(mount, requestPath, role)
+                .expectOkStatus()
+                .build(VaultLeasedResultExtractor.of(VaultDynamicCredentialsResult.class));
+        return vaultClient.execute(request)
+                .map(VaultResponse::getResult)
                 .map(vaultDynamicCredentials -> {
-                    LeaseBase lease = new LeaseBase(vaultDynamicCredentials.leaseId, vaultDynamicCredentials.renewable,
-                            vaultDynamicCredentials.leaseDurationSecs);
-                    VaultDynamicCredentials credentials = new VaultDynamicCredentials(lease,
-                            vaultDynamicCredentials.data.username,
-                            vaultDynamicCredentials.data.password);
+                    var data = vaultDynamicCredentials.getData();
+                    LeaseBase lease = new LeaseBase(vaultDynamicCredentials.getLeaseId(), vaultDynamicCredentials.isRenewable(),
+                            vaultDynamicCredentials.getLeaseDuration().toSeconds());
+                    VaultDynamicCredentials credentials = new VaultDynamicCredentials(lease, data.username, data.password);
                     log.debug("generated " + role + "(" + getCredentialsPath(mount, requestPath) + ") credentials:"
                             + credentials.getConfidentialInfo(getConfig().logConfidentialityLevel()));
                     sanityCheck(credentials, mount, requestPath, role);

@@ -2,7 +2,7 @@ package io.quarkus.vault.utils;
 
 import java.util.Optional;
 
-import io.quarkus.vault.runtime.client.VaultClientException;
+import io.quarkus.vault.client.VaultClientException;
 import io.smallrye.mutiny.Uni;
 
 public class Plugs {
