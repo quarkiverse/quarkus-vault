@@ -3,7 +3,9 @@ package io.quarkus.vault.client.api.secrets.pki;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum VaultSecretsPKIKeyBits {
+import io.quarkus.vault.client.common.VaultModel;
+
+public enum VaultSecretsPKIKeyBits implements VaultModel {
 
     RSA_2048(2048),
     RSA_3072(3072),

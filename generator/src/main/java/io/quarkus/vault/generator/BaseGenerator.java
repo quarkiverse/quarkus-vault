@@ -11,7 +11,9 @@ import javax.lang.model.element.Modifier;
 
 import jakarta.annotation.Nonnull;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.squareup.javapoet.*;
 
 import io.quarkus.vault.generator.errors.OneOfFieldsMissingError;
@@ -325,14 +327,46 @@ public abstract class BaseGenerator implements Generator {
                     .addModifiers(Modifier.PUBLIC);
             for (var value : e.values()) {
                 var valueName = kebabCaseToSnakeCase(value).toUpperCase();
-                var valueSpec = TypeSpec.anonymousClassBuilder("")
-                        .addAnnotation(
-                                AnnotationSpec.builder(className(JsonProperty.class))
-                                        .addMember("value", "$S", value)
-                                        .build())
+                var valueSpec = TypeSpec.anonymousClassBuilder("$S", value)
                         .build();
                 spec.addEnumConstant(valueName, valueSpec);
             }
+            spec.addField(String.class, "value", Modifier.PRIVATE, Modifier.FINAL);
+            spec.addMethod(
+                    MethodSpec.constructorBuilder()
+                            .addParameter(String.class, "value")
+                            .addStatement("this.value = value")
+                            .build());
+            spec.addMethod(
+                    MethodSpec.methodBuilder("getValue")
+                            .addAnnotation(JsonValue.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .returns(String.class)
+                            .addStatement("return value")
+                            .build());
+            spec.addMethod(
+                    MethodSpec.methodBuilder("toString")
+                            .addModifiers(Modifier.PUBLIC)
+                            .returns(String.class)
+                            .addAnnotation(Override.class)
+                            .addStatement("return getValue()")
+                            .build());
+            spec.addMethod(
+                    MethodSpec.methodBuilder("from")
+                            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                            .addAnnotation(JsonCreator.class)
+                            .addParameter(String.class, "value")
+                            .returns(typeName)
+                            .addCode(
+                                    CodeBlock.builder()
+                                            .addStatement("if (value == null) return null")
+                                            .beginControlFlow("for (var v : values())")
+                                            .addStatement("if (v.value.equals(value)) return v")
+                                            .endControlFlow()
+                                            .addStatement("throw new $T(\"Unknown value: \" + value)",
+                                                    IllegalArgumentException.class)
+                                            .build())
+                            .build());
             return spec.build();
         });
     }

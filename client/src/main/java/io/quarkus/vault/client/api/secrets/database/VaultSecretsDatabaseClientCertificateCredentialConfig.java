@@ -1,25 +1,77 @@
 package io.quarkus.vault.client.api.secrets.database;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+
+import io.quarkus.vault.client.common.VaultModel;
 
 public class VaultSecretsDatabaseClientCertificateCredentialConfig implements VaultSecretsDatabaseCredentialConfig {
 
-    public enum KeyType {
-        @JsonProperty("rsa")
-        RSA,
-        @JsonProperty("ec")
-        EC,
-        @JsonProperty("ed25519")
-        ED25519
+    public enum KeyType implements VaultModel {
+        RSA("rsa"),
+        EC("ec"),
+        ED25519("ed25519");
+
+        private final String value;
+
+        KeyType(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return getValue();
+        }
+
+        @JsonCreator
+        public static KeyType from(String value) {
+            if (value == null)
+                return null;
+            for (var v : values()) {
+                if (v.value.equals(value))
+                    return v;
+            }
+            throw new IllegalArgumentException("Unknown value: " + value);
+        }
     }
 
-    public enum SignatureBits {
-        @JsonProperty("256")
-        BITS_256,
-        @JsonProperty("384")
-        BITS_384,
-        @JsonProperty("512")
-        BITS_512
+    public enum SignatureBits implements VaultModel {
+        BITS_256("256"),
+        BITS_384("384"),
+        BITS_512("512");
+
+        private final String value;
+
+        SignatureBits(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return getValue();
+        }
+
+        @JsonCreator
+        public static SignatureBits from(String value) {
+            if (value == null)
+                return null;
+            for (var v : values()) {
+                if (v.value.equals(value))
+                    return v;
+            }
+            throw new IllegalArgumentException("Unknown value: " + value);
+        }
     }
 
     @JsonProperty("common_name_template")

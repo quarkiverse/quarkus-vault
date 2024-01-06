@@ -3,7 +3,9 @@ package io.quarkus.vault.client.api.secrets.pki;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum VaultSecretsPKISignatureBits {
+import io.quarkus.vault.client.common.VaultModel;
+
+public enum VaultSecretsPKISignatureBits implements VaultModel {
     DEFAULT(0),
     SHA_256(256),
     SHA_384(384),

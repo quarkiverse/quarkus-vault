@@ -1,6 +1,10 @@
 package io.quarkus.vault.client.api.sys.health;
 
-public enum VaultHealthStatus {
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import io.quarkus.vault.client.common.VaultModel;
+
+public enum VaultHealthStatus implements VaultModel {
     INITIALIZED_UNSEALED_ACTIVE(200),
     UNSEALED_STANDBY(429),
     RECOVERY_REPLICATION_SECONDARY_ACTIVE(472),
@@ -14,10 +18,12 @@ public enum VaultHealthStatus {
         this.statusCode = statusCode;
     }
 
+    @JsonValue
     public int getStatusCode() {
         return statusCode;
     }
 
+    @JsonCreator
     public static VaultHealthStatus fromStatusCode(int statusCode) {
         for (VaultHealthStatus status : VaultHealthStatus.values()) {
             if (status.getStatusCode() == statusCode) {
