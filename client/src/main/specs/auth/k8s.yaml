@@ -162,6 +162,10 @@ operations:
     data:
     - name: keys
       type: java.util.List<String>
+  recoverNotFound:
+    using: $T.of()
+    arguments:
+      - <type>java.util.List
 
 
 - name: deleteRole
