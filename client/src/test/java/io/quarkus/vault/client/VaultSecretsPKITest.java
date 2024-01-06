@@ -1589,6 +1589,214 @@ public class VaultSecretsPKITest {
     }
 
     @Test
+    public void testUpdateRole(VaultClient client, @Random String mount) {
+        client.sys().mounts().enable(mount, "pki", null, null)
+                .await().indefinitely();
+
+        var pki = client.secrets().pki(mount);
+
+        pki.generateIssuerRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
+                .setIssuerName("test1")
+                .setCommonName("Root CA"))
+                .await().indefinitely();
+
+        var now = OffsetDateTime.now();
+
+        pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
+                .setIssuerRef("test1")
+                .setTtl(Duration.ofMinutes(23))
+                .setMaxTtl(Duration.ofMinutes(45))
+                .setAllowLocalhost(true)
+                .setAllowedDomains(List.of("example.com"))
+                .setAllowedDomainsTemplate(true)
+                .setAllowBareDomains(true)
+                .setAllowSubdomains(true)
+                .setAllowGlobDomains(true)
+                .setAllowWildcardCertificates(true)
+                .setAllowAnyName(true)
+                .setEnforceHostnames(true)
+                .setAllowIpSans(true)
+                .setAllowedUriSans(List.of("https://example.com"))
+                .setAllowedUriSansTemplate(true)
+                .setAllowedOtherSans(List.of("2.5.29.17;UTF8:test@example.com"))
+                .setAllowedSerialNumbers(List.of("1234567890"))
+                .setServerFlag(true)
+                .setClientFlag(true)
+                .setCodeSigningFlag(true)
+                .setEmailProtectionFlag(true)
+                .setKeyType(VaultSecretsPKIKeyType.EC)
+                .setKeyBits(VaultSecretsPKIKeyBits.EC_P256)
+                .setSignatureBits(VaultSecretsPKISignatureBits.SHA_512)
+                .setKeyUsage(List.of(VaultSecretsPKIKeyUsage.DIGITALSIGNATURE))
+                .setExtKeyUsage(List.of(VaultSecretsPKIExtKeyUsage.CLIENTAUTH))
+                .setExtKeyUsageOids(List.of("2.5.29.37"))
+                .setUseCsrCommonName(true)
+                .setUseCsrSans(true)
+                .setOu(List.of("Test"))
+                .setOrganization(List.of("Example Inc"))
+                .setCountry(List.of("US"))
+                .setProvince(List.of("CA"))
+                .setLocality(List.of("San Francisco"))
+                .setStreetAddress(List.of("123 Main Street"))
+                .setPostalCode(List.of("94105"))
+                .setGenerateLease(false)
+                .setNoStore(true)
+                .setRequireCn(true)
+                .setPolicyIdentifiers(List.of())
+                .setBasicConstraintsValidForNonCa(true)
+                .setNotBefore(Duration.ofMinutes(5))
+                .setNotAfter(now.plusYears(1))
+                .setCnValidations(List.of(VaultSecretsPKICommonNameValidation.HOSTNAME))
+                .setAllowedUserIds(List.of("user1")))
+                .await().indefinitely();
+
+        var role = pki.readRole("test")
+                .await().indefinitely();
+
+        assertThat(role.getIssuerRef())
+                .isEqualTo("test1");
+        assertThat(role.getTtl())
+                .isEqualTo(Duration.ofMinutes(23));
+        assertThat(role.getMaxTtl())
+                .isEqualTo(Duration.ofMinutes(45));
+        assertThat(role.isAllowLocalhost())
+                .isTrue();
+        assertThat(role.getAllowedDomains())
+                .contains("example.com");
+        assertThat(role.isAllowedDomainsTemplate())
+                .isTrue();
+        assertThat(role.isAllowBareDomains())
+                .isTrue();
+        assertThat(role.isAllowSubdomains())
+                .isTrue();
+        assertThat(role.isAllowGlobDomains())
+                .isTrue();
+        assertThat(role.isAllowWildcardCertificates())
+                .isTrue();
+        assertThat(role.isAllowAnyName())
+                .isTrue();
+        assertThat(role.isEnforceHostnames())
+                .isTrue();
+        assertThat(role.isAllowIpSans())
+                .isTrue();
+        assertThat(role.getAllowedUriSans())
+                .contains("https://example.com");
+        assertThat(role.isAllowedUriSansTemplate())
+                .isTrue();
+        assertThat(role.getAllowedOtherSans())
+                .contains("2.5.29.17;UTF8:test@example.com");
+        assertThat(role.getAllowedSerialNumbers())
+                .contains("1234567890");
+        assertThat(role.isServerFlag())
+                .isTrue();
+        assertThat(role.isClientFlag())
+                .isTrue();
+        assertThat(role.isCodeSigningFlag())
+                .isTrue();
+        assertThat(role.isEmailProtectionFlag())
+                .isTrue();
+        assertThat(role.getKeyType())
+                .isEqualTo(VaultSecretsPKIKeyType.EC);
+        assertThat(role.getKeyBits())
+                .isEqualTo(VaultSecretsPKIKeyBits.EC_P256);
+        assertThat(role.getSignatureBits())
+                .isEqualTo(VaultSecretsPKISignatureBits.SHA_512);
+        assertThat(role.getKeyUsage())
+                .contains(VaultSecretsPKIKeyUsage.DIGITALSIGNATURE);
+        assertThat(role.getExtKeyUsage())
+                .contains(VaultSecretsPKIExtKeyUsage.CLIENTAUTH);
+        assertThat(role.getExtKeyUsageOids())
+                .contains("2.5.29.37");
+        assertThat(role.isUseCsrCommonName())
+                .isTrue();
+        assertThat(role.isUseCsrSans())
+                .isTrue();
+        assertThat(role.getOu())
+                .contains("Test");
+        assertThat(role.getOrganization())
+                .contains("Example Inc");
+        assertThat(role.getCountry())
+                .contains("US");
+        assertThat(role.getProvince())
+                .contains("CA");
+        assertThat(role.getLocality())
+                .contains("San Francisco");
+        assertThat(role.getStreetAddress())
+                .contains("123 Main Street");
+        assertThat(role.getPostalCode())
+                .contains("94105");
+        assertThat(role.isGenerateLease())
+                .isFalse();
+        assertThat(role.isNoStore())
+                .isTrue();
+        assertThat(role.isRequireCn())
+                .isTrue();
+        assertThat(role.getPolicyIdentifiers())
+                .isEmpty();
+        assertThat(role.isBasicConstraintsValidForNonCa())
+                .isTrue();
+        assertThat(role.getNotBefore())
+                .isEqualTo(Duration.ofMinutes(5));
+        assertThat(role.getNotAfter())
+                .isEqualTo(now.plusYears(1));
+        assertThat(role.getCnValidations())
+                .contains(VaultSecretsPKICommonNameValidation.HOSTNAME);
+        assertThat(role.getAllowedUserIds())
+                .contains("user1");
+    }
+
+    @Test
+    public void testListRoles(VaultClient client, @Random String mount) {
+        client.sys().mounts().enable(mount, "pki", null, null)
+                .await().indefinitely();
+
+        var pki = client.secrets().pki(mount);
+
+        pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
+                .setCommonName("Root CA"))
+                .await().indefinitely();
+
+        pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams())
+                .await().indefinitely();
+
+        var roles = pki.listRoles()
+                .await().indefinitely();
+
+        assertThat(roles)
+                .contains("test");
+    }
+
+    @Test
+    public void testDeleteRole(VaultClient client, @Random String mount) {
+        client.sys().mounts().enable(mount, "pki", null, null)
+                .await().indefinitely();
+
+        var pki = client.secrets().pki(mount);
+
+        pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
+                .setCommonName("Root CA"))
+                .await().indefinitely();
+
+        pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams())
+                .await().indefinitely();
+
+        var roles = pki.listRoles()
+                .await().indefinitely();
+
+        assertThat(roles)
+                .contains("test");
+
+        pki.deleteRole("test")
+                .await().indefinitely();
+
+        roles = pki.listRoles()
+                .await().indefinitely();
+
+        assertThat(roles)
+                .doesNotContain("test");
+    }
+
+    @Test
     public void testDeleteAll(VaultClient client, @Random String mount) {
         client.sys().mounts().enable(mount, "pki", null, null)
                 .await().indefinitely();

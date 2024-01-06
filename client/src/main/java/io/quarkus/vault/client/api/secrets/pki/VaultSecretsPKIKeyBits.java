@@ -28,7 +28,10 @@ public enum VaultSecretsPKIKeyBits implements VaultModel {
     }
 
     @JsonCreator
-    public static VaultSecretsPKIKeyBits fromBits(int bits) {
+    public static VaultSecretsPKIKeyBits fromBits(Integer bits) {
+        if (bits == null) {
+            return null;
+        }
         for (VaultSecretsPKIKeyBits keyBits : VaultSecretsPKIKeyBits.values()) {
             if (keyBits.getBits() == bits) {
                 return keyBits;
