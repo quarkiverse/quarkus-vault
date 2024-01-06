@@ -9,15 +9,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.quarkus.vault.client.common.VaultModel;
 import jakarta.inject.Singleton;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.vault.client.VaultClient;
 import io.quarkus.vault.client.VaultClientException;
-import io.quarkus.vault.client.api.common.VaultAuthResult;
-import io.quarkus.vault.client.api.common.VaultLeasedResult;
+import io.quarkus.vault.client.api.common.VaultAnyResult;
 import io.quarkus.vault.client.common.VaultLeasedResultExtractor;
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultResponse;
@@ -125,26 +123,20 @@ public class VaultDynamicCredentialsManager {
                 });
     }
 
-    static class VaultDynamicCredentialsData implements VaultModel {
-        public String username;
-        public String password;
-    }
-
-    static class VaultDynamicCredentialsResult extends VaultLeasedResult<VaultDynamicCredentialsData, VaultAuthResult<Object>> {
-    }
-
     private Uni<VaultDynamicCredentials> create(String mount, String requestPath, String role) {
         var request = VaultRequest.get(String.format("[DYN-CREDS (%s)] Generate for %s", mount, role))
                 .path(mount, requestPath, role)
                 .expectOkStatus()
-                .build(VaultLeasedResultExtractor.of(VaultDynamicCredentialsResult.class));
+                .build(VaultLeasedResultExtractor.of(VaultAnyResult.class));
         return vaultClient.execute(request)
                 .map(VaultResponse::getResult)
-                .map(vaultDynamicCredentials -> {
-                    var data = vaultDynamicCredentials.getData();
-                    LeaseBase lease = new LeaseBase(vaultDynamicCredentials.getLeaseId(), vaultDynamicCredentials.isRenewable(),
-                            vaultDynamicCredentials.getLeaseDuration().toSeconds());
-                    VaultDynamicCredentials credentials = new VaultDynamicCredentials(lease, data.username, data.password);
+                .map(creds -> {
+                    var data = creds.getData();
+                    LeaseBase lease = new LeaseBase(creds.getLeaseId(), creds.isRenewable(),
+                            creds.getLeaseDuration().toSeconds());
+                    VaultDynamicCredentials credentials = new VaultDynamicCredentials(lease,
+                            data.get(VaultAnyResult.USERNAME).toString(),
+                            data.get(VaultAnyResult.PASSWORD).toString());
                     log.debug("generated " + role + "(" + getCredentialsPath(mount, requestPath) + ") credentials:"
                             + credentials.getConfidentialInfo(getConfig().logConfidentialityLevel()));
                     sanityCheck(credentials, mount, requestPath, role);
