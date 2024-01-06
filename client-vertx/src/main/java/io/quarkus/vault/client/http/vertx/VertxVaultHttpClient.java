@@ -10,12 +10,12 @@ import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.http.VaultHttpClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.VertxException;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
-import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
+import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.client.HttpRequest;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
+import io.vertx.mutiny.ext.web.client.WebClient;
 
 public class VertxVaultHttpClient extends VaultHttpClient {
 
@@ -48,10 +48,9 @@ public class VertxVaultHttpClient extends VaultHttpClient {
         var send = request.getSerializedBody()
                 .map(Buffer::buffer)
                 .map(httpRequest::sendBuffer)
-                .orElseGet(httpRequest::send)
-                .toCompletionStage();
+                .orElseGet(httpRequest::send);
 
-        return Uni.createFrom().completionStage(send)
+        return send
                 .ifNoItem().after(request.getTimeout()).failWith(TimeoutException::new)
                 .onFailure(VertxException.class).transform(e -> {
                     if ("Connection was closed".equals(e.getMessage())) {

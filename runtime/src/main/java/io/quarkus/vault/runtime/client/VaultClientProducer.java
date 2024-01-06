@@ -44,7 +44,7 @@ public class VaultClientProducer {
 
     VaultClient createVaultClient(WebClient webClient, VaultRuntimeConfig config) {
 
-        var vaultHttpClient = new VertxVaultHttpClient(webClient.getDelegate());
+        var vaultHttpClient = new VertxVaultHttpClient(webClient);
 
         var vaultClientBuilder = VaultClient.builder()
                 .baseUrl(config.url().orElseThrow(() -> new VaultException("no vault url provided")))

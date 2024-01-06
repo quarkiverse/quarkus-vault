@@ -49,8 +49,8 @@ import io.quarkus.vault.client.VaultIOException;
 import io.quarkus.vault.client.api.sys.init.VaultSysInitParams;
 import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
 import io.quarkus.vault.runtime.VaultVersions;
-import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.ext.web.client.WebClient;
 
 public class VaultTestExtension {
 

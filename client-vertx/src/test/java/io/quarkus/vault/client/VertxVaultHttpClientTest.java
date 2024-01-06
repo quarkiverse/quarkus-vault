@@ -13,8 +13,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.vault.VaultContainer;
 
 import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
-import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.ext.web.client.WebClient;
 
 @Testcontainers
 public class VertxVaultHttpClientTest {
