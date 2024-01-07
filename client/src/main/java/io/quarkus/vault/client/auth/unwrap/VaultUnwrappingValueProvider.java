@@ -9,7 +9,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import io.quarkus.vault.client.VaultClientException;
-import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.api.sys.wrapping.VaultSysWrapping;
 import io.quarkus.vault.client.auth.VaultAuthRequest;
 import io.quarkus.vault.client.json.JsonMapping;
@@ -48,14 +47,14 @@ public abstract class VaultUnwrappingValueProvider<UnwrapResult> implements Vaul
 
                         return unwrappedClientToken;
                     })
-                    .onFailure(VaultClientException.class).transform(e -> {
-                        if (((VaultClientException) e).getStatus() == 400) {
+                    .onFailure().transform(e -> {
+                        if (e instanceof VaultClientException ve && ve.getStatus() == 400) {
                             String message = "wrapping token is not valid or does not exist; " +
                                     "this means that the token has already expired " +
                                     "(if so you can increase the ttl on the wrapping token) or " +
                                     "has been consumed by somebody else " +
                                     "(potentially indicating that the wrapping token has been stolen)";
-                            return new VaultException(message, e);
+                            return ve.withError(message);
                         } else {
                             return e;
                         }

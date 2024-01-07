@@ -176,7 +176,7 @@ public class VaultSecretsKV2Test {
 
         assertThatThrownBy(() -> kvApi.readSecret(path).await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
-                .asString().contains("status=404");
+                .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test
@@ -414,7 +414,7 @@ public class VaultSecretsKV2Test {
 
             assertThatThrownBy(() -> kvApi.readSecret(path, 1).await().indefinitely())
                     .isInstanceOf(VaultClientException.class)
-                    .asString().contains("status=404");
+                    .hasFieldOrPropertyWithValue("status", 404);
         }
 
         kvApi.undeleteSecretVersions(path, List.of(1))
@@ -483,7 +483,7 @@ public class VaultSecretsKV2Test {
 
         assertThatThrownBy(() -> kvApi.readSecret(path).await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
-                .asString().contains("status=404");
+                .hasFieldOrPropertyWithValue("status", 404);
     }
 
 }

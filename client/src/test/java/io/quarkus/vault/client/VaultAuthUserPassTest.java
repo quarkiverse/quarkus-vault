@@ -257,8 +257,8 @@ public class VaultAuthUserPassTest {
         // Validate
 
         assertThatThrownBy(() -> authClient.sys().auth().read("token").await().indefinitely())
-                .isInstanceOf(VaultException.class)
-                .asString().contains("permission denied");
+                .isInstanceOf(VaultClientException.class)
+                .hasMessageContaining("permission denied");
 
         var mountInfo = authClient.sys().mounts().read("secret")
                 .await().indefinitely();

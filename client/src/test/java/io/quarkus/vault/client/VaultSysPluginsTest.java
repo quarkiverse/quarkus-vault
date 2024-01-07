@@ -217,7 +217,7 @@ public class VaultSysPluginsTest {
         assertThatCode(() -> pluginsApi.read("secret", pluginName)
                 .await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
-                .asString().contains("status=404");
+                .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test
@@ -244,7 +244,7 @@ public class VaultSysPluginsTest {
         assertThatCode(() -> pluginsApi.read("secret", pluginName, "v1.0.0")
                 .await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
-                .asString().contains("status=404");
+                .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test

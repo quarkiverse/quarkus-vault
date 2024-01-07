@@ -11,7 +11,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import io.quarkus.vault.client.VaultException;
+import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.json.JsonMapping;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
 
@@ -302,7 +302,7 @@ public class VaultRequest<T> {
         try {
             return Optional.of(JsonMapping.mapper.writeValueAsString(body));
         } catch (Exception e) {
-            throw new VaultException("Failed to serialize request body", e);
+            throw new VaultClientException(this, null, List.of("Failed to serialize request body"), null);
         }
     }
 

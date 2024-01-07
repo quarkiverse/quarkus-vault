@@ -1903,7 +1903,7 @@ public class VaultSecretsTransitTest {
         assertThatCode(() -> transitApi.restoreKey(keyName, backup, null)
                 .await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
-                .asString().contains("already exists");
+                .hasMessageContaining("already exists");
 
         transitApi.restoreKey(keyName, backup, true)
                 .await().indefinitely();

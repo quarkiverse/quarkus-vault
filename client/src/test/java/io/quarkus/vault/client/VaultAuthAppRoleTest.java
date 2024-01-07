@@ -354,7 +354,7 @@ public class VaultAuthAppRoleTest {
 
         assertThatThrownBy(() -> appRoleApi.readSecretId(role, secretIdInfo.getSecretId()).await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
-                .asString().contains("status=204");
+                .hasFieldOrPropertyWithValue("status", 204);
     }
 
     @Test
@@ -456,7 +456,7 @@ public class VaultAuthAppRoleTest {
         assertThatThrownBy(() -> appRoleApi.readSecretIdAccessor(role, secretIdInfo.getSecretIdAccessor())
                 .await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
-                .asString().contains("status=404");
+                .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test

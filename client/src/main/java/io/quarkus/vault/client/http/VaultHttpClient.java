@@ -12,8 +12,6 @@ import java.util.concurrent.TimeoutException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.quarkus.vault.client.VaultClientException;
-import io.quarkus.vault.client.VaultException;
-import io.quarkus.vault.client.VaultIOException;
 import io.quarkus.vault.client.common.VaultErrorResponse;
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultRequestExecutor;
@@ -39,15 +37,17 @@ public abstract class VaultHttpClient implements VaultRequestExecutor, AutoClose
 
                     return response;
                 })
-                .onFailure(JsonProcessingException.class).transform(VaultException::new)
-                .onFailure(io.smallrye.mutiny.TimeoutException.class).transform(VaultIOException::new)
+                .onFailure(JsonProcessingException.class)
+                .transform(x -> new VaultClientException(request, statusCode, List.of("Failed to parse response body"), x))
+                .onFailure(io.smallrye.mutiny.TimeoutException.class)
+                .transform(x -> new VaultClientException(request, statusCode, List.of("Request timed out"), x))
                 .onFailure(CompletionException.class).transform(e -> {
                     if (e.getCause() instanceof ConnectException) {
                         // unable to establish connection
-                        return new VaultIOException(e);
+                        return new VaultClientException(request, statusCode, List.of("Unable to establish connection"), e);
                     } else if (e.getCause() instanceof TimeoutException) {
                         // timeout on request - see HttpRequest.timeout(long)
-                        return new VaultIOException(e);
+                        return new VaultClientException(request, statusCode, List.of("HTTP request timed out"), e);
                     } else {
                         return e;
                     }
@@ -74,9 +74,9 @@ public abstract class VaultHttpClient implements VaultRequestExecutor, AutoClose
             // ignore
         }
         if (errors != null) {
-            throw new VaultClientException(request.getOperation(), request.getUrl().toString(), statusCode, errors);
+            throw new VaultClientException(request, statusCode, errors, null);
         } else {
-            throw new VaultClientException(request.getOperation(), request.getUrl().toString(), statusCode, bodyText);
+            throw new VaultClientException(request, statusCode, bodyText, null);
         }
     }
 

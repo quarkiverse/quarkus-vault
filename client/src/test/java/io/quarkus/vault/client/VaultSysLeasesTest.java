@@ -88,7 +88,8 @@ public class VaultSysLeasesTest {
 
         assertThatThrownBy(() -> leasesApi.read(leaseId)
                 .await().indefinitely())
-                .asString().contains("status=400");
+                .isInstanceOf(VaultClientException.class)
+                .hasFieldOrPropertyWithValue("status", 400);
     }
 
     @Test
@@ -118,7 +119,8 @@ public class VaultSysLeasesTest {
 
         assertThatThrownBy(() -> leasesApi.read(leaseId)
                 .await().indefinitely())
-                .asString().contains("status=400");
+                .isInstanceOf(VaultClientException.class)
+                .hasFieldOrPropertyWithValue("status", 400);
     }
 
     @Test
@@ -148,7 +150,8 @@ public class VaultSysLeasesTest {
 
         assertThatThrownBy(() -> leasesApi.read(leaseId)
                 .await().indefinitely())
-                .asString().contains("status=400");
+                .isInstanceOf(VaultClientException.class)
+                .hasFieldOrPropertyWithValue("status", 400);
     }
 
     @Test

@@ -45,7 +45,6 @@ import io.quarkus.vault.VaultKVSecretEngine;
 import io.quarkus.vault.client.VaultClient;
 import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.VaultException;
-import io.quarkus.vault.client.VaultIOException;
 import io.quarkus.vault.client.api.sys.init.VaultSysInitParams;
 import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
 import io.quarkus.vault.runtime.VaultVersions;
@@ -478,7 +477,7 @@ public class VaultTestExtension {
                         .await().indefinitely();
                 log.info(sealStatus);
                 return;
-            } catch (VaultIOException e) {
+            } catch (VaultException e) {
                 log.info("vault api not ready: " + e);
             }
             Thread.sleep(1000L);

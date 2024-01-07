@@ -19,7 +19,6 @@ import org.jboss.logging.Logger;
 import io.quarkus.arc.Arc;
 import io.quarkus.vault.VaultKVSecretReactiveEngine;
 import io.quarkus.vault.client.VaultException;
-import io.quarkus.vault.client.VaultIOException;
 import io.quarkus.vault.runtime.client.Private;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
@@ -106,7 +105,7 @@ public class VaultConfigSource implements ConfigSource {
                 fetchSecrets(properties);
                 log.debug("loaded " + properties.size() + " properties from vault");
                 return;
-            } catch (VaultIOException e) {
+            } catch (VaultException e) {
                 log.debug("attempt " + (i + 1) + " to fetch secrets from vault failed with: " + e);
                 last = e;
             } catch (CompletionException e) {

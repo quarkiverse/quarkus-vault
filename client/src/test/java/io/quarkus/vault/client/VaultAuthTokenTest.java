@@ -438,8 +438,8 @@ public class VaultAuthTokenTest {
 
         assertThatThrownBy(() -> tokenApi.lookup(createdToken.getClientToken())
                 .await().indefinitely())
-                .isInstanceOf(VaultException.class)
-                .asString().contains("status=403");
+                .isInstanceOf(VaultClientException.class)
+                .hasFieldOrPropertyWithValue("status", 403);
     }
 
     @Test
@@ -456,8 +456,8 @@ public class VaultAuthTokenTest {
 
         assertThatThrownBy(() -> client.auth().token().lookup(createdToken.getClientToken())
                 .await().indefinitely())
-                .isInstanceOf(VaultException.class)
-                .asString().contains("status=403");
+                .isInstanceOf(VaultClientException.class)
+                .hasFieldOrPropertyWithValue("status", 403);
     }
 
     @Test
@@ -472,8 +472,8 @@ public class VaultAuthTokenTest {
 
         assertThatThrownBy(() -> tokenApi.lookup(createdToken.getClientToken())
                 .await().indefinitely())
-                .isInstanceOf(VaultException.class)
-                .asString().contains("status=403");
+                .isInstanceOf(VaultClientException.class)
+                .hasFieldOrPropertyWithValue("status", 403);
     }
 
     @Test
@@ -577,8 +577,8 @@ public class VaultAuthTokenTest {
 
         assertThatThrownBy(() -> tokenApi.readRole(role)
                 .await().indefinitely())
-                .isInstanceOf(VaultException.class)
-                .asString().contains("status=404");
+                .isInstanceOf(VaultClientException.class)
+                .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test

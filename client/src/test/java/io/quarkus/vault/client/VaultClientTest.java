@@ -27,7 +27,8 @@ public class VaultClientTest {
         var executor = spy(new VaultRequestExecutor() {
             @Override
             public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
-                return Uni.createFrom().failure(new VaultClientException("Test", "/test", 403, List.of("permission denied")));
+                return Uni.createFrom()
+                        .failure(new VaultClientException("Test", "/test", 403, List.of("permission denied"), null));
             }
         });
         var tokenProvider = spy(new VaultTokenProvider() {
@@ -47,7 +48,7 @@ public class VaultClientTest {
 
         assertThatThrownBy(() -> client.secrets().kv1().list().await().indefinitely())
                 .isInstanceOf(VaultClientException.class)
-                .asString().contains("permission denied");
+                .hasMessageContaining("permission denied");
 
         verify(tokenProvider, times(1))
                 .apply(any());

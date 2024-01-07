@@ -101,7 +101,8 @@ public class VaultSecretsRabbitMQTest {
 
         assertThatThrownBy(() -> rmqApi.readRole(roleName)
                 .await().indefinitely())
-                .asString().contains("status=404");
+                .isInstanceOf(VaultClientException.class)
+                .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test

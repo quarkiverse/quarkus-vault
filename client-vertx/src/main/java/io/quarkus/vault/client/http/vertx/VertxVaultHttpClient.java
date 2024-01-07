@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import io.quarkus.vault.client.VaultIOException;
+import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.http.VaultHttpClient;
@@ -55,7 +55,7 @@ public class VertxVaultHttpClient extends VaultHttpClient {
                 .onFailure(VertxException.class).transform(e -> {
                     if ("Connection was closed".equals(e.getMessage())) {
                         // happens if the connection gets closed (idle timeout, reset by peer, ...)
-                        return new VaultIOException(e);
+                        return new VaultClientException(request, null, List.of("Connection was closed"), e);
                     } else {
                         return e;
                     }

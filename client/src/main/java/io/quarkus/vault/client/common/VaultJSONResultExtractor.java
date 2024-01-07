@@ -36,7 +36,7 @@ public class VaultJSONResultExtractor<T> implements VaultResultExtractor<T> {
                 } else {
                     errors = List.of("Failed to parse response body");
                 }
-                throw new VaultClientException(request.getOperation(), request.getPath(), response.getStatusCode(), errors);
+                throw new VaultClientException(response, errors, e);
             }
         });
     }
