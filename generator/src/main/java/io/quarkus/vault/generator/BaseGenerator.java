@@ -331,6 +331,9 @@ public abstract class BaseGenerator implements Generator {
             for (var value : e.values()) {
                 var valueName = kebabCaseToSnakeCase(value).toUpperCase();
                 var valueSpec = TypeSpec.anonymousClassBuilder("$S", value)
+                        .addAnnotation(AnnotationSpec.builder(JsonProperty.class)
+                                .addMember("value", "$S", value)
+                                .build())
                         .build();
                 spec.addEnumConstant(valueName, valueSpec);
             }

@@ -9,8 +9,11 @@ import io.quarkus.vault.client.common.VaultModel;
 public class VaultSecretsDatabaseClientCertificateCredentialConfig implements VaultSecretsDatabaseCredentialConfig {
 
     public enum KeyType implements VaultModel {
+        @JsonProperty("rsa")
         RSA("rsa"),
+        @JsonProperty("ec")
         EC("ec"),
+        @JsonProperty("ed25519")
         ED25519("ed25519");
 
         private final String value;
@@ -42,8 +45,11 @@ public class VaultSecretsDatabaseClientCertificateCredentialConfig implements Va
     }
 
     public enum SignatureBits implements VaultModel {
+        @JsonProperty("256")
         BITS_256("256"),
+        @JsonProperty("384")
         BITS_384("384"),
+        @JsonProperty("512")
         BITS_512("512");
 
         private final String value;

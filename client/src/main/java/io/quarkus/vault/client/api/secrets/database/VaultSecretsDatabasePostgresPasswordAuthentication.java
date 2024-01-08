@@ -1,12 +1,17 @@
 package io.quarkus.vault.client.api.secrets.database;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import io.quarkus.vault.client.common.VaultModel;
 
 public enum VaultSecretsDatabasePostgresPasswordAuthentication implements VaultModel {
+
+    @JsonProperty("scram-sha-256")
     SCRAM_SHA_256("scram-sha-256"),
+
+    @JsonProperty("password")
     PASSWORD("password");
 
     private final String value;
