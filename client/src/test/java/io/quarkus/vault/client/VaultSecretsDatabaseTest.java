@@ -47,6 +47,11 @@ public class VaultSecretsDatabaseTest {
                 .connectionUrl(connUrl)
                 .username(postgres.getUsername())
                 .password(postgres.getPassword())
+                .maxOpenConnections(5)
+                .maxIdleConnections(2)
+                .maxConnectionLifetime(Duration.ofHours(1))
+                .usernameTemplate("{{.DisplayName}}")
+                .disableEscaping(true)
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
                 .await().indefinitely();
@@ -62,11 +67,24 @@ public class VaultSecretsDatabaseTest {
                 .isEmpty();
         assertThat(config.getAllowedRoles())
                 .containsExactly(roleName);
-        assertThat(config.getConnectionDetails())
-                .containsEntry("connection_url", connUrl)
-                .containsEntry("username", postgres.getUsername())
-                .containsEntry("password_authentication", "scram-sha-256");
 
+        var details = config.getConnectionDetails(VaultSecretsDatabasePostgresConnectionDetails.class);
+        assertThat(details.getConnectionUrl())
+                .isEqualTo(connUrl);
+        assertThat(details.getUsername())
+                .isEqualTo(postgres.getUsername());
+        assertThat(details.getMaxOpenConnections())
+                .isEqualTo(5);
+        assertThat(details.getMaxIdleConnections())
+                .isEqualTo(2);
+        assertThat(details.getMaxConnectionLifetime())
+                .isEqualTo(Duration.ofHours(1));
+        assertThat(details.getUsernameTemplate())
+                .isEqualTo("{{.DisplayName}}");
+        assertThat(details.isDisableEscaping())
+                .isTrue();
+        assertThat(details.getPasswordAuthentication())
+                .isEqualTo(SCRAM_SHA_256);
     }
 
     @Test
