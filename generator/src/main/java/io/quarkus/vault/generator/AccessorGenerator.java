@@ -37,11 +37,16 @@ public class AccessorGenerator {
 
         var typeSpec = TypeSpec.classBuilder(className)
                 .addModifiers(PUBLIC)
-                .addField(reqExecTypeName, "executor", PRIVATE, FINAL)
                 .addMethod(MethodSpec.constructorBuilder()
                         .addModifiers(PUBLIC)
                         .addParameter(ParameterSpec.builder(reqExecTypeName, "executor").build())
                         .addStatement("this.executor = executor")
+                        .build())
+                .addField(reqExecTypeName, "executor", PRIVATE, FINAL)
+                .addMethod(MethodSpec.methodBuilder("getExecutor")
+                        .addModifiers(PUBLIC)
+                        .returns(reqExecTypeName)
+                        .addStatement("return executor")
                         .build());
 
         for (var api : apis) {

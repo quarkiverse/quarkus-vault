@@ -35,7 +35,8 @@ public class VaultSecretsRabbitMQTest {
         rmqApi.configureConnection(new VaultSecretsRabbitMQConfigureConnectionParams()
                 .setConnectionUri("http://rmq:15672")
                 .setUsername("guest")
-                .setPassword("guest"))
+                .setPassword("guest")
+                .setUsernameTemplate("{{.DisplayName}}_{{.RoleName}}"))
                 .await().indefinitely();
     }
 
@@ -51,6 +52,14 @@ public class VaultSecretsRabbitMQTest {
 
         rmqApi.configureLease(Duration.ofMinutes(1), Duration.ofMinutes(5))
                 .await().indefinitely();
+
+        var config = rmqApi.readLeaseConfig()
+                .await().indefinitely();
+
+        assertThat(config.getTtl())
+                .isEqualTo(Duration.ofMinutes(1));
+        assertThat(config.getMaxTtl())
+                .isEqualTo(Duration.ofMinutes(5));
     }
 
     @Test
