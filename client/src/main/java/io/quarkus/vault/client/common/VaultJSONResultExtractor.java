@@ -26,7 +26,6 @@ public class VaultJSONResultExtractor<T> implements VaultResultExtractor<T> {
 
     public static <T> Optional<T> extract(VaultResponse<T> response, Class<T> resultClass) {
         return response.getBody().map(body -> {
-            var request = response.getRequest();
             try {
                 return JsonMapping.mapper.readValue(body, resultClass);
             } catch (IOException e) {
