@@ -1,5 +1,7 @@
 package io.quarkus.vault.client;
 
+import static java.lang.System.lineSeparator;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,7 +85,7 @@ public class VaultClientException extends VaultException {
             sb.append(" with status ").append(status);
         }
         if (errors != null && !errors.isEmpty()) {
-            sb.append("\n").append("errors:").append("\n").append(String.join("\n", errors));
+            sb.append(lineSeparator()).append("errors:").append(lineSeparator()).append(String.join(lineSeparator(), errors));
         }
         return sb.toString();
     }
