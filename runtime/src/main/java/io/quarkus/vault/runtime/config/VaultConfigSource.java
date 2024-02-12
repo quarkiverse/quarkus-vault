@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.microprofile.config.spi.ConfigSource;
@@ -95,7 +97,7 @@ public class VaultConfigSource implements ConfigSource {
     }
 
     private void fetchSecretsFirstTime(Map<String, String> properties) {
-        VaultIOException last = null;
+        VaultException last = null;
         for (int i = 0; i < vaultRuntimeConfig.mpConfigInitialAttempts(); i++) {
             try {
                 if (i > 0) {
@@ -107,6 +109,13 @@ public class VaultConfigSource implements ConfigSource {
             } catch (VaultIOException e) {
                 log.debug("attempt " + (i + 1) + " to fetch secrets from vault failed with: " + e);
                 last = e;
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof TimeoutException) {
+                    log.debug("attempt " + (i + 1) + " to fetch secrets from vault failed with: " + e);
+                    last = new VaultException(e);
+                } else {
+                    throw e;
+                }
             }
         }
         if (last == null) {
