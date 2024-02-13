@@ -16,11 +16,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.jboss.logging.Logger;
 
-import io.quarkus.arc.Arc;
 import io.quarkus.vault.VaultException;
-import io.quarkus.vault.VaultKVSecretReactiveEngine;
+import io.quarkus.vault.runtime.JDKVaultClient;
 import io.quarkus.vault.runtime.VaultIOException;
-import io.quarkus.vault.runtime.client.Private;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 public class VaultConfigSource implements ConfigSource {
@@ -31,8 +29,11 @@ public class VaultConfigSource implements ConfigSource {
     private VaultRuntimeConfig vaultRuntimeConfig;
     private volatile boolean firstTime = true;
 
+    private JDKVaultClient jdkVaultClient;
+
     public VaultConfigSource(VaultRuntimeConfig vaultRuntimeConfig) {
         this.vaultRuntimeConfig = vaultRuntimeConfig;
+        this.jdkVaultClient = new JDKVaultClient(vaultRuntimeConfig);
     }
 
     @Override
@@ -139,7 +140,7 @@ public class VaultConfigSource implements ConfigSource {
 
     private Map<String, String> fetchSecrets(String path, String prefix) {
 
-        Map<String, Object> secretJson = getVaultKVSecretEngine().readSecretJson(path).await().indefinitely();
+        Map<String, Object> secretJson = jdkVaultClient.readSecret(path);
 
         // ignore list and map, honor null, get as string scalar types
         Map<String, String> secret = secretJson.entrySet().stream()
@@ -148,10 +149,6 @@ public class VaultConfigSource implements ConfigSource {
                 .collect(HashMap::new, (m, v) -> m.put(v.getKey(), toString(v.getValue())), HashMap::putAll);
 
         return prefixMap(secret, prefix);
-    }
-
-    private VaultKVSecretReactiveEngine getVaultKVSecretEngine() {
-        return Arc.container().instance(VaultKVSecretReactiveEngine.class, Private.Literal.INSTANCE).get();
     }
 
     private Map<String, String> prefixMap(Map<String, String> map, String prefix) {
