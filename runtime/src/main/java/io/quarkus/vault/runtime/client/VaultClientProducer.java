@@ -13,11 +13,12 @@ import io.quarkus.vault.client.auth.VaultAppRoleAuthOptions;
 import io.quarkus.vault.client.auth.VaultKubernetesAuthOptions;
 import io.quarkus.vault.client.auth.VaultStaticClientTokenAuthOptions;
 import io.quarkus.vault.client.auth.VaultUserPassAuthOptions;
+import io.quarkus.vault.client.http.VaultHttpClient;
+import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient;
 import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
 import io.quarkus.vault.runtime.VaultConfigHolder;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.ext.web.client.WebClient;
 
 @Singleton
 public class VaultClientProducer {
@@ -25,12 +26,14 @@ public class VaultClientProducer {
     @Produces
     @Singleton
     @Private
-    public VaultClient privateVaultClient(@Private Vertx vertx, VaultConfigHolder vaultConfigHolder,
-            TlsConfig tlsConfig) {
+    public VaultClient privateVaultClient(VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
 
         var config = vaultConfigHolder.getVaultRuntimeConfig();
 
-        return createVaultClient(MutinyVertxClientFactory.createHttpClient(vertx, config, tlsConfig), config);
+        var httpClient = JDKClientFactory.createHttpClient(config, tlsConfig);
+        var vaultHttpClient = new JDKVaultHttpClient(httpClient);
+
+        return createVaultClient(vaultHttpClient, config);
     }
 
     @Produces
@@ -39,12 +42,13 @@ public class VaultClientProducer {
 
         var config = vaultConfigHolder.getVaultRuntimeConfig();
 
-        return createVaultClient(MutinyVertxClientFactory.createHttpClient(vertx, config, tlsConfig), config);
+        var webClient = MutinyVertxClientFactory.createHttpClient(vertx, config, tlsConfig);
+        var vaultHttpClient = new VertxVaultHttpClient(webClient);
+
+        return createVaultClient(vaultHttpClient, config);
     }
 
-    VaultClient createVaultClient(WebClient webClient, VaultRuntimeConfig config) {
-
-        var vaultHttpClient = new VertxVaultHttpClient(webClient);
+    VaultClient createVaultClient(VaultHttpClient vaultHttpClient, VaultRuntimeConfig config) {
 
         var vaultClientBuilder = VaultClient.builder()
                 .baseUrl(config.url().orElseThrow(() -> new VaultException("no vault url provided")))
