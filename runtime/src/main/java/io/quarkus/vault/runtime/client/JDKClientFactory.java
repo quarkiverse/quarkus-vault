@@ -5,15 +5,14 @@ import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.KUBERNETES_CACE
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ProxySelector;
-import java.net.Socket;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 import javax.net.ssl.*;
 
@@ -31,10 +30,9 @@ public class JDKClientFactory {
                 .followRedirects(HttpClient.Redirect.NORMAL);
 
         if (vaultRuntimeConfig.proxyHost().isPresent()) {
-            // TODO: Need to support non-proxy hosts
-            var proxySelector = ProxySelector
-                    .of((new InetSocketAddress(vaultRuntimeConfig.proxyHost().get(), vaultRuntimeConfig.proxyPort())));
-            builder = builder.proxy(proxySelector);
+            var proxyAddress = new InetSocketAddress(vaultRuntimeConfig.proxyHost().get(), vaultRuntimeConfig.proxyPort());
+            var nonProxyHosts = vaultRuntimeConfig.nonProxyHosts().orElse(List.of());
+            builder = builder.proxy(new NonProxyHostsSupportingProxySelector(proxyAddress, nonProxyHosts));
         }
 
         SSLContext sslContext = createSSLContext(vaultRuntimeConfig, tlsConfig);
@@ -130,4 +128,27 @@ public class JDKClientFactory {
         }
     }
 
+    static class NonProxyHostsSupportingProxySelector extends ProxySelector {
+
+        private final ProxySelector delegate;
+        private final List<String> nonProxyHosts;
+
+        public NonProxyHostsSupportingProxySelector(InetSocketAddress proxyAddress, List<String> nonProxyHosts) {
+            this.delegate = ProxySelector.of(proxyAddress);
+            this.nonProxyHosts = nonProxyHosts;
+        }
+
+        @Override
+        public List<Proxy> select(URI uri) {
+            if (nonProxyHosts.stream().anyMatch(uri.getHost()::matches)) {
+                return List.of(Proxy.NO_PROXY);
+            }
+            return delegate.select(uri);
+        }
+
+        @Override
+        public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+            delegate.connectFailed(uri, sa, ioe);
+        }
+    }
 }
