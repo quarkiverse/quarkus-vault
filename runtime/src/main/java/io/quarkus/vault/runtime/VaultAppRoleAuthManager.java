@@ -32,7 +32,7 @@ public class VaultAppRoleAuthManager implements VaultAppRoleAuthReactiveService 
 
     @Override
     public Uni<List<String>> getAppRoles() {
-        return appRole.listRoles();
+        return Uni.createFrom().completionStage(appRole.listRoles());
     }
 
     @Override
@@ -52,17 +52,17 @@ public class VaultAppRoleAuthManager implements VaultAppRoleAuthReactiveService 
                 .setTokenNumUses(role.tokenNumUses)
                 .setTokenPeriod(fromVaultDuration(role.tokenPeriod))
                 .setTokenType(VaultTokenType.from(role.tokenType));
-        return appRole.updateRole(name, params);
+        return Uni.createFrom().completionStage(appRole.updateRole(name, params));
     }
 
     @Override
     public Uni<Void> deleteAppRole(String name) {
-        return appRole.deleteRole(name);
+        return Uni.createFrom().completionStage(appRole.deleteRole(name));
     }
 
     @Override
     public Uni<VaultAppRoleAuthRole> getAppRole(String name) {
-        return appRole.readRole(name)
+        return Uni.createFrom().completionStage(appRole.readRole(name))
                 .map(role -> new VaultAppRoleAuthRole()
                         .setBindSecretId(role.isBindSecretId())
                         .setSecretIdBoundCidrs(role.getSecretIdBoundCidrs())
@@ -82,12 +82,12 @@ public class VaultAppRoleAuthManager implements VaultAppRoleAuthReactiveService 
 
     @Override
     public Uni<String> getAppRoleRoleId(String name) {
-        return appRole.readRoleId(name);
+        return Uni.createFrom().completionStage(appRole.readRoleId(name));
     }
 
     @Override
     public Uni<Void> setAppRoleRoleId(String name, String roleId) {
-        return appRole.updateRoleId(name, roleId);
+        return Uni.createFrom().completionStage(appRole.updateRoleId(name, roleId));
     }
 
     @Override
@@ -96,7 +96,7 @@ public class VaultAppRoleAuthManager implements VaultAppRoleAuthReactiveService 
                 .setCidrList(newSecretIdRequest.cidrList)
                 .setTokenBoundCidrs(newSecretIdRequest.tokenBoundCidrs)
                 .setMetadata(newSecretIdRequest.metadata);
-        return appRole.generateSecretId(name, params)
+        return Uni.createFrom().completionStage(appRole.generateSecretId(name, params))
                 .map(result -> new VaultAppRoleSecretId()
                         .setSecretId(result.getSecretId())
                         .setSecretIdAccessor(result.getSecretIdAccessor()));
@@ -109,7 +109,7 @@ public class VaultAppRoleAuthManager implements VaultAppRoleAuthReactiveService 
                 .setCidrList(newSecretIdRequest.cidrList)
                 .setTokenBoundCidrs(newSecretIdRequest.tokenBoundCidrs)
                 .setMetadata(newSecretIdRequest.metadata);
-        return appRole.createCustomSecretId(name, params)
+        return Uni.createFrom().completionStage(appRole.createCustomSecretId(name, params))
                 .map(result -> new VaultAppRoleSecretId()
                         .setSecretId(result.getSecretId())
                         .setSecretIdAccessor(result.getSecretIdAccessor()));
@@ -117,12 +117,12 @@ public class VaultAppRoleAuthManager implements VaultAppRoleAuthReactiveService 
 
     @Override
     public Uni<List<String>> getSecretIdAccessors(String name) {
-        return appRole.listSecretIdAccessors(name);
+        return Uni.createFrom().completionStage(appRole.listSecretIdAccessors(name));
     }
 
     @Override
     public Uni<VaultAppRoleSecretIdAccessor> getSecretIdAccessor(String name, String accessorId) {
-        return appRole.readSecretIdAccessor(name, accessorId)
+        return Uni.createFrom().completionStage(appRole.readSecretIdAccessor(name, accessorId))
                 .map(result -> new VaultAppRoleSecretIdAccessor()
                         .setCreationTime(result.getCreationTime())
                         .setLastUpdatedTime(result.getLastUpdatedTime())
@@ -137,12 +137,12 @@ public class VaultAppRoleAuthManager implements VaultAppRoleAuthReactiveService 
 
     @Override
     public Uni<Void> deleteSecretIdAccessor(String name, String accessorId) {
-        return appRole.destroySecretIdAccessor(name, accessorId);
+        return Uni.createFrom().completionStage(appRole.destroySecretIdAccessor(name, accessorId));
     }
 
     @Override
     public Uni<VaultAppRoleSecretIdAccessor> getSecretId(String name, String secretId) {
-        return appRole.readSecretId(name, secretId)
+        return Uni.createFrom().completionStage(appRole.readSecretId(name, secretId))
                 .map(result -> new VaultAppRoleSecretIdAccessor()
                         .setCreationTime(result.getCreationTime())
                         .setLastUpdatedTime(result.getLastUpdatedTime())
@@ -157,7 +157,7 @@ public class VaultAppRoleAuthManager implements VaultAppRoleAuthReactiveService 
 
     @Override
     public Uni<Void> deleteSecretId(String name, String secretId) {
-        return appRole.destroySecretId(name, secretId);
+        return Uni.createFrom().completionStage(appRole.destroySecretId(name, secretId));
     }
 
 }

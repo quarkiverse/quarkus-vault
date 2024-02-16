@@ -34,7 +34,7 @@ public class VaultSysInitTest {
     }
 
     @Test
-    public void testInit() {
+    public void testInit() throws Exception {
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
 
             var client = VaultClient.builder()
@@ -43,7 +43,7 @@ public class VaultSysInitTest {
                     .build();
 
             var info = client.sys().init().status()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(info.isInitialized())
                     .isFalse();
@@ -51,7 +51,7 @@ public class VaultSysInitTest {
             var init = client.sys().init().init(new VaultSysInitParams()
                     .setSecretThreshold(3)
                     .setSecretShares(9))
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(init.getKeys())
                     .hasSize(9);

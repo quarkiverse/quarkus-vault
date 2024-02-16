@@ -4,6 +4,7 @@ import static java.time.OffsetDateTime.now;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Test;
 
@@ -17,35 +18,35 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSysLeasesTest {
 
     @Test
-    public void testList(VaultClient client) {
+    public void testList(VaultClient client) throws Exception {
         var leasesApi = client.sys().leases();
 
         var leases = leasesApi.list("auth")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(leases)
                 .contains("token/");
     }
 
     @Test
-    public void testRead(VaultClient client) {
+    public void testRead(VaultClient client) throws Exception {
         var leasesApi = client.sys().leases();
 
         client.auth().userPass().updateUser("test", new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test")
                 .setTokenType(VaultTokenType.SERVICE)
                 .setTokenTtl(Duration.ofMinutes(5)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.auth().userPass().login("test", "test")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var leases = client.sys().leases().list("auth/userpass/login/test/")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var leaseId = "auth/userpass/login/test/" + leases.get(0);
         var lease = leasesApi.read(leaseId)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(lease)
                 .isNotNull();
@@ -62,104 +63,107 @@ public class VaultSysLeasesTest {
     }
 
     @Test
-    public void testRevoke(VaultClient client) {
+    public void testRevoke(VaultClient client) throws Exception {
         var leasesApi = client.sys().leases();
 
         client.auth().userPass().updateUser("test", new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test")
                 .setTokenType(VaultTokenType.SERVICE)
                 .setTokenTtl(Duration.ofMinutes(5)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.auth().userPass().login("test", "test")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var leases = client.sys().leases().list("auth/userpass/login/test/")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var leaseId = "auth/userpass/login/test/" + leases.get(0);
 
         assertThatCode(() -> leasesApi.read(leaseId)
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
 
         leasesApi.revoke(leaseId, true)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatThrownBy(() -> leasesApi.read(leaseId)
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 400);
     }
 
     @Test
-    public void testRevokeForce(VaultClient client) {
+    public void testRevokeForce(VaultClient client) throws Exception {
         var leasesApi = client.sys().leases();
 
         client.auth().userPass().updateUser("test", new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test")
                 .setTokenType(VaultTokenType.SERVICE)
                 .setTokenTtl(Duration.ofMinutes(5)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.auth().userPass().login("test", "test")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var leases = client.sys().leases().list("auth/userpass/login/test/")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var leaseId = "auth/userpass/login/test/" + leases.get(0);
 
         assertThatCode(() -> leasesApi.read(leaseId)
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
 
         leasesApi.revokeForce("auth/userpass/login/test/")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatThrownBy(() -> leasesApi.read(leaseId)
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 400);
     }
 
     @Test
-    public void testRevokePrefix(VaultClient client) {
+    public void testRevokePrefix(VaultClient client) throws Exception {
         var leasesApi = client.sys().leases();
 
         client.auth().userPass().updateUser("test", new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test")
                 .setTokenType(VaultTokenType.SERVICE)
                 .setTokenTtl(Duration.ofMinutes(5)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.auth().userPass().login("test", "test")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var leases = client.sys().leases().list("auth/userpass/login/test/")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var leaseId = "auth/userpass/login/test/" + leases.get(0);
 
         assertThatCode(() -> leasesApi.read(leaseId)
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
 
         leasesApi.revokePrefix("auth/userpass/login/test/")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatThrownBy(() -> leasesApi.read(leaseId)
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 400);
     }
 
     @Test
-    public void testTidy(VaultClient client) {
+    public void testTidy(VaultClient client) throws Exception {
         var leasesApi = client.sys().leases();
 
         assertThatCode(() -> leasesApi.tidy()
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
     }
 }

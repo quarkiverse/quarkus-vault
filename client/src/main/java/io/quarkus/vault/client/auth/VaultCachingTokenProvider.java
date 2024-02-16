@@ -1,17 +1,19 @@
 package io.quarkus.vault.client.auth;
 
-import static io.quarkus.vault.client.util.OptionalUnis.flatMapEmptyGet;
-import static io.quarkus.vault.client.util.OptionalUnis.flatMapPresent;
+import static io.quarkus.vault.client.util.OptionalCompletionStages.flatMapEmptyGet;
+import static io.quarkus.vault.client.util.OptionalCompletionStages.flatMapPresent;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.api.auth.token.VaultAuthToken;
 import io.quarkus.vault.client.common.VaultResponse;
-import io.smallrye.mutiny.Uni;
 
 public class VaultCachingTokenProvider implements VaultTokenProvider {
 
@@ -29,7 +31,7 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
     }
 
     @Override
-    public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
+    public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
 
         var cachedToken = Optional.ofNullable(this.cachedToken.get())
                 .map(token -> {
@@ -41,18 +43,18 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
                     return token;
                 });
 
-        return Uni.createFrom().item(cachedToken)
+        return CompletableFuture.completedStage(cachedToken)
                 // if present, extend token if necessary
-                .plug(flatMapPresent(token -> {
+                .thenCompose(flatMapPresent(token -> {
                     if (token.shouldExtend(renewGracePeriod)) {
                         return extend(authRequest, token.getClientToken());
                     }
-                    return Uni.createFrom().item(token);
+                    return CompletableFuture.completedStage(token);
                 }))
                 // if empty, request new token from delegate
-                .plug(flatMapEmptyGet(() -> request(authRequest)))
+                .thenCompose(flatMapEmptyGet(() -> request(authRequest)))
                 // cache token
-                .map(vaultToken -> {
+                .thenApply(vaultToken -> {
                     this.cachedToken.set(vaultToken.cached());
                     return vaultToken;
                 });
@@ -69,25 +71,25 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
         return this;
     }
 
-    public Uni<VaultToken> request(VaultAuthRequest authRequest) {
+    public CompletionStage<VaultToken> request(VaultAuthRequest authRequest) {
         var logLevel = authRequest.getRequest().getLogConfidentialityLevel();
         return delegate.apply(authRequest)
-                .map(vaultToken -> {
+                .thenApply(vaultToken -> {
                     sanityCheck(vaultToken);
                     log.fine("created new login token: " + vaultToken.getConfidentialInfo(logLevel));
                     return vaultToken;
                 });
     }
 
-    public Uni<VaultToken> extend(VaultAuthRequest authRequest, String clientToken) {
+    public CompletionStage<VaultToken> extend(VaultAuthRequest authRequest, String clientToken) {
         var logLevel = authRequest.getRequest().getLogConfidentialityLevel();
         var request = VaultAuthToken.FACTORY.renewSelf(null)
                 .builder()
                 .token(clientToken)
                 .rebuild();
         return authRequest.getExecutor().execute(request)
-                .map(VaultResponse::getResult)
-                .map(res -> {
+                .thenApply(VaultResponse::getResult)
+                .thenApply(res -> {
                     var auth = res.getAuth();
                     var vaultToken = VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration(),
                             authRequest.getInstantSource());
@@ -95,14 +97,19 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
                     log.fine("extended login token: " + vaultToken.getConfidentialInfo(logLevel));
                     return vaultToken;
                 })
-                .onFailure(VaultClientException.class).recoverWithUni(e -> {
-                    var ve = (VaultClientException) e;
-                    if (ve.isPermissionDenied() || ve.hasErrorContaining("lease is not renewable")) {
-                        // token is invalid
-                        log.fine("login token " + clientToken + " has become invalid");
-                        return Uni.createFrom().nullItem();
+                .exceptionallyCompose(e -> {
+                    if (e instanceof CompletionException) {
+                        e = e.getCause();
                     }
-                    return Uni.createFrom().failure(e);
+
+                    if (e instanceof VaultClientException ve) {
+                        if (ve.isPermissionDenied() || ve.hasErrorContaining("lease is not renewable")) {
+                            // token is invalid
+                            log.fine("login token " + clientToken + " has become invalid");
+                            return CompletableFuture.completedStage(null);
+                        }
+                    }
+                    return CompletableFuture.failedStage(e);
                 });
     }
 

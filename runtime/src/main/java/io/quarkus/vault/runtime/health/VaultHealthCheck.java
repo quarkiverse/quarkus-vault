@@ -24,7 +24,7 @@ public class VaultHealthCheck implements HealthCheck {
 
         try {
             var status = client.sys().health().status()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             switch (status) {
                 case INITIALIZED_UNSEALED_ACTIVE:

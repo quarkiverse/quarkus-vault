@@ -23,40 +23,40 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultUnwrappingValueProviderTest {
 
     @Test
-    public void testTokenCreateUnwrap(VaultClient client) {
+    public void testTokenCreateUnwrap(VaultClient client) throws Exception {
 
         var wrapped = client.auth().token().wrapping(Duration.ofSeconds(10), (api) -> api.create(null))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var unwrappingClient = client.configure().clientToken(VaultStaticClientTokenAuthOptions.builder()
                 .unwrappingToken(wrapped.getToken()).build())
                 .build();
 
         assertThatCode(() -> unwrappingClient.secrets().kv2().listSecrets("/")
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
     }
 
     @Test
-    public void testSecretIdUnwrap(VaultClient client, @Random String role) {
+    public void testSecretIdUnwrap(VaultClient client, @Random String role) throws Exception {
 
         var policyName = role + "-policy";
 
         client.sys().policy().update(policyName, """
                 path "secret/*" { capabilities = ["create", "read", "update", "delete", "list"] }
                 """)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.auth().appRole().updateRole(role, new VaultAuthAppRoleUpdateRoleParams()
                 .setTokenPolicies(List.of(policyName)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roleId = client.auth().appRole().readRoleId(role)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var wrapped = client.auth().appRole()
                 .wrapping(Duration.ofSeconds(10), (api) -> api.generateSecretId("approle", role, null))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var unwrappingClient = client.configure()
                 .appRole(VaultAppRoleAuthOptions.builder()
@@ -66,31 +66,31 @@ public class VaultUnwrappingValueProviderTest {
                 .build();
 
         assertThatCode(() -> unwrappingClient.secrets().kv2().listSecrets("/")
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
     }
 
     @Test
-    public void testPasswordUnwrap(VaultClient client, @Random String user, @Random String password) {
+    public void testPasswordUnwrap(VaultClient client, @Random String user, @Random String password) throws Exception {
 
         var policyName = user + "-policy";
 
         client.sys().policy().update(policyName, """
                 path "secret/*" { capabilities = ["create", "read", "update", "delete", "list"] }
                 """)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.auth().userPass().updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setTokenPolicies(List.of(policyName))
                 .setPassword(password))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.secrets().kv2().updateSecret("login", null, Map.of("password", password))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var wrapped = client.secrets().kv2().wrapping(Duration.ofSeconds(10),
                 (api) -> api.readSecret("secret", "login"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var unwrappingClient = client.configure().userPass(VaultUserPassAuthOptions.builder()
                 .username(user)
@@ -99,7 +99,7 @@ public class VaultUnwrappingValueProviderTest {
                 .build();
 
         assertThatCode(() -> unwrappingClient.secrets().kv2().listSecrets("/")
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
     }
 

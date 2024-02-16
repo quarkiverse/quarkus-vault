@@ -7,9 +7,8 @@ import static io.quarkus.vault.client.auth.VaultKubernetesTokenProvider.jwtToken
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
-
-import io.smallrye.mutiny.Uni;
 
 public class VaultKubernetesAuthOptions extends VaultAuthOptions {
 
@@ -18,7 +17,7 @@ public class VaultKubernetesAuthOptions extends VaultAuthOptions {
     public static class Builder {
         private String mountPath = DEFAULT_KUBERNETES_MOUNT_PATH;
         private String role;
-        private Supplier<Uni<String>> jwtProvider = jwtTokenPathReader(DEFAULT_KUBERNETES_JWT_TOKEN_PATH);
+        private Supplier<CompletionStage<String>> jwtProvider = jwtTokenPathReader(DEFAULT_KUBERNETES_JWT_TOKEN_PATH);
         private Duration cachingRenewGracePeriod = DEFAULT_RENEW_GRACE_PERIOD;
 
         public Builder mountPath(String mountPath) {
@@ -36,7 +35,7 @@ public class VaultKubernetesAuthOptions extends VaultAuthOptions {
             return this;
         }
 
-        public Builder jwtProvider(Supplier<Uni<String>> jwtProvider) {
+        public Builder jwtProvider(Supplier<CompletionStage<String>> jwtProvider) {
             this.jwtProvider = jwtProvider;
             return this;
         }
@@ -58,7 +57,7 @@ public class VaultKubernetesAuthOptions extends VaultAuthOptions {
 
     public final String mountPath;
     public final String role;
-    public final Supplier<Uni<String>> jwtProvider;
+    public final Supplier<CompletionStage<String>> jwtProvider;
 
     private VaultKubernetesAuthOptions(Builder builder) {
         super(builder.cachingRenewGracePeriod);

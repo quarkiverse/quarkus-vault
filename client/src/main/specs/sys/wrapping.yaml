@@ -80,12 +80,12 @@ operations:
 methods:
 - name: unwrapAs
   typeParameters: [T]
-  returnType: Uni<T>
+  returnType: java.util.concurrent.CompletionStage<T>
   parameters:
     token: String
     type: Class<T>
   body: |
-    return unwrap(token).map(r -> {
+    return unwrap(token).thenApply(r -> {
       var val = r.getAuth() != null ? r.getAuth() : r.getData(); 
       return $mapping:T.convert(val, type);
     });
@@ -93,7 +93,7 @@ methods:
     mapping: <type>io.quarkus.vault.client.json.JsonMapping
 
 - name: wrap
-  returnType: io.smallrye.mutiny.Uni<$$.api.common.VaultWrapInfo>
+  returnType: java.util.concurrent.CompletionStage<$$.api.common.VaultWrapInfo>
   parameters:
     data: Object
     wrapTtl: java.time.Duration

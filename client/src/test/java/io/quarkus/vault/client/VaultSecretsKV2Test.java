@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,10 +20,10 @@ import io.quarkus.vault.client.test.VaultClientTest.Mount;
 public class VaultSecretsKV2Test {
 
     @Test
-    void testReadConfig(VaultClient client) {
+    public void testReadConfig(VaultClient client) throws Exception {
 
         var config = client.secrets().kv2("kv-v2").readConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(config)
                 .isNotNull();
@@ -31,18 +32,18 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testUpdateConfig(VaultClient client, @Random String path) {
+    public void testUpdateConfig(VaultClient client, @Random String path) throws Exception {
         // Mount specific engine for testing CAS configuration
         client.sys().mounts().enable(path, "kv", "KV with CAS enabled", null, Map.of("version", "2"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var kvApi = client.secrets().kv2(path);
 
         kvApi.updateConfig(3, true, "3m0s")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var config = kvApi.readConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(config)
                 .isNotNull();
@@ -55,15 +56,15 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testUpdate(VaultClient client, @Random String path) {
+    public void testUpdate(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("greeting", "hello", "subject", "world"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var secret = kvApi.readSecret(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(secret)
                 .isNotNull();
@@ -82,18 +83,18 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testPatch(VaultClient client, @Random String path) {
+    public void testPatch(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("greeting", "hello", "subject", "world"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         kvApi.patchSecret(path, null, Map.of("subject", "new world!"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var secret = kvApi.readSecret(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(secret)
                 .isNotNull();
@@ -105,15 +106,15 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testReadSubkeys(VaultClient client, @Random String path) {
+    public void testReadSubkeys(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("greeting", "hello", "subject", "world"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var read = kvApi.readSubkeys(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(read.getSubkeys())
                 .isNotNull()
@@ -122,17 +123,17 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testList(VaultClient client, @Random String path) {
+    public void testList(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path + "/test1", null, Map.of("key1", "val1", "key2", "val2"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.updateSecret(path + "/test2", null, Map.of("key1", "val1", "key2", "val2"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keys = kvApi.listSecrets(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys)
                 .isNotNull()
@@ -140,28 +141,28 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testListEmpty(VaultClient client, @Random String path) {
+    public void testListEmpty(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         var keys = kvApi.listSecrets(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys)
                 .isEmpty();
     }
 
     @Test
-    void testDelete(VaultClient client, @Random String path) {
+    public void testDelete(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("test", "some-value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Validate update
         var secret = kvApi.readSecret(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(secret)
                 .isNotNull();
@@ -172,26 +173,27 @@ public class VaultSecretsKV2Test {
         // Delete and validate
 
         kvApi.deleteSecret(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
-        assertThatThrownBy(() -> kvApi.readSecret(path).await().indefinitely())
+        assertThatThrownBy(() -> kvApi.readSecret(path).toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test
-    void testReadWithVersion(VaultClient client, @Random String path) {
+    public void testReadWithVersion(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.updateSecret(path, null, Map.of("greeting", "hello", "subject", "world"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         {
             var secret = kvApi.readSecret(path, 1)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(secret)
                     .isNotNull();
@@ -210,7 +212,7 @@ public class VaultSecretsKV2Test {
 
         {
             var secret = kvApi.readSecret(path, 2)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(secret)
                     .isNotNull();
@@ -230,17 +232,17 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testReadSubkeysWithVersion(VaultClient client, @Random String path) {
+    public void testReadSubkeysWithVersion(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.updateSecret(path, null, Map.of("greeting", "hello", "subject", "world"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var read = kvApi.readSubkeys(path, 2, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(read.getSubkeys())
                 .isNotNull()
@@ -249,17 +251,17 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testUpdateMetadata(VaultClient client, @Random String path) {
+    public void testUpdateMetadata(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.updateSecretMetadata(path, 3, false, "3m", Map.of("owner", "quarkus-vault-client-test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var metadata = kvApi.readSecretMetadata(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(metadata)
                 .isNotNull();
@@ -293,18 +295,18 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testPatchMetadata(VaultClient client, @Random String path) {
+    public void testPatchMetadata(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.patchSecretMetadata(path, new VaultSecretsKV2SecretMetadataParams()
                 .setCustomMetadata(Map.of("owner", "quarkus-vault-client-test")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var metadata = kvApi.readSecretMetadata(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(metadata)
                 .isNotNull();
@@ -338,19 +340,19 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testReadMetadataAfterDelete(VaultClient client, @Random String path) {
+    public void testReadMetadataAfterDelete(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.updateSecretMetadata(path, 3, false, "3m", Map.of("owner", "quarkus-vault-client-test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.deleteSecret(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var metadata = kvApi.readSecretMetadata(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(metadata)
                 .isNotNull();
@@ -363,19 +365,19 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testDeleteVersion(VaultClient client, @Random String path) {
+    public void testDeleteVersion(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.updateSecretMetadata(path, 3, false, "3m", Map.of("owner", "quarkus-vault-client-test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.deleteSecretVersions(path, List.of(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var metadata = kvApi.readSecretMetadata(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(metadata)
                 .isNotNull();
@@ -389,18 +391,18 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testUndeleteVersion(VaultClient client, @Random String path) {
+    public void testUndeleteVersion(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.deleteSecretVersions(path, List.of(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         {
             var metadata = kvApi.readSecretMetadata(path)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(metadata)
                     .isNotNull();
@@ -412,17 +414,18 @@ public class VaultSecretsKV2Test {
             assertThat(metadata.getVersions().get("1").getDeletionTime())
                     .isBetween(now().minusSeconds(2), now().plusSeconds(2));
 
-            assertThatThrownBy(() -> kvApi.readSecret(path, 1).await().indefinitely())
+            assertThatThrownBy(() -> kvApi.readSecret(path, 1).toCompletableFuture().get())
+                    .isInstanceOf(ExecutionException.class).cause()
                     .isInstanceOf(VaultClientException.class)
                     .hasFieldOrPropertyWithValue("status", 404);
         }
 
         kvApi.undeleteSecretVersions(path, List.of(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         {
             var metadata = kvApi.readSecretMetadata(path)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(metadata)
                     .isNotNull();
@@ -434,24 +437,24 @@ public class VaultSecretsKV2Test {
             assertThat(metadata.getVersions().get("1").getDeletionTime())
                     .isNull();
 
-            assertThatNoException().isThrownBy(() -> kvApi.readSecret(path, 1).await().indefinitely());
+            assertThatNoException().isThrownBy(() -> kvApi.readSecret(path, 1).toCompletableFuture().get());
         }
     }
 
     @Test
-    void testDestroyVersion(VaultClient client, @Random String path) {
+    public void testDestroyVersion(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.updateSecretMetadata(path, 3, false, "3m", Map.of("owner", "quarkus-vault-client-test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         kvApi.destroySecretVersions(path, List.of(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var data = kvApi.readSecretMetadata(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(data)
                 .isNotNull();
@@ -465,23 +468,24 @@ public class VaultSecretsKV2Test {
     }
 
     @Test
-    void testDeleteMetadataAndHistory(VaultClient client, @Random String path) {
+    public void testDeleteMetadataAndHistory(VaultClient client, @Random String path) throws Exception {
 
         var kvApi = client.secrets().kv2("kv-v2");
 
         kvApi.updateSecret(path, null, Map.of("initial", "value"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var secret = kvApi.readSecret(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(secret.getData())
                 .isNotNull();
 
         kvApi.deleteSecretMetadata(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
-        assertThatThrownBy(() -> kvApi.readSecret(path).await().indefinitely())
+        assertThatThrownBy(() -> kvApi.readSecret(path).toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 404);
     }

@@ -1,14 +1,13 @@
 package io.quarkus.vault.client.auth;
 
 import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
-import io.smallrye.mutiny.Uni;
-
 public class VaultStaticClientTokenProvider implements VaultTokenProvider {
-    private final Function<VaultAuthRequest, Uni<String>> tokenProvider;
+    private final Function<VaultAuthRequest, CompletionStage<String>> tokenProvider;
 
-    public VaultStaticClientTokenProvider(Function<VaultAuthRequest, Uni<String>> tokenProvider) {
+    public VaultStaticClientTokenProvider(Function<VaultAuthRequest, CompletionStage<String>> tokenProvider) {
         this.tokenProvider = tokenProvider;
     }
 
@@ -17,8 +16,9 @@ public class VaultStaticClientTokenProvider implements VaultTokenProvider {
     }
 
     @Override
-    public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
-        return tokenProvider.apply(authRequest).map(token -> VaultToken.neverExpires(token, authRequest.getInstantSource()));
+    public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+        return tokenProvider.apply(authRequest)
+                .thenApply(token -> VaultToken.neverExpires(token, authRequest.getInstantSource()));
     }
 
     @Override

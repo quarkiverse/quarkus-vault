@@ -1,15 +1,19 @@
 package io.quarkus.vault.client;
 
-import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
-import static io.smallrye.mutiny.helpers.ParameterValidation.positive;
+import static java.util.Objects.requireNonNull;
 
 import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.InstantSource;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import io.quarkus.vault.client.api.VaultAuthAccessor;
 import io.quarkus.vault.client.api.VaultSecretsAccessor;
@@ -20,13 +24,6 @@ import io.quarkus.vault.client.common.VaultRequestExecutor;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.common.VaultTracingExecutor;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.operators.AbstractUni;
-import io.smallrye.mutiny.operators.UniOperator;
-import io.smallrye.mutiny.operators.uni.UniOperatorProcessor;
-import io.smallrye.mutiny.subscription.UniSubscriber;
-import io.smallrye.mutiny.subscription.UniSubscription;
 
 public class VaultClient implements VaultRequestExecutor {
 
@@ -42,7 +39,7 @@ public class VaultClient implements VaultRequestExecutor {
         private InstantSource instantSource = InstantSource.system();
 
         public Builder baseUrl(URL baseUrl) {
-            this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl is required");
+            this.baseUrl = requireNonNull(baseUrl, "baseUrl is required");
             return this;
         }
 
@@ -55,7 +52,7 @@ public class VaultClient implements VaultRequestExecutor {
         }
 
         public Builder apiVersion(String apiVersion) {
-            this.apiVersion = Objects.requireNonNull(apiVersion, "apiVersion is required");
+            this.apiVersion = requireNonNull(apiVersion, "apiVersion is required");
             assert apiVersion.startsWith("v");
             return this;
         }
@@ -128,7 +125,7 @@ public class VaultClient implements VaultRequestExecutor {
         }
 
         public Builder traceRequests() {
-            Objects.requireNonNull(executor, "executor must be configured before tracing");
+            requireNonNull(executor, "executor must be configured before tracing");
             if (!(executor instanceof VaultTracingExecutor)) {
                 executor = new VaultTracingExecutor(executor);
             }
@@ -170,8 +167,8 @@ public class VaultClient implements VaultRequestExecutor {
     private final InstantSource instantSource;
 
     private VaultClient(Builder builder) {
-        this.baseUrl = Objects.requireNonNull(builder.baseUrl, "baseUrl is required");
-        this.executor = Objects.requireNonNull(builder.executor, "executor is required");
+        this.baseUrl = requireNonNull(builder.baseUrl, "baseUrl is required");
+        this.executor = requireNonNull(builder.executor, "executor is required");
         this.apiVersion = builder.apiVersion;
         this.logConfidentialityLevel = builder.logConfidentialityLevel;
         this.requestTimeout = builder.requestTimeout;
@@ -227,7 +224,7 @@ public class VaultClient implements VaultRequestExecutor {
     }
 
     @Override
-    public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
+    public <T> CompletionStage<VaultResponse<T>> execute(VaultRequest<T> request) {
 
         var requestBuilder = request.builder();
 
@@ -252,21 +249,22 @@ public class VaultClient implements VaultRequestExecutor {
 
         var appliedToken = new AtomicReference<VaultToken>(null);
 
-        var response = tokenProvider.apply(VaultAuthRequest.of(this, request, instantSource))
-                .flatMap(token -> {
+        var providedToken = tokenProvider.apply(VaultAuthRequest.of(this, request, instantSource));
 
-                    appliedToken.set(token);
+        Supplier<CompletionStage<VaultResponse<T>>> responseSupplier = () -> providedToken.thenCompose(token -> {
 
-                    if (token == null) {
-                        requestBuilder.noToken();
-                    } else {
-                        requestBuilder.token(token.getClientToken());
-                    }
+            appliedToken.set(token);
 
-                    return executor.execute(requestBuilder.rebuild());
-                });
+            if (token == null) {
+                requestBuilder.noToken();
+            } else {
+                requestBuilder.token(token.getClientToken());
+            }
 
-        return new Retry<>(response, 1, appliedToken);
+            return executor.execute(requestBuilder.rebuild());
+        });
+
+        return CompletableFuture.completedStage(0).thenCompose(new Retry<>(responseSupplier, 1, appliedToken));
     }
 
     public VaultClient.Builder configure() {
@@ -282,72 +280,36 @@ public class VaultClient implements VaultRequestExecutor {
     }
 }
 
-class Retry<T> extends UniOperator<T, T> {
-    private final long maxAttempts;
+class Retry<T> implements Function<Integer, CompletionStage<T>> {
+    private final Supplier<CompletionStage<T>> upstreamSupplier;
+    private final long maxRetries;
     private final AtomicReference<VaultToken> appliedToken;
 
-    public Retry(Uni<T> upstream, long maxAttempts, AtomicReference<VaultToken> appliedToken) {
-        super(nonNull(upstream, "upstream"));
-        this.maxAttempts = positive(maxAttempts, "maxAttempts");
+    public Retry(Supplier<CompletionStage<T>> upstreamSupplier, long maxRetries, AtomicReference<VaultToken> appliedToken) {
+        assert maxRetries > 0;
+        this.upstreamSupplier = Objects.requireNonNull(upstreamSupplier, "upstreamSupplier");
+        this.maxRetries = maxRetries;
         this.appliedToken = appliedToken;
     }
 
     @Override
-    public void subscribe(UniSubscriber<? super T> subscriber) {
-        AbstractUni.subscribe(upstream(), new RetryProcessor<>(this, subscriber));
+    public CompletionStage<T> apply(Integer attempt) {
+        return upstreamSupplier.get().exceptionallyCompose(failure -> {
+            if (attempt < maxRetries && shouldRetry(failure)) {
+                return apply(attempt + 1);
+            }
+            return CompletableFuture.failedFuture(failure);
+        });
     }
 
-    private static class RetryProcessor<T> extends UniOperatorProcessor<T, T> {
-
-        private final Retry<T> retry;
-        private volatile int counter = 0;
-        private static final AtomicIntegerFieldUpdater<RetryProcessor> counterUpdater = AtomicIntegerFieldUpdater
-                .newUpdater(Retry.RetryProcessor.class, "counter");
-
-        public RetryProcessor(Retry<T> retry, UniSubscriber<? super T> downstream) {
-            super(downstream);
-            this.retry = retry;
+    private boolean shouldRetry(Throwable failure) {
+        if (failure instanceof CompletionException || failure instanceof ExecutionException) {
+            failure = failure.getCause();
         }
-
-        @Override
-        public void onSubscribe(UniSubscription subscription) {
-            int count = counterUpdater.incrementAndGet(this);
-            if (compareAndSetUpstreamSubscription(null, subscription)) {
-                if (count == 1) {
-                    downstream.onSubscribe(this);
-                }
-            } else {
-                subscription.cancel();
-            }
+        if (failure instanceof VaultClientException ve) {
+            var token = appliedToken.get();
+            return ve.isPermissionDenied() && token != null && token.isFromCache();
         }
-
-        @Override
-        public void onFailure(Throwable failure) {
-            if (isCancelled()) {
-                Infrastructure.handleDroppedException(failure);
-                return;
-            }
-            if (counter > retry.maxAttempts || !shouldRetry(failure)) {
-                downstream.onFailure(failure);
-                return;
-            }
-            UniSubscription previousSubscription = getAndSetUpstreamSubscription(null);
-            if (previousSubscription != null) {
-                previousSubscription.cancel();
-            }
-
-            // invalidate token to ensure a new one is requested from the token provider
-            retry.appliedToken.set(null);
-
-            AbstractUni.subscribe(retry.upstream(), this);
-        }
-
-        private boolean shouldRetry(Throwable failure) {
-            if (failure instanceof VaultClientException ve) {
-                var token = retry.appliedToken.get();
-                return ve.isPermissionDenied() && token != null && token.isFromCache();
-            }
-            return false;
-        }
+        return false;
     }
 }

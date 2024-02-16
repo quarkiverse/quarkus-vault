@@ -3,7 +3,6 @@ package io.quarkus.vault.client;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HexFormat;
 
@@ -18,11 +17,11 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSysToolsTest {
 
     @Test
-    public void testRandomBase64(VaultClient client) {
+    public void testRandomBase64(VaultClient client) throws Exception {
         var toolsApi = client.sys().tools();
 
         var random = toolsApi.random(32, VaultRandomSource.ALL, VaultFormat.BASE64)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(random)
                 .isNotNull()
@@ -30,11 +29,11 @@ public class VaultSysToolsTest {
     }
 
     @Test
-    public void testRandomHex(VaultClient client) {
+    public void testRandomHex(VaultClient client) throws Exception {
         var toolsApi = client.sys().tools();
 
         var random = toolsApi.random(32, VaultRandomSource.PLATFORM, VaultFormat.HEX)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(random)
                 .isNotNull()
@@ -42,11 +41,11 @@ public class VaultSysToolsTest {
     }
 
     @Test
-    public void testRandomWithDefaults(VaultClient client) {
+    public void testRandomWithDefaults(VaultClient client) throws Exception {
         var toolsApi = client.sys().tools();
 
         var random = toolsApi.random(32, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(random)
                 .isNotNull()
@@ -54,13 +53,13 @@ public class VaultSysToolsTest {
     }
 
     @Test
-    public void testHash(VaultClient client) throws NoSuchAlgorithmException {
+    public void testHash(VaultClient client) throws Exception {
         var toolsApi = client.sys().tools();
 
         var data = "test".getBytes();
 
         var hash = toolsApi.hash(VaultHashAlgorithm.SHA2_512, data, VaultFormat.BASE64)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var localHash = Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-512").digest(data));
 
@@ -69,13 +68,13 @@ public class VaultSysToolsTest {
     }
 
     @Test
-    public void testHashDefaultParams(VaultClient client) throws NoSuchAlgorithmException {
+    public void testHashDefaultParams(VaultClient client) throws Exception {
         var toolsApi = client.sys().tools();
 
         var data = "test".getBytes();
 
         var hash = toolsApi.hash(null, data, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var localHash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(data));
 

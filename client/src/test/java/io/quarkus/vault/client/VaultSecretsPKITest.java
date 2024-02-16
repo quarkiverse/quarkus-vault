@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.bouncycastle.asn1.x500.style.BCStyle.CN;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigInteger;
@@ -38,24 +37,24 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSecretsPKITest {
 
     @Test
-    public void testIssue(VaultClient client, @Random String mount) {
+    public void testIssue(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var issued = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issued.getCertificate())
                 .isNotEmpty();
@@ -74,24 +73,24 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testIssueViaIssuer(VaultClient client, @Random String mount) {
+    public void testIssueViaIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var issued = pki.issue(root.getIssuerId(), "test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issued.getCertificate())
                 .isNotEmpty();
@@ -112,18 +111,18 @@ public class VaultSecretsPKITest {
     @Test
     public void testSign(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
         var csr = new JcaPKCS10CertificationRequestBuilder(new X500NameBuilder()
@@ -136,7 +135,7 @@ public class VaultSecretsPKITest {
 
         var issued = pki.sign("test", new VaultSecretsPKISignParams()
                 .setCsr(csrPem.toString()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issued.getCertificate())
                 .isNotEmpty();
@@ -157,18 +156,18 @@ public class VaultSecretsPKITest {
     @Test
     public void testSignViaIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
         var csr = new JcaPKCS10CertificationRequestBuilder(new X500NameBuilder()
@@ -181,7 +180,7 @@ public class VaultSecretsPKITest {
 
         var issued = pki.sign(root.getIssuerId(), "test", new VaultSecretsPKISignParams()
                 .setCsr(csrPem.toString()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issued.getCertificate())
                 .isNotEmpty();
@@ -202,18 +201,18 @@ public class VaultSecretsPKITest {
     @Test
     public void testSignVerbatim(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
         var csr = new JcaPKCS10CertificationRequestBuilder(new X500NameBuilder()
@@ -226,7 +225,7 @@ public class VaultSecretsPKITest {
 
         var issued = pki.signVerbatim("test", new VaultSecretsPKISignVerbatimParams()
                 .setCsr(csrPem.toString()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issued.getCertificate())
                 .isNotEmpty();
@@ -247,18 +246,18 @@ public class VaultSecretsPKITest {
     @Test
     public void testSignVerbatimViaIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
         var csr = new JcaPKCS10CertificationRequestBuilder(new X500NameBuilder()
@@ -271,7 +270,7 @@ public class VaultSecretsPKITest {
 
         var issued = pki.signVerbatim(root.getIssuerId(), "test", new VaultSecretsPKISignVerbatimParams()
                 .setCsr(csrPem.toString()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issued.getCertificate())
                 .isNotEmpty();
@@ -290,27 +289,27 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testSignIntermediate(VaultClient client, @Random String mount1, @Random String mount2) throws IOException {
+    public void testSignIntermediate(VaultClient client, @Random String mount1, @Random String mount2) throws Exception {
         client.sys().mounts().enable(mount1, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         client.sys().mounts().enable(mount2, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki1 = client.secrets().pki(mount1);
         var pki2 = client.secrets().pki(mount2);
 
         pki1.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var genCsr = pki2.generateIntermediateCsr(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateCsrParams()
                 .setCommonName("Test Intermediate CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signed = pki1.signIntermediate(new VaultSecretsPKISignIntermediateParams()
                 .setCsr(genCsr.getCsr())
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signed.getCertificate())
                 .isNotEmpty();
@@ -330,27 +329,27 @@ public class VaultSecretsPKITest {
 
     @Test
     public void testSignIntermediateViaIssuer(VaultClient client, @Random String mount1, @Random String mount2)
-            throws IOException {
+            throws Exception {
         client.sys().mounts().enable(mount1, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         client.sys().mounts().enable(mount2, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki1 = client.secrets().pki(mount1);
         var pki2 = client.secrets().pki(mount2);
 
         var root = pki1.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var genCsr = pki2.generateIntermediateCsr(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateCsrParams()
                 .setCommonName("Test Intermediate CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signed = pki1.signIntermediate(root.getIssuerId(), new VaultSecretsPKISignIntermediateParams()
                 .setCsr(genCsr.getCsr())
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signed.getCertificate())
                 .isNotEmpty();
@@ -369,23 +368,23 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testSignSelfIssued(VaultClient client, @Random String mount) {
+    public void testSignSelfIssued(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signed = pki.signSelfIssued(root.getCertificate(), false)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signed.getCertificate())
                 .isNotEmpty();
@@ -394,23 +393,23 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testSignSelfIssuedViaIssuer(VaultClient client, @Random String mount) {
+    public void testSignSelfIssuedViaIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signed = pki.signSelfIssued(root.getIssuerId(), root.getCertificate(), false)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signed.getCertificate())
                 .isNotEmpty();
@@ -419,54 +418,54 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testListCerts(VaultClient client, @Random String mount) {
+    public void testListCerts(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var issued = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var certs = pki.listCertificates()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(certs)
                 .contains(issued.getSerialNumber());
     }
 
     @Test
-    public void testReadCert(VaultClient client, @Random String mount) {
+    public void testReadCert(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var issued = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var certInfo = pki.readCertificate(issued.getSerialNumber())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(certInfo.getCertificate())
                 .isEqualTo(issued.getCertificate());
@@ -478,124 +477,124 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testRevoke(VaultClient client, @Random String mount) {
+    public void testRevoke(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var issued = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var revoked = pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(issued.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(revoked.getRevocationTime())
                 .isBetween(now().minusSeconds(5), now().plusSeconds(5));
     }
 
     @Test
-    public void testRevokeWithKey(VaultClient client, @Random String mount) {
+    public void testRevokeWithKey(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var issued = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var revoked = pki.revokeWithKey(new VaultSecretsPKIRevokeWithKeyParams()
                 .setSerialNumber(issued.getSerialNumber())
                 .setPrivateKey(issued.getPrivateKey()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(revoked.getRevocationTime())
                 .isBetween(now().minusSeconds(5), now().plusSeconds(5));
     }
 
     @Test
-    public void testListRevoked(VaultClient client, @Random String mount) {
+    public void testListRevoked(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setTtl(Duration.ofDays(30)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var issued = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(issued.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var revoked = pki.listRevoked()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(revoked)
                 .contains(issued.getSerialNumber());
     }
 
     @Test
-    public void testReadIssuerCa(VaultClient client, @Random String mount) {
+    public void testReadIssuerCa(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA 1"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var ca = pki.readIssuerCaCert()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(ca.getCertificate().trim())
                 .isEqualTo(root.getCertificate().trim());
     }
 
     @Test
-    public void testReadIssuerCaFromIssuer(VaultClient client, @Random String mount) {
+    public void testReadIssuerCaFromIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA 1"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var ca = pki.readIssuerCaCert(root.getIssuerId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(ca.getCertificate().trim())
                 .isEqualTo(root.getCertificate().trim());
@@ -606,18 +605,18 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testReadIssuerCaChain(VaultClient client, @Random String mount) {
+    public void testReadIssuerCaChain(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA 1"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var caChain = pki.readIssuerCaChain()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(caChain.trim())
                 .isEqualTo(root.getCertificate().trim());
@@ -626,31 +625,31 @@ public class VaultSecretsPKITest {
     @Test
     public void testReadIssuerCrl(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA ")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setUseCsrCommonName(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com")
                 .setNotAfter(OffsetDateTime.now().plusMonths(3)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(cert.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crlStr = pki.readIssuerCrl()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crl = (X509CRLHolder) new PEMParser(new StringReader(crlStr)).readObject();
         @SuppressWarnings("unchecked")
@@ -666,31 +665,31 @@ public class VaultSecretsPKITest {
     @Test
     public void testReadIssuerCrlViaIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA ")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setUseCsrCommonName(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com")
                 .setNotAfter(OffsetDateTime.now().plusMonths(3)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(cert.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crlStr = pki.readIssuerCrl(root.getIssuerId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crl = (X509CRLHolder) new PEMParser(new StringReader(crlStr)).readObject();
         @SuppressWarnings("unchecked")
@@ -706,31 +705,31 @@ public class VaultSecretsPKITest {
     @Test
     public void testReadIssuerDeltaCrl(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA ")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setUseCsrCommonName(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com")
                 .setNotAfter(OffsetDateTime.now().plusMonths(3)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(cert.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crlStr = pki.readIssuerDeltaCrl()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crl = (X509CRLHolder) new PEMParser(new StringReader(crlStr)).readObject();
         @SuppressWarnings("unchecked")
@@ -744,31 +743,31 @@ public class VaultSecretsPKITest {
     @Test
     public void testReadIssuerDeltaCrlViaIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA ")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setUseCsrCommonName(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com")
                 .setNotAfter(OffsetDateTime.now().plusMonths(3)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(cert.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crlStr = pki.readIssuerDeltaCrl(root.getIssuerId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crl = (X509CRLHolder) new PEMParser(new StringReader(crlStr)).readObject();
         @SuppressWarnings("unchecked")
@@ -783,31 +782,31 @@ public class VaultSecretsPKITest {
     @Test
     public void testReadIssuerUnifiedCrl(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA ")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setUseCsrCommonName(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com")
                 .setNotAfter(OffsetDateTime.now().plusMonths(3)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(cert.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crlStr = pki.readIssuerUnifiedCrl()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crl = (X509CRLHolder) new PEMParser(new StringReader(crlStr)).readObject();
         @SuppressWarnings("unchecked")
@@ -824,31 +823,31 @@ public class VaultSecretsPKITest {
     @Test
     public void testReadIssuerUnifiedCrlViaIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA ")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setUseCsrCommonName(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com")
                 .setNotAfter(OffsetDateTime.now().plusMonths(3)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(cert.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crlStr = pki.readIssuerUnifiedCrl(root.getIssuerId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crl = (X509CRLHolder) new PEMParser(new StringReader(crlStr)).readObject();
         @SuppressWarnings("unchecked")
@@ -865,31 +864,31 @@ public class VaultSecretsPKITest {
     @Test
     public void testReadIssuerUnifiedDeltaCrl(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA ")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setUseCsrCommonName(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com")
                 .setNotAfter(OffsetDateTime.now().plusMonths(3)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(cert.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crlStr = pki.readIssuerUnifiedDeltaCrl()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crl = (X509CRLHolder) new PEMParser(new StringReader(crlStr)).readObject();
         @SuppressWarnings("unchecked")
@@ -904,31 +903,31 @@ public class VaultSecretsPKITest {
     @Test
     public void testReadIssuerUnifiedDeltaCrlViaIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA ")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams()
                 .setAllowAnyName(true)
                 .setUseCsrCommonName(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = pki.issue("test", new VaultSecretsPKIIssueParams()
                 .setCommonName("test.example.com")
                 .setNotAfter(OffsetDateTime.now().plusMonths(3)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.revoke(new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(cert.getSerialNumber()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crlStr = pki.readIssuerUnifiedDeltaCrl(root.getIssuerId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var crl = (X509CRLHolder) new PEMParser(new StringReader(crlStr)).readObject();
         @SuppressWarnings("unchecked")
@@ -940,9 +939,9 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testConfigUrls(VaultClient client, @Random String mount) {
+    public void testConfigUrls(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
@@ -950,9 +949,9 @@ public class VaultSecretsPKITest {
                 .setEnableTemplating(true)
                 .setOcspServers(List.of("https://example.com/ocsp"))
                 .setCrlDistributionPoints(List.of("https://example.com/crl.pem")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
-        var config = pki.readUrlsConfig().await().indefinitely();
+        var config = pki.readUrlsConfig().toCompletableFuture().get();
 
         assertThat(config.isEnableTemplating())
                 .isTrue();
@@ -963,16 +962,16 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testConfigCluster(VaultClient client, @Random String mount) {
+    public void testConfigCluster(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.configCluster("https://example.com/1", "https://example.com/2")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
-        var config = pki.readClusterConfig().await().indefinitely();
+        var config = pki.readClusterConfig().toCompletableFuture().get();
 
         assertThat(config.getPath())
                 .isEqualTo("https://example.com/1");
@@ -981,9 +980,9 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testConfigCrl(VaultClient client, @Random String mount) {
+    public void testConfigCrl(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
@@ -997,9 +996,9 @@ public class VaultSecretsPKITest {
                 .setCrossClusterRevocation(false)
                 .setOcspDisable(false)
                 .setOcspExpiry(Duration.ofHours(7)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
-        var config = pki.readCrlConfig().await().indefinitely();
+        var config = pki.readCrlConfig().toCompletableFuture().get();
 
         assertThat(config.isDisable())
                 .isFalse();
@@ -1022,55 +1021,55 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testConfigKeys(VaultClient client, @Random String mount) {
+    public void testConfigKeys(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var key1 = pki.generateKey(VaultSecretsPKIManageType.INTERNAL, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         var key2 = pki.generateKey(VaultSecretsPKIManageType.INTERNAL, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.configKeys(key2.getKeyId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keys = pki.readKeysConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys.getDefaultKey())
                 .isEqualTo(key2.getKeyId());
 
         pki.configKeys(key1.getKeyId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         keys = pki.readKeysConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys.getDefaultKey())
                 .isEqualTo(key1.getKeyId());
     }
 
     @Test
-    public void testConfigIssuers(VaultClient client, @Random String mount) {
+    public void testConfigIssuers(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var issuer1 = pki.generateIssuerRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Test Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         var issuer2 = pki.generateIssuerRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Test Root CA 2"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.configIssuers(issuer2.getIssuerId(), false)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var issuers = pki.readIssuersConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issuers.getDefaultIssuer())
                 .isEqualTo(issuer2.getIssuerId());
@@ -1078,10 +1077,10 @@ public class VaultSecretsPKITest {
                 .isFalse();
 
         pki.configIssuers(issuer1.getIssuerId(), true)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         issuers = pki.readIssuersConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issuers.getDefaultIssuer())
                 .isEqualTo(issuer1.getIssuerId());
@@ -1090,49 +1089,49 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testRotateCrl(VaultClient client, @Random String mount) {
+    public void testRotateCrl(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var rotated = pki.rotateCrl()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(rotated.isSuccess())
                 .isTrue();
     }
 
     @Test
-    public void testRotateDeltaCrl(VaultClient client, @Random String mount) {
+    public void testRotateDeltaCrl(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.configCrl(new VaultSecretsPKIConfigCrlParams()
                 .setAutoRebuild(true)
                 .setEnableDelta(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var rotated = pki.rotateDeltaCrl()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(rotated.isSuccess())
                 .isTrue();
     }
 
     @Test
-    public void testGenerateRoot(VaultClient client, @Random String mount) throws IOException {
+    public void testGenerateRoot(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Test Root CA")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = (X509CertificateHolder) new PEMParser(new StringReader(root.getCertificate())).readObject();
 
@@ -1159,21 +1158,21 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testRotateRoot(VaultClient client, @Random String mount) throws IOException {
+    public void testRotateRoot(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Test Root CA")
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var rotated = pki.rotateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Rotated Root CA")
                 .setNotAfter(OffsetDateTime.now().plusYears(2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(rotated.getSerialNumber())
                 .isNotEqualTo(root.getSerialNumber());
@@ -1203,9 +1202,9 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testGenerateIssuerRoot(VaultClient client, @Random String mount) throws IOException {
+    public void testGenerateIssuerRoot(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
@@ -1214,7 +1213,7 @@ public class VaultSecretsPKITest {
                 .setKeyType(VaultSecretsPKIKeyType.EC)
                 .setKeyBits(VaultSecretsPKIKeyBits.EC_P384)
                 .setNotAfter(OffsetDateTime.now().plusYears(1)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var cert = (X509CertificateHolder) new PEMParser(new StringReader(root.getCertificate())).readObject();
 
@@ -1242,15 +1241,15 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testGenerateIntermediateCsr(VaultClient client, @Random String mount) throws IOException {
+    public void testGenerateIntermediateCsr(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var gen = pki.generateIntermediateCsr(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateCsrParams()
                 .setCommonName("Test Intermediate CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var csr = (PKCS10CertificationRequest) new PEMParser(new StringReader(gen.getCsr())).readObject();
 
@@ -1260,15 +1259,15 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testGenerateIssuerIntermediateCsr(VaultClient client, @Random String mount) throws IOException {
+    public void testGenerateIssuerIntermediateCsr(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var gen = pki.generateIssuerIntermediateCsr(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateCsrParams()
                 .setCommonName("Test Intermediate CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var csr = (PKCS10CertificationRequest) new PEMParser(new StringReader(gen.getCsr())).readObject();
 
@@ -1278,19 +1277,19 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testGenerateCrossSignCsr(VaultClient client, @Random String mount) throws IOException {
+    public void testGenerateCrossSignCsr(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var gen = pki.generateCrossSignCsr(new VaultSecretsPKIGenerateCsrParams()
                 .setCommonName("Cross Intermediate CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var csr = (PKCS10CertificationRequest) new PEMParser(new StringReader(gen.getCsr())).readObject();
 
@@ -1300,29 +1299,29 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testSetSignedIntermediate(VaultClient client, @Random String mount1, @Random String mount2) throws IOException {
+    public void testSetSignedIntermediate(VaultClient client, @Random String mount1, @Random String mount2) throws Exception {
         client.sys().mounts().enable(mount1, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         client.sys().mounts().enable(mount2, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki1 = client.secrets().pki(mount1);
         var pki2 = client.secrets().pki(mount2);
 
         pki1.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var genCsr = pki2.generateIntermediateCsr(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateCsrParams()
                 .setCommonName("Test Intermediate CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signed = pki1.signIntermediate(new VaultSecretsPKISignIntermediateParams()
                 .setCsr(genCsr.getCsr()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signedInt = pki2.setSignedIntermediate(signed.getCertificate())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signedInt.getImportedIssuers())
                 .hasSize(1);
@@ -1335,17 +1334,17 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testConfigCa(VaultClient client, @Random String mount1, @Random String mount2) {
+    public void testConfigCa(VaultClient client, @Random String mount1, @Random String mount2) throws Exception {
         client.sys().mounts().enable(mount1, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         client.sys().mounts().enable(mount2, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki1 = client.secrets().pki(mount1);
 
         var root1 = pki1.generateRoot(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pemBundle = root1.getCertificate() + "\n" +
                 root1.getPrivateKey() + "\n";
@@ -1353,7 +1352,7 @@ public class VaultSecretsPKITest {
         var pki2 = client.secrets().pki(mount2);
 
         var root2 = pki2.configCa(pemBundle)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(root2.getImportedIssuers())
                 .hasSize(1);
@@ -1366,17 +1365,17 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testImportIssuerBundle(VaultClient client, @Random String mount1, @Random String mount2) {
+    public void testImportIssuerBundle(VaultClient client, @Random String mount1, @Random String mount2) throws Exception {
         client.sys().mounts().enable(mount1, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         client.sys().mounts().enable(mount2, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki1 = client.secrets().pki(mount1);
 
         var root1 = pki1.generateRoot(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pemBundle = root1.getCertificate() + "\n" +
                 root1.getPrivateKey() + "\n";
@@ -1384,7 +1383,7 @@ public class VaultSecretsPKITest {
         var pki2 = client.secrets().pki(mount2);
 
         var root2 = pki2.importIssuerBundle(pemBundle)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(root2.getImportedIssuers())
                 .hasSize(1);
@@ -1397,22 +1396,22 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testImportIssuerCert(VaultClient client, @Random String mount1, @Random String mount2) {
+    public void testImportIssuerCert(VaultClient client, @Random String mount1, @Random String mount2) throws Exception {
         client.sys().mounts().enable(mount1, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         client.sys().mounts().enable(mount2, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki1 = client.secrets().pki(mount1);
 
         var root1 = pki1.generateRoot(VaultSecretsPKIManageType.EXPORTED, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki2 = client.secrets().pki(mount2);
 
         var root2 = pki2.importIssuerCertificate(root1.getCertificate())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(root2.getImportedIssuers())
                 .hasSize(1);
@@ -1425,18 +1424,18 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testRevokeIssuer(VaultClient client, @Random String mount) {
+    public void testRevokeIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var revoked = pki.revokeIssuer(root.getIssuerId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(revoked.getRevocationTime())
                 .isBetween(now().minusSeconds(5), now().plusSeconds(5));
@@ -1459,36 +1458,36 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testDeleteIssuer(VaultClient client, @Random String mount) {
+    public void testDeleteIssuer(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var root = pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatCode(() -> pki.deleteIssuer(root.getIssuerId())
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
     }
 
     @Test
-    public void testListKeys(VaultClient client, @Random String mount) {
+    public void testListKeys(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var key1 = pki.generateKey(VaultSecretsPKIManageType.INTERNAL, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var key2 = pki.generateKey(VaultSecretsPKIManageType.INTERNAL, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keys = pki.listKeys()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys.getKeys())
                 .contains(key1.getKeyId(), key2.getKeyId());
@@ -1499,7 +1498,7 @@ public class VaultSecretsPKITest {
     @Test
     public void testImportKey(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
@@ -1510,7 +1509,7 @@ public class VaultSecretsPKITest {
         }
 
         var key = pki.importKey(privateKeyPem.getBuffer().toString(), "Imported-Key-" + mount)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(key.getKeyId())
                 .isNotEmpty();
@@ -1522,18 +1521,18 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testReadKey(VaultClient client, @Random String mount) {
+    public void testReadKey(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var key = pki.generateKey(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateKeyParams()
                 .setKeyName("Test-Key"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var read = pki.readKey(key.getKeyId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(read.getKeyId())
                 .isNotEmpty();
@@ -1544,19 +1543,19 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testUpdateKey(VaultClient client, @Random String mount) {
+    public void testUpdateKey(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var key = pki.generateKey(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateKeyParams()
                 .setKeyName("Test-Key"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var updated = pki.updateKey(key.getKeyId(), new VaultSecretsPKIUpdateKeyParams()
                 .setKeyName("Test-Key-Updated"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(updated.getKeyId())
                 .isNotEmpty();
@@ -1567,38 +1566,38 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testDeleteKey(VaultClient client, @Random String mount) {
+    public void testDeleteKey(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var key = pki.generateKey(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateKeyParams()
                 .setKeyName("Test-Key"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatCode(() -> pki.deleteKey(key.getKeyId())
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
 
         var keys = pki.listKeys()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys.getKeys())
                 .doesNotContain(key.getKeyId());
     }
 
     @Test
-    public void testUpdateRole(VaultClient client, @Random String mount) {
+    public void testUpdateRole(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateIssuerRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setIssuerName("test1")
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var now = OffsetDateTime.now();
 
@@ -1648,10 +1647,10 @@ public class VaultSecretsPKITest {
                 .setNotAfter(now.plusYears(1))
                 .setCnValidations(List.of(VaultSecretsPKICommonNameValidation.HOSTNAME))
                 .setAllowedUserIds(List.of("user1")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var role = pki.readRole("test")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(role.getIssuerRef())
                 .isEqualTo("test1");
@@ -1746,83 +1745,83 @@ public class VaultSecretsPKITest {
     }
 
     @Test
-    public void testListRoles(VaultClient client, @Random String mount) {
+    public void testListRoles(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roles = pki.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .contains("test");
     }
 
     @Test
-    public void testDeleteRole(VaultClient client, @Random String mount) {
+    public void testDeleteRole(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         pki.generateRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pki.updateRole("test", new VaultSecretsPKIUpdateRoleParams())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roles = pki.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .contains("test");
 
         pki.deleteRole("test")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         roles = pki.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .doesNotContain("test");
     }
 
     @Test
-    public void testDeleteAll(VaultClient client, @Random String mount) {
+    public void testDeleteAll(VaultClient client, @Random String mount) throws Exception {
         client.sys().mounts().enable(mount, "pki", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pki = client.secrets().pki(mount);
 
         var issuer = pki.generateIssuerRoot(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateRootParams()
                 .setCommonName("Test Root CA"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var key = pki.generateKey(VaultSecretsPKIManageType.INTERNAL, new VaultSecretsPKIGenerateKeyParams()
                 .setKeyName("Test-Key"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatCode(() -> pki.deleteAll()
-                .await().indefinitely())
+                .toCompletableFuture().get())
                 .doesNotThrowAnyException();
 
         var keys = pki.listKeys()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys.getKeys())
                 .doesNotContain(key.getKeyId());
 
         var issuers = pki.listIssuers()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(issuers.getKeys())
                 .doesNotContain(issuer.getIssuerId());

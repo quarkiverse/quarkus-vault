@@ -95,7 +95,7 @@ public class VaultDynamicCredentialsManager {
         if (credentials.isEmpty()) {
             return Uni.createFrom().item(Optional.empty());
         }
-        return vaultClient.sys().leases().read(credentials.get().leaseId)
+        return Uni.createFrom().completionStage(vaultClient.sys().leases().read(credentials.get().leaseId))
                 .map(ignored -> credentials)
                 .onFailure(VaultClientException.class).recoverWithUni(e -> {
                     if (((VaultClientException) e).getStatus() == 400) { // bad request
@@ -109,7 +109,7 @@ public class VaultDynamicCredentialsManager {
 
     private Uni<VaultDynamicCredentials> extend(VaultDynamicCredentials currentCredentials, String mount, String requestPath,
             String role) {
-        return vaultClient.sys().leases().renew(currentCredentials.leaseId, null)
+        return Uni.createFrom().completionStage(vaultClient.sys().leases().renew(currentCredentials.leaseId, null))
                 .map(vaultRenewLease -> {
                     LeaseBase lease = new LeaseBase(vaultRenewLease.getLeaseId(),
                             vaultRenewLease.isRenewable(),
@@ -128,7 +128,7 @@ public class VaultDynamicCredentialsManager {
                 .path(mount, requestPath, role)
                 .expectOkStatus()
                 .build(VaultLeasedResultExtractor.of(VaultAnyResult.class));
-        return vaultClient.execute(request)
+        return Uni.createFrom().completionStage(vaultClient.execute(request))
                 .map(VaultResponse::getResult)
                 .map(creds -> {
                     var data = creds.getData();

@@ -104,7 +104,8 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
             configKeyName = keyName;
         }
 
-        return transit.encrypt(configKeyName, params).map(VaultSecretsTransitEncryptResultData::getCiphertext);
+        return Uni.createFrom().completionStage(transit.encrypt(configKeyName, params))
+                .map(VaultSecretsTransitEncryptResultData::getCiphertext);
     }
 
     private TransitKeyConfig getTransitConfig(String keyName) {
@@ -147,7 +148,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
             configKeyName = keyName;
         }
 
-        return transit.encryptBatch(configKeyName, params)
+        return Uni.createFrom().completionStage(transit.encryptBatch(configKeyName, params))
                 .map(result -> result.stream()
                         .map(r -> new EncryptionResult(r.getCiphertext(), r.getError()))
                         .collect(toList()));
@@ -192,7 +193,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
             configKeyName = keyName;
         }
 
-        return transit.decryptBatch(configKeyName, params)
+        return Uni.createFrom().completionStage(transit.decryptBatch(configKeyName, params))
                 .map(result -> result.stream()
                         .map(r -> new DecryptionResult(new ClearData(r.getPlaintext()), r.getError()))
                         .collect(toList()));
@@ -240,7 +241,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
             configKeyName = keyName;
         }
 
-        return transit.rewrapBatch(configKeyName, params)
+        return Uni.createFrom().completionStage(transit.rewrapBatch(configKeyName, params))
                 .map(result -> result.stream()
                         .map(r -> new EncryptionResult(r.getCiphertext(), r.getError()))
                         .collect(toList()));
@@ -336,7 +337,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
                     VaultSecretsTransitMarshalingAlgorithm.from(defaultIfNull(options.getMarshalingAlgorithm(), null)));
         }
 
-        return transit.signBatch(configKeyName, params)
+        return Uni.createFrom().completionStage(transit.signBatch(configKeyName, params))
                 .map(result -> {
                     for (int i = 0; i < pairs.size(); i++) {
                         var batchResult = result.get(i);
@@ -427,7 +428,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
                     VaultSecretsTransitMarshalingAlgorithm.from(defaultIfNull(options.getMarshalingAlgorithm(), null)));
         }
 
-        return transit.verifyBatch(configKeyName, params)
+        return Uni.createFrom().completionStage(transit.verifyBatch(configKeyName, params))
                 .map(result -> result.stream()
                         .map(r -> {
                             if (r.getError() != null) {
@@ -452,7 +453,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
                     .setType(VaultSecretsTransitKeyType.from(detail.getType()));
         }
 
-        return transit.createKey(keyName, params).map(r -> null);
+        return Uni.createFrom().completionStage(transit.createKey(keyName, params)).map(r -> null);
     }
 
     @Override
@@ -465,18 +466,20 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
                 .setMinDecryptionVersion(detail.getMinDecryptionVersion())
                 .setMinEncryptionVersion(detail.getMinEncryptionVersion());
 
-        return transit.updateKey(keyName, params);
+        return Uni.createFrom().completionStage(transit.updateKey(keyName, params));
     }
 
     @Override
     public Uni<Void> deleteKey(String keyName) {
-        return transit.deleteKey(keyName);
+        return Uni.createFrom().completionStage(transit.deleteKey(keyName));
     }
 
     @Override
     public Uni<VaultTransitKeyExportDetail> exportKey(String keyName, VaultTransitExportKeyType keyType,
             String keyVersion) {
-        return transit.exportKey(VaultSecretsTransitExportKeyType.from(keyType.name() + "-key"), keyName, keyVersion)
+        return Uni.createFrom()
+                .completionStage(
+                        transit.exportKey(VaultSecretsTransitExportKeyType.from(keyType.name() + "-key"), keyName, keyVersion))
                 .map(result -> new VaultTransitKeyExportDetail()
                         .setName(result.getName())
                         .setKeys(result.getKeys()));
@@ -484,14 +487,14 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
     @Override
     public Uni<Optional<VaultTransitKeyDetail<?>>> readKey(String keyName) {
-        Uni<Optional<VaultTransitKeyDetail<?>>> res = transit.readKey(keyName)
+        Uni<Optional<VaultTransitKeyDetail<?>>> res = Uni.createFrom().completionStage(transit.readKey(keyName))
                 .map(result -> Optional.of(map(result)));
         return res.plug(Plugs::notFoundToEmpty);
     }
 
     @Override
     public Uni<List<String>> listKeys() {
-        return transit.listKeys();
+        return Uni.createFrom().completionStage(transit.listKeys());
     }
 
     protected VaultTransitKeyDetail<?> map(VaultSecretsTransitKeyInfo info) {

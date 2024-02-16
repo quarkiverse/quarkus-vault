@@ -45,23 +45,27 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
 
     @Override
     public Uni<Map<String, Object>> readSecretJson(String path) {
-        return isV1 ? kv1.read(path) : kv2.readSecret(path).map(VaultSecretsKV2ReadSecretData::getData);
+        return isV1 ? Uni.createFrom().completionStage(kv1.read(path))
+                : Uni.createFrom().completionStage(kv2.readSecret(path)).map(VaultSecretsKV2ReadSecretData::getData);
     }
 
     @Override
     public Uni<Void> writeSecret(String path, Map<String, String> secret) {
         var secretMap = secret.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> (Object) entry.getValue()));
-        return isV1 ? kv1.update(path, secretMap) : kv2.updateSecret(path, null, secretMap).map(r -> null);
+        return isV1 ? Uni.createFrom().completionStage(kv1.update(path, secretMap))
+                : Uni.createFrom().completionStage(kv2.updateSecret(path, null, secretMap)).map(r -> null);
     }
 
     @Override
     public Uni<Void> deleteSecret(String path) {
-        return isV1 ? kv1.delete(path) : kv2.deleteSecret(path);
+        return isV1 ? Uni.createFrom().completionStage(kv1.delete(path))
+                : Uni.createFrom().completionStage(kv2.deleteSecret(path));
     }
 
     @Override
     public Uni<List<String>> listSecrets(String path) {
-        return isV1 ? kv1.list(path) : kv2.listSecrets(path);
+        return isV1 ? Uni.createFrom().completionStage(kv1.list(path))
+                : Uni.createFrom().completionStage(kv2.listSecrets(path));
     }
 }

@@ -43,9 +43,9 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
 
     @Override
     public Uni<VaultInit> init(int secretShares, int secretThreshold) {
-        return vaultClient.sys().init().init(new VaultSysInitParams()
+        return Uni.createFrom().completionStage(vaultClient.sys().init().init(new VaultSysInitParams()
                 .setSecretShares(secretShares)
-                .setSecretThreshold(secretThreshold))
+                .setSecretThreshold(secretThreshold)))
                 .map(init -> new VaultInit(init.getKeys(), init.getKeysBase64(), init.getRootToken()));
     }
 
@@ -67,7 +67,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
 
     @Override
     public Uni<VaultSealStatus> sealStatus() {
-        return vaultClient.sys().seal().status()
+        return Uni.createFrom().completionStage(vaultClient.sys().seal().status())
                 .map(result -> {
                     final VaultSealStatus vaultSealStatus = new VaultSealStatus();
                     vaultSealStatus.setClusterId(result.getClusterId());
@@ -88,7 +88,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     }
 
     private Uni<VaultHealthStatus> healthStatus(boolean isStandByOk, boolean isPerfStandByOk) {
-        return vaultClient.sys().health().info(isStandByOk, isPerfStandByOk)
+        return Uni.createFrom().completionStage(vaultClient.sys().health().info(isStandByOk, isPerfStandByOk))
                 .map(result -> {
 
                     final VaultHealthStatus vaultHealthStatus = new VaultHealthStatus();
@@ -108,33 +108,34 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     }
 
     private Uni<VaultHealth> health(boolean isStandByOk, boolean isPerfStandByOk) {
-        return vaultClient.sys().health().statusCode(isStandByOk, isPerfStandByOk)
+        return Uni.createFrom().completionStage(vaultClient.sys().health().statusCode(isStandByOk, isPerfStandByOk))
                 .map(VaultHealth::new);
     }
 
     @Override
     public Uni<String> getPolicyRules(String name) {
-        return vaultClient.sys().policy().read(name).map(VaultSysPolicyReadResultData::getRules);
+        return Uni.createFrom().completionStage(vaultClient.sys().policy().read(name))
+                .map(VaultSysPolicyReadResultData::getRules);
     }
 
     @Override
     public Uni<Void> createUpdatePolicy(String name, String policy) {
-        return vaultClient.sys().policy().update(name, policy);
+        return Uni.createFrom().completionStage(vaultClient.sys().policy().update(name, policy));
     }
 
     @Override
     public Uni<Void> deletePolicy(String name) {
-        return vaultClient.sys().policy().delete(name);
+        return Uni.createFrom().completionStage(vaultClient.sys().policy().delete(name));
     }
 
     @Override
     public Uni<List<String>> getPolicies() {
-        return vaultClient.sys().policy().list();
+        return Uni.createFrom().completionStage(vaultClient.sys().policy().list());
     }
 
     @Override
     public Uni<VaultSecretEngineInfo> getSecretEngineInfo(String mount) {
-        return vaultClient.sys().mounts().read(mount)
+        return Uni.createFrom().completionStage(vaultClient.sys().mounts().read(mount))
                 .map(result -> {
                     VaultSecretEngineInfo info = new VaultSecretEngineInfo();
                     info.setDescription(result.getDescription());
@@ -162,7 +163,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     }
 
     public Uni<VaultTuneInfo> getTuneInfo(String mount) {
-        return vaultClient.sys().mounts().readTune(mount)
+        return Uni.createFrom().completionStage(vaultClient.sys().mounts().readTune(mount))
                 .map(result -> {
                     VaultTuneInfo tuneInfo = new VaultTuneInfo();
                     tuneInfo.setDefaultLeaseTimeToLive(toLongDurationSeconds(result.getDefaultLeaseTtl()));
@@ -196,7 +197,7 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                 .setPassthroughRequestHeaders(tuneInfoUpdates.getPassthroughRequestHeaders())
                 .setAllowedResponseHeaders(tuneInfoUpdates.getAllowedResponseHeaders())
                 .setAllowedManagedKeys(tuneInfoUpdates.getAllowedManagedKeys());
-        return vaultClient.sys().mounts().tune(mount, params);
+        return Uni.createFrom().completionStage(vaultClient.sys().mounts().tune(mount, params));
     }
 
     @Override
@@ -235,19 +236,21 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                 .setAllowedResponseHeaders(options.allowedResponseHeaders)
                 .setAllowedManagedKeys(options.allowedManagedKeys)
                 .setPluginVersion(options.pluginVersion);
-        return vaultClient.sys().mounts().enable(mount, engineType, description, config, options.options != null
-                ? options.options.entrySet().stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue))
-                : null);
+        return Uni.createFrom()
+                .completionStage(vaultClient.sys().mounts().enable(mount, engineType, description, config,
+                        options.options != null
+                                ? options.options.entrySet().stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue))
+                                : null));
     }
 
     @Override
     public Uni<Void> disable(String mount) {
-        return vaultClient.sys().mounts().disable(mount);
+        return Uni.createFrom().completionStage(vaultClient.sys().mounts().disable(mount));
     }
 
     @Override
     public Uni<VaultPlugins> listPlugins() {
-        return vaultClient.sys().plugins().list()
+        return Uni.createFrom().completionStage(vaultClient.sys().plugins().list())
                 .map(r -> new VaultPlugins()
                         .setAuth(r.getAuth())
                         .setDatabase(r.getDatabase())
@@ -263,20 +266,17 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
 
     @Override
     public Uni<List<String>> listPlugins(String type) {
-        switch (type.toLowerCase()) {
-            case "auth":
-                return vaultClient.sys().plugins().listAuth();
-            case "database":
-                return vaultClient.sys().plugins().listDatabase();
-            case "secret":
-                return vaultClient.sys().plugins().listSecret();
-        }
-        return Uni.createFrom().failure(new IllegalArgumentException("Unknown plugin type: " + type));
+        return switch (type.toLowerCase()) {
+            case "auth" -> Uni.createFrom().completionStage(vaultClient.sys().plugins().listAuth());
+            case "database" -> Uni.createFrom().completionStage(vaultClient.sys().plugins().listDatabase());
+            case "secret" -> Uni.createFrom().completionStage(vaultClient.sys().plugins().listSecret());
+            default -> Uni.createFrom().failure(new IllegalArgumentException("Unknown plugin type: " + type));
+        };
     }
 
     @Override
     public Uni<VaultPluginDetails> getPluginDetails(String type, String name, @Nullable String version) {
-        return vaultClient.sys().plugins().read(type, name, version)
+        return Uni.createFrom().completionStage(vaultClient.sys().plugins().read(type, name, version))
                 .map(r -> new VaultPluginDetails()
                         .setBuiltin(r.isBuiltin())
                         .setName(r.getName())
@@ -305,11 +305,11 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
                 .setArgs(args)
                 .setEnv(env);
 
-        return vaultClient.sys().plugins().register(type, name, params);
+        return Uni.createFrom().completionStage(vaultClient.sys().plugins().register(type, name, params));
     }
 
     @Override
     public Uni<Void> removePlugin(String type, String name, @Nullable String version) {
-        return vaultClient.sys().plugins().remove(type, name, version);
+        return Uni.createFrom().completionStage(vaultClient.sys().plugins().remove(type, name, version));
     }
 }

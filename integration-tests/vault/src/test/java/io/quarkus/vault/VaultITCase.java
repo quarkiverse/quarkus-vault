@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.StreamSupport;
 
 import jakarta.inject.Inject;
@@ -90,7 +91,7 @@ public class VaultITCase {
     String someSecretThroughIndirection;
 
     @Test
-    public void credentialsProvider() {
+    public void credentialsProvider() throws Exception {
         Map<String, String> staticCredentials = credentialsProvider.getCredentials("static");
         assertEquals("{" + PASSWORD_PROPERTY_NAME + "=" + DB_PASSWORD + "}", staticCredentials.toString());
 
@@ -100,7 +101,7 @@ public class VaultITCase {
     }
 
     @Test
-    public void config() {
+    public void config() throws Exception {
         assertEquals(DB_PASSWORD, someSecret);
 
         Config config = ConfigProviderResolver.instance().getConfig();
@@ -117,7 +118,7 @@ public class VaultITCase {
     }
 
     @Test
-    public void configPropertyIndirection() {
+    public void configPropertyIndirection() throws Exception {
         assertEquals(DB_PASSWORD, someSecretThroughIndirection);
 
         Config config = ConfigProviderResolver.instance().getConfig();
@@ -126,7 +127,7 @@ public class VaultITCase {
     }
 
     @Test
-    public void configPropertyScalar() {
+    public void configPropertyScalar() throws Exception {
         Config config = ConfigProviderResolver.instance().getConfig();
         assertTrue(config.getValue("my-enabled", Boolean.class));
         assertTrue(config.getOptionalValue("my-foo", String.class).isEmpty());
@@ -135,13 +136,13 @@ public class VaultITCase {
     }
 
     @Test
-    public void secret() {
+    public void secret() throws Exception {
         Map<String, String> secrets = kvSecretEngine.readSecret(APP_SECRET_PATH);
         assertEquals("{" + SECRET_KEY + "=" + SECRET_VALUE + "}", secrets.toString());
     }
 
     @Test
-    public void crudSecret() {
+    public void crudSecret() throws Exception {
         VaultTestExtension.assertCrudSecret(kvSecretEngine);
     }
 
@@ -151,21 +152,26 @@ public class VaultITCase {
     }
 
     @Test
-    public void httpclient() {
+    public void httpclient() throws Exception {
 
         var anotherWrappingToken = ConfigProviderResolver.instance().getConfig()
                 .getValue("vault-test.another-password-kv-v2-wrapping-token", String.class);
         var unwrap = vaultClient.sys().wrapping()
                 .unwrapAs(anotherWrappingToken, VaultSecretsKV2ReadSecretData.class)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals(VAULT_AUTH_USERPASS_PASSWORD, unwrap.getData().get("password"));
         try {
             vaultClient.sys().wrapping().unwrapAs(anotherWrappingToken, VaultSecretsKV2ReadSecretData.class)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
             fail("expected error 400: wrapping token is not valid or does not exist");
-        } catch (VaultClientException e) {
+        } catch (ExecutionException e) {
             // fails on second unwrap attempt
-            assertEquals(400, e.getStatus());
+            if (e.getCause() instanceof VaultClientException) {
+                VaultClientException vce = (VaultClientException) e.getCause();
+                assertEquals(400, vce.getStatus());
+            } else {
+                throw e;
+            }
         }
 
         String appRoleRoleId = ConfigProviderResolver.instance().getConfig()
@@ -173,7 +179,7 @@ public class VaultITCase {
         String appRoleSecretId = ConfigProviderResolver.instance().getConfig()
                 .getValue("vault-test.secret-id", String.class);
         var vaultAppRoleAuth = vaultClient.auth().appRole().login(appRoleRoleId, appRoleSecretId)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         var appRoleClientToken = vaultAppRoleAuth.getClientToken();
         assertNotNull(appRoleClientToken);
         log.info("appRoleClientToken = " + appRoleClientToken);
@@ -188,7 +194,7 @@ public class VaultITCase {
         assertTransit(appRoleClient);
 
         var vaultUserPassAuth = vaultClient.auth().userPass().login(VAULT_AUTH_USERPASS_USER, VAULT_AUTH_USERPASS_PASSWORD)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         String userPassClientToken = vaultUserPassAuth.getClientToken();
         log.info("userPassClientToken = " + userPassClientToken);
         assertNotNull(userPassClientToken);
@@ -202,16 +208,16 @@ public class VaultITCase {
         assertWrap(userPassClient);
     }
 
-    private void assertWrap(VaultClient vaultClient) {
+    private void assertWrap(VaultClient vaultClient) throws Exception {
         var wrapResult = vaultClient.sys().wrapping().wrap(new WrapExample(), Duration.ofMinutes(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         WrapExample unwrapExample = vaultClient.sys().wrapping().unwrapAs(wrapResult.getToken(), WrapExample.class)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals("bar", unwrapExample.foo);
         assertEquals("zap", unwrapExample.zip);
     }
 
-    private void assertTransit(VaultClient vaultClient) {
+    private void assertTransit(VaultClient vaultClient) throws Exception {
 
         var context = "mycontext".getBytes(StandardCharsets.UTF_8);
 
@@ -222,20 +228,20 @@ public class VaultITCase {
         assertTransitSign(vaultClient, SIGN_KEY_NAME, context);
 
         vaultClient.secrets().transit().rotateKey(ENCRYPTION_KEY_NAME, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertHash(vaultClient);
     }
 
-    private void assertHash(VaultClient vaultClient) {
+    private void assertHash(VaultClient vaultClient) throws Exception {
         var data = "coucou".getBytes(StandardCharsets.UTF_8);
         var hash = vaultClient.secrets().transit().hash(VaultHashAlgorithm.SHA2_512, data, VaultFormat.BASE64)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         String expected = "4FrxOZ9PS+t5NMnxK6WpyI9+4ejvP+ehZ75Ll5xRXSQQKtkNOgdU1I/Fkw9jaaMIfmhulzLvNGDmQ5qVCJtIAA==";
         assertEquals(expected, hash);
     }
 
-    private void assertTransitSign(VaultClient vaultClient, String keyName, byte[] context) {
+    private void assertTransitSign(VaultClient vaultClient, String keyName, byte[] context) throws Exception {
 
         String data = "coucou";
 
@@ -244,7 +250,7 @@ public class VaultITCase {
                 .setContext(context);
 
         var sign = vaultClient.secrets().transit().sign(keyName, signParams)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var verifyParams = new VaultSecretsTransitVerifyParams()
                 .setInput(data.getBytes(StandardCharsets.UTF_8))
@@ -252,11 +258,11 @@ public class VaultITCase {
                 .setSignature(sign.getSignature());
 
         var verify = vaultClient.secrets().transit().verify(keyName, verifyParams)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertTrue(verify);
     }
 
-    private void assertTransitEncryption(VaultClient vaultClient, String keyName, byte[] context) {
+    private void assertTransitEncryption(VaultClient vaultClient, String keyName, byte[] context) throws Exception {
 
         String data = "coucou";
 
@@ -264,7 +270,7 @@ public class VaultITCase {
                 .setPlaintext(data.getBytes(StandardCharsets.UTF_8))
                 .setContext(context);
         var encryptBatchResult = vaultClient.secrets().transit().encrypt(keyName, encryptParams)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         String ciphertext = encryptBatchResult.getCiphertext();
 
         String batchDecryptedString = decrypt(vaultClient, keyName, ciphertext, context);
@@ -274,31 +280,31 @@ public class VaultITCase {
                 .setCiphertext(ciphertext)
                 .setContext(context);
         var rewrap = vaultClient.secrets().transit().rewrap(keyName, rewrapParams)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         String rewrappedCiphertext = rewrap.getCiphertext();
 
         batchDecryptedString = decrypt(vaultClient, keyName, rewrappedCiphertext, context);
         assertEquals(data, batchDecryptedString);
     }
 
-    private String decrypt(VaultClient vaultClient, String keyName, String ciphertext, byte[] context) {
+    private String decrypt(VaultClient vaultClient, String keyName, String ciphertext, byte[] context) throws Exception {
         var params = new VaultSecretsTransitDecryptParams()
                 .setCiphertext(ciphertext)
                 .setContext(context);
         var decryptBatchResult = vaultClient.secrets().transit().decrypt(keyName, params)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         return new String(decryptBatchResult, StandardCharsets.UTF_8);
     }
 
     private void assertDynamicCredentials(VaultClient vaultClient, String mount, String role,
-            VaultAuthenticationType authType) {
+            VaultAuthenticationType authType) throws Exception {
 
         VaultLeasedResult<?, ?> dynCreds;
 
         switch (mount) {
             case DATABASE_DEFAULT_MOUNT:
                 var dbCreds = vaultClient.secrets().database(mount).generateCredentials(role)
-                        .await().indefinitely();
+                        .toCompletableFuture().get();
                 dynCreds = dbCreds;
                 String dbUsername = Objects.toString(dbCreds.getData().get("username"));
                 assertTrue(dbUsername.startsWith("v-" + authType.name().toLowerCase() + "-" + role + "-"));
@@ -306,7 +312,7 @@ public class VaultITCase {
 
             case RABBITMQ_DEFAULT_MOUNT:
                 var rmqCreds = vaultClient.secrets().rabbitMQ(mount).generateCredentials(role)
-                        .await().indefinitely();
+                        .toCompletableFuture().get();
                 dynCreds = rmqCreds;
                 String rmqUsername = rmqCreds.getData().getUsername();
                 assertTrue(rmqUsername.startsWith(authType.name().toLowerCase() + "-"));
@@ -318,57 +324,57 @@ public class VaultITCase {
         }
 
         var vaultLeasesLookup = vaultClient.sys().leases().read(dynCreds.getLeaseId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals(dynCreds.getLeaseId(), vaultLeasesLookup.getId());
 
         var vaultRenewLease = vaultClient.sys().leases().renew(dynCreds.getLeaseId(), null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals(dynCreds.getLeaseId(), vaultRenewLease.getLeaseId());
     }
 
-    private void assertKvSecrets(VaultClient vaultClient) {
+    private void assertKvSecrets(VaultClient vaultClient) throws Exception {
         var kv1 = vaultClient.secrets().kv1(SECRET_PATH_V1);
         var kv2 = vaultClient.secrets().kv2(SECRET_PATH_V2);
 
         var secretV1 = kv1.read(APP_SECRET_PATH)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals(SECRET_VALUE, secretV1.get(SECRET_KEY));
         var vaultKvListSecretsV1 = kv1.list(LIST_PATH)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals(EXPECTED_SUB_PATHS, vaultKvListSecretsV1.toString());
-        var fooJsonV1 = kv1.read("foo-json").await().indefinitely();
+        var fooJsonV1 = kv1.read("foo-json").toCompletableFuture().get();
         assertEquals("{hello={foo=bar}}", fooJsonV1.toString());
-        var configJsonV1 = kv1.read("config-json").await().indefinitely();
+        var configJsonV1 = kv1.read("config-json").toCompletableFuture().get();
         assertTrue((boolean) configJsonV1.get("isEnabled"));
 
         var secretV2 = kv2.readSecret(APP_SECRET_PATH)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals(SECRET_VALUE, secretV2.getData().get(SECRET_KEY));
-        var vaultKvListSecretsV2 = kv2.listSecrets(LIST_PATH).await().indefinitely();
+        var vaultKvListSecretsV2 = kv2.listSecrets(LIST_PATH).toCompletableFuture().get();
         assertEquals(EXPECTED_SUB_PATHS, vaultKvListSecretsV2.toString());
-        var fooJsonV2 = kv2.readSecret("foo-json").await().indefinitely();
+        var fooJsonV2 = kv2.readSecret("foo-json").toCompletableFuture().get();
         assertEquals("{hello={foo=bar}}", fooJsonV2.getData().toString());
-        var configJsonV2 = kv2.readSecret("config-json").await().indefinitely();
+        var configJsonV2 = kv2.readSecret("config-json").toCompletableFuture().get();
         assertTrue((boolean) configJsonV2.getData().get("isEnabled"));
     }
 
-    private void assertTokenUserPass(VaultClient vaultClient) {
+    private void assertTokenUserPass(VaultClient vaultClient) throws Exception {
         var vaultLookupSelf = vaultClient.auth().token().lookupSelf()
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals("auth/" + USERPASS.name().toLowerCase() + "/login/" + VAULT_AUTH_USERPASS_USER, vaultLookupSelf.getPath());
 
         var vaultRenewSelf = vaultClient.auth().token().renewSelf(Duration.ofHours(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals(VAULT_AUTH_USERPASS_USER, vaultRenewSelf.getMetadata().get("username"));
     }
 
-    private void assertTokenAppRole(VaultClient vaultClient) {
+    private void assertTokenAppRole(VaultClient vaultClient) throws Exception {
         var vaultLookupSelf = vaultClient.auth().token().lookupSelf()
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals("auth/approle/login", vaultLookupSelf.getPath());
 
         var vaultRenewSelf = vaultClient.auth().token().renewSelf(Duration.ofHours(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertEquals(VAULT_AUTH_APPROLE, vaultRenewSelf.getMetadata().get("role_name"));
     }
 }

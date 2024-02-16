@@ -11,22 +11,22 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSysPoliciesTest {
 
     @Test
-    public void testList(VaultClient client) {
+    public void testList(VaultClient client) throws Exception {
         var policyApi = client.sys().policy();
 
         var policies = policyApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(policies)
                 .contains("root", "default");
     }
 
     @Test
-    public void testRead(VaultClient client) {
+    public void testRead(VaultClient client) throws Exception {
         var policyApi = client.sys().policy();
 
         var policy = policyApi.read("default")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(policy)
                 .isNotNull();
@@ -41,7 +41,7 @@ public class VaultSysPoliciesTest {
     }
 
     @Test
-    public void testUpdate(VaultClient client, @Random String policy) {
+    public void testUpdate(VaultClient client, @Random String policy) throws Exception {
         var policyApi = client.sys().policy();
 
         var rules = """
@@ -51,16 +51,16 @@ public class VaultSysPoliciesTest {
                 """;
 
         policyApi.update(policy, rules)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(policyApi.read(policy)
-                .await().indefinitely()
+                .toCompletableFuture().get()
                 .getRules())
                 .isEqualTo(rules);
     }
 
     @Test
-    public void testDelete(VaultClient client, @Random String policy) {
+    public void testDelete(VaultClient client, @Random String policy) throws Exception {
         var policyApi = client.sys().policy();
 
         var rules = """
@@ -70,15 +70,15 @@ public class VaultSysPoliciesTest {
                 """;
 
         policyApi.update(policy, rules)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
-        assertThat(policyApi.list().await().indefinitely())
+        assertThat(policyApi.list().toCompletableFuture().get())
                 .contains(policy);
 
         policyApi.delete(policy)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
-        assertThat(policyApi.list().await().indefinitely())
+        assertThat(policyApi.list().toCompletableFuture().get())
                 .doesNotContain(policy);
     }
 }

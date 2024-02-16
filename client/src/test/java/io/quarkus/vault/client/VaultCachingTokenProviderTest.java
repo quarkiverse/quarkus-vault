@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +17,6 @@ import io.quarkus.vault.client.auth.VaultToken;
 import io.quarkus.vault.client.auth.VaultTokenProvider;
 import io.quarkus.vault.client.test.TickableInstanceSource;
 import io.quarkus.vault.client.test.VaultClientTest;
-import io.smallrye.mutiny.Uni;
 
 @VaultClientTest
 public class VaultCachingTokenProviderTest {
@@ -23,15 +24,15 @@ public class VaultCachingTokenProviderTest {
     private static final TickableInstanceSource tickableInstanceSource = new TickableInstanceSource(Instant.now());
 
     @Test
-    public void testExpiredTokensAreRequestedAgain(VaultClient client) {
+    public void testExpiredTokensAreRequestedAgain(VaultClient client) throws Exception {
 
         var token = client.auth().token().create(null)
-                .map(a -> VaultToken.from(a.getClientToken(), true, Duration.ofMinutes(1), tickableInstanceSource))
-                .await().indefinitely();
+                .thenApply(a -> VaultToken.from(a.getClientToken(), true, Duration.ofMinutes(1), tickableInstanceSource))
+                .toCompletableFuture().get();
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
-            public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
-                return Uni.createFrom().item(token);
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                return CompletableFuture.completedStage(token);
             }
         });
         var cachingTokenProvider = spy(new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30)));
@@ -45,7 +46,7 @@ public class VaultCachingTokenProviderTest {
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
 
         verify(executor, times(10))
@@ -61,7 +62,7 @@ public class VaultCachingTokenProviderTest {
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
 
         verify(executor, times(20))
@@ -75,18 +76,19 @@ public class VaultCachingTokenProviderTest {
     }
 
     @Test
-    public void testExpiringTokensRenew(VaultClient client) {
+    public void testExpiringTokensRenew(VaultClient client) throws Exception {
 
         var token = client.auth().token().create(new VaultAuthTokenCreateTokenParams()
                 .setTtl(Duration.ofMinutes(1))
                 .setRenewable(true))
-                .map(a -> VaultToken.from(a.getClientToken(), a.isRenewable(), a.getLeaseDuration(), tickableInstanceSource))
-                .await().indefinitely();
+                .thenApply(
+                        a -> VaultToken.from(a.getClientToken(), a.isRenewable(), a.getLeaseDuration(), tickableInstanceSource))
+                .toCompletableFuture().get();
         //noinspection Convert2Lambda
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
-            public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
-                return Uni.createFrom().item(token);
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                return CompletableFuture.completedStage(token);
             }
         });
         var cachingTokenProvider = spy(new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30)));
@@ -100,7 +102,7 @@ public class VaultCachingTokenProviderTest {
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
 
         verify(executor, times(10))
@@ -116,7 +118,7 @@ public class VaultCachingTokenProviderTest {
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
 
         verify(executor, times(21))
@@ -130,17 +132,18 @@ public class VaultCachingTokenProviderTest {
     }
 
     @Test
-    public void testExpiredNonRenewableTokensAreRequestedAgain(VaultClient client) {
+    public void testExpiredNonRenewableTokensAreRequestedAgain(VaultClient client) throws Exception {
 
         var token = client.auth().token().create(new VaultAuthTokenCreateTokenParams()
                 .setTtl(Duration.ofMinutes(5))
                 .setRenewable(false))
-                .map(a -> VaultToken.from(a.getClientToken(), a.isRenewable(), Duration.ofMinutes(1), tickableInstanceSource))
-                .await().indefinitely();
+                .thenApply(a -> VaultToken.from(a.getClientToken(), a.isRenewable(), Duration.ofMinutes(1),
+                        tickableInstanceSource))
+                .toCompletableFuture().get();
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
-            public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
-                return Uni.createFrom().item(token);
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                return CompletableFuture.completedStage(token);
             }
         });
         var cachingTokenProvider = spy(new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30)));
@@ -154,7 +157,7 @@ public class VaultCachingTokenProviderTest {
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
 
         verify(executor, times(10))
@@ -170,7 +173,7 @@ public class VaultCachingTokenProviderTest {
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
 
         verify(executor, times(20))
@@ -184,15 +187,16 @@ public class VaultCachingTokenProviderTest {
     }
 
     @Test
-    public void testExpiringTokensFailingToRenewAreRequestedAgain(VaultClient client) {
+    public void testExpiringTokensFailingToRenewAreRequestedAgain(VaultClient client) throws Exception {
 
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
-            public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
                 return client.auth().token().create(new VaultAuthTokenCreateTokenParams()
                         .setTtl(Duration.ofSeconds(30))
                         .setRenewable(false))
-                        .map(a -> VaultToken.from(a.getClientToken(), true, Duration.ofMinutes(1), tickableInstanceSource));
+                        .thenApply(
+                                a -> VaultToken.from(a.getClientToken(), true, Duration.ofMinutes(1), tickableInstanceSource));
             }
         });
         var cachingTokenProvider = spy(new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30)));
@@ -206,7 +210,7 @@ public class VaultCachingTokenProviderTest {
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
 
         verify(executor, times(10))
@@ -222,7 +226,7 @@ public class VaultCachingTokenProviderTest {
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
 
         verify(executor, times(21))

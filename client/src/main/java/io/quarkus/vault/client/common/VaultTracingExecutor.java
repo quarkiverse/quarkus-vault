@@ -2,10 +2,10 @@ package io.quarkus.vault.client.common;
 
 import static java.lang.System.lineSeparator;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import io.smallrye.mutiny.Uni;
 
 public class VaultTracingExecutor implements VaultRequestExecutor {
 
@@ -18,15 +18,19 @@ public class VaultTracingExecutor implements VaultRequestExecutor {
     }
 
     @Override
-    public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
+    public <T> CompletionStage<VaultResponse<T>> execute(VaultRequest<T> request) {
         log.info("Executing: " + request.getOperation() + lineSeparator() + getCurlFormattedRequest(request));
         return delegate.execute(request)
-                .onItem().invoke((response) -> {
+                .thenApply((response) -> {
                     var message = "Response: " + request.getOperation() + lineSeparator() + getHTTPFormattedResponse(response)
                             + lineSeparator();
                     log.log(response.isSuccessful() ? Level.INFO : Level.WARNING, message);
+                    return response;
                 })
-                .onFailure().invoke((error) -> log.info("Request failed: " + error));
+                .exceptionallyCompose(error -> {
+                    log.log(Level.SEVERE, "Request failed: " + error);
+                    return CompletableFuture.failedStage(error);
+                });
     }
 
     private String getCurlFormattedRequest(VaultRequest<?> request) {

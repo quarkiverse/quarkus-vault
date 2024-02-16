@@ -3,16 +3,16 @@ package io.quarkus.vault.client.auth;
 import static io.quarkus.vault.client.auth.VaultCachingTokenProvider.DEFAULT_RENEW_GRACE_PERIOD;
 
 import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.auth.unwrap.VaultClientTokenUnwrappingProvider;
 import io.quarkus.vault.client.auth.unwrap.VaultValueProvider;
-import io.smallrye.mutiny.Uni;
 
 public class VaultStaticClientTokenAuthOptions extends VaultAuthOptions {
 
     public static class Builder {
-        private Function<VaultAuthRequest, Uni<String>> tokenProvider;
+        private Function<VaultAuthRequest, CompletionStage<String>> tokenProvider;
         private Duration cachingRenewGracePeriod = DEFAULT_RENEW_GRACE_PERIOD;
 
         public Builder token(String token) {
@@ -25,7 +25,7 @@ public class VaultStaticClientTokenAuthOptions extends VaultAuthOptions {
             return this;
         }
 
-        public Builder customTokenProvider(Function<VaultAuthRequest, Uni<String>> tokenProvider) {
+        public Builder customTokenProvider(Function<VaultAuthRequest, CompletionStage<String>> tokenProvider) {
             this.tokenProvider = tokenProvider;
             return this;
         }
@@ -45,7 +45,7 @@ public class VaultStaticClientTokenAuthOptions extends VaultAuthOptions {
         }
     }
 
-    public final Function<VaultAuthRequest, Uni<String>> tokenProvider;
+    public final Function<VaultAuthRequest, CompletionStage<String>> tokenProvider;
 
     private VaultStaticClientTokenAuthOptions(Builder builder) {
         super(builder.cachingRenewGracePeriod);

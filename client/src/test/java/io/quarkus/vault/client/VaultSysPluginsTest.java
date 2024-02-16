@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,10 +26,10 @@ public class VaultSysPluginsTest {
                 .setEnv(List.of("ENV1=VALUE1", "ENV2=VALUE2"))
                 .setSha256(VaultClientTestExtension.getPluginSha256())
                 .setVersion("v1.0.0"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plugins = pluginsApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(plugins.getAuth())
                 .contains("approle");
@@ -77,33 +78,33 @@ public class VaultSysPluginsTest {
     }
 
     @Test
-    public void testListAuths(VaultClient client) {
+    public void testListAuths(VaultClient client) throws Exception {
         var pluginsApi = client.sys().plugins();
 
         var plugins = pluginsApi.listAuth()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(plugins)
                 .contains("approle");
     }
 
     @Test
-    public void testListDatabases(VaultClient client) {
+    public void testListDatabases(VaultClient client) throws Exception {
         var pluginsApi = client.sys().plugins();
 
         var plugins = pluginsApi.listDatabase()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(plugins)
                 .contains("mysql-database-plugin");
     }
 
     @Test
-    public void testListSecrets(VaultClient client) {
+    public void testListSecrets(VaultClient client) throws Exception {
         var pluginsApi = client.sys().plugins();
 
         var plugins = pluginsApi.listSecret()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(plugins)
                 .contains("kv");
@@ -120,10 +121,10 @@ public class VaultSysPluginsTest {
                 .setArgs(List.of("--arg1", "--arg2"))
                 .setEnv(List.of("ENV1=VALUE1", "ENV2=VALUE2"))
                 .setSha256(pluginSha256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pluginInfo = pluginsApi.read("secret", pluginName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(pluginInfo)
                 .isNotNull();
@@ -142,11 +143,11 @@ public class VaultSysPluginsTest {
     }
 
     @Test
-    public void testReadBuiltin(VaultClient client) {
+    public void testReadBuiltin(VaultClient client) throws Exception {
         var pluginsApi = client.sys().plugins();
 
         var pluginInfo = pluginsApi.read("secret", "kv")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(pluginInfo)
                 .isNotNull();
@@ -175,10 +176,10 @@ public class VaultSysPluginsTest {
                 .setArgs(List.of("--arg1", "--arg2"))
                 .setSha256(pluginSha256)
                 .setVersion("v1.0.0"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pluginInfo = pluginsApi.read("secret", pluginName, "v1.0.0")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(pluginInfo)
                 .isNotNull();
@@ -204,18 +205,19 @@ public class VaultSysPluginsTest {
                 .setCommand("test-plugin")
                 .setArgs(List.of("--arg1", "--arg2"))
                 .setSha256(pluginSha256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pluginInfo = pluginsApi.read("secret", pluginName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertThat(pluginInfo)
                 .isNotNull();
 
         pluginsApi.remove("secret", pluginName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatCode(() -> pluginsApi.read("secret", pluginName)
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 404);
     }
@@ -231,18 +233,19 @@ public class VaultSysPluginsTest {
                 .setArgs(List.of("--arg1", "--arg2"))
                 .setSha256(pluginSha256)
                 .setVersion("v1.0.0"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var pluginInfo = pluginsApi.read("secret", pluginName, "v1.0.0")
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertThat(pluginInfo)
                 .isNotNull();
 
         pluginsApi.remove("secret", pluginName, "v1.0.0")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatCode(() -> pluginsApi.read("secret", pluginName, "v1.0.0")
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 404);
     }
@@ -258,10 +261,10 @@ public class VaultSysPluginsTest {
                 .setArgs(List.of("--arg1", "--arg2"))
                 .setSha256(pluginSha256)
                 .setVersion("v1.0.0"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pluginsApi.reloadPlugin(pluginName, "global")
-                .await().indefinitely();
+                .toCompletableFuture().get();
     }
 
     @Test
@@ -275,12 +278,12 @@ public class VaultSysPluginsTest {
                 .setArgs(List.of("--arg1", "--arg2"))
                 .setSha256(pluginSha256)
                 .setVersion("v1.0.0"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.sys().mounts().enable(mount, pluginName, null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         pluginsApi.reloadPlugin(pluginName, "global")
-                .await().indefinitely();
+                .toCompletableFuture().get();
     }
 }

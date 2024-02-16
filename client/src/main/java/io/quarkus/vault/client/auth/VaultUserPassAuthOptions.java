@@ -4,18 +4,18 @@ import static io.quarkus.vault.client.api.VaultAuthAccessor.DEFAULT_USERPASS_MOU
 import static io.quarkus.vault.client.auth.VaultCachingTokenProvider.DEFAULT_RENEW_GRACE_PERIOD;
 
 import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.auth.unwrap.VaultKeyValueUnwrappingValueProvider;
 import io.quarkus.vault.client.auth.unwrap.VaultValueProvider;
-import io.smallrye.mutiny.Uni;
 
 public class VaultUserPassAuthOptions extends VaultAuthOptions {
 
     public static class Builder {
         private String mountPath = DEFAULT_USERPASS_MOUNT_PATH;
         private String username;
-        private Function<VaultAuthRequest, Uni<String>> passwordProvider;
+        private Function<VaultAuthRequest, CompletionStage<String>> passwordProvider;
         private Duration cachingRenewGracePeriod = DEFAULT_RENEW_GRACE_PERIOD;
 
         public Builder mountPath(String mountPath) {
@@ -42,7 +42,7 @@ public class VaultUserPassAuthOptions extends VaultAuthOptions {
             return this;
         }
 
-        public Builder customPasswordProvider(Function<VaultAuthRequest, Uni<String>> passwordProvider) {
+        public Builder customPasswordProvider(Function<VaultAuthRequest, CompletionStage<String>> passwordProvider) {
             this.passwordProvider = passwordProvider;
             return this;
         }
@@ -65,7 +65,7 @@ public class VaultUserPassAuthOptions extends VaultAuthOptions {
     public final String mountPath;
 
     public final String username;
-    public final Function<VaultAuthRequest, Uni<String>> passwordProvider;
+    public final Function<VaultAuthRequest, CompletionStage<String>> passwordProvider;
 
     private VaultUserPassAuthOptions(Builder builder) {
         super(builder.cachingRenewGracePeriod);

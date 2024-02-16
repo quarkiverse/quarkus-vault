@@ -6,8 +6,7 @@ import java.net.ConnectException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -17,7 +16,6 @@ import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultRequestExecutor;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.json.JsonMapping;
-import io.smallrye.mutiny.Uni;
 
 public abstract class VaultHttpClient implements VaultRequestExecutor, AutoCloseable {
 
@@ -25,10 +23,10 @@ public abstract class VaultHttpClient implements VaultRequestExecutor, AutoClose
     public static final String X_VAULT_WRAP_TTL = "X-Vault-Wrap-TTL";
     public static final String X_VAULT_NAMESPACE = "X-Vault-Namespace";
 
-    protected <T> Uni<VaultResponse<T>> buildResponse(VaultRequest<T> request, int statusCode,
+    protected <T> CompletionStage<VaultResponse<T>> buildResponse(VaultRequest<T> request, int statusCode,
             Collection<Map.Entry<String, String>> headers, byte[] body) {
-        return Uni.createFrom().nullItem()
-                .map(none -> {
+        return CompletableFuture.completedStage(null)
+                .thenApply(none -> {
                     var response = new VaultResponse<>(request, statusCode, List.copyOf(headers), body);
 
                     if (!response.isStatusCodeExpected() && !response.isUpgradedResponse()) {
@@ -37,20 +35,23 @@ public abstract class VaultHttpClient implements VaultRequestExecutor, AutoClose
 
                     return response;
                 })
-                .onFailure(JsonProcessingException.class)
-                .transform(x -> new VaultClientException(request, statusCode, List.of("Failed to parse response body"), x))
-                .onFailure(io.smallrye.mutiny.TimeoutException.class)
-                .transform(x -> new VaultClientException(request, statusCode, List.of("Request timed out"), x))
-                .onFailure(CompletionException.class).transform(e -> {
-                    if (e.getCause() instanceof ConnectException) {
-                        // unable to establish connection
-                        return new VaultClientException(request, statusCode, List.of("Unable to establish connection"), e);
-                    } else if (e.getCause() instanceof TimeoutException) {
-                        // timeout on request - see HttpRequest.timeout(long)
-                        return new VaultClientException(request, statusCode, List.of("HTTP request timed out"), e);
-                    } else {
-                        return e;
+                .exceptionallyCompose(x -> {
+                    // Unwrap CompletionException
+                    if (x instanceof CompletionException || x instanceof ExecutionException) {
+                        x = x.getCause();
                     }
+
+                    if (x instanceof JsonProcessingException) {
+                        x = new VaultClientException(request, statusCode, List.of("Failed to parse response body"), x);
+                    } else if (x instanceof ConnectException) {
+                        // unable to establish connection
+                        x = new VaultClientException(request, statusCode, List.of("Unable to establish connection"), x);
+                    } else if (x instanceof TimeoutException) {
+                        // timeout on request - see HttpRequest.timeout(long)
+                        x = new VaultClientException(request, statusCode, List.of("HTTP request timed out"), x);
+                    }
+
+                    return CompletableFuture.failedStage(x);
                 });
     }
 

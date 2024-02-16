@@ -3,6 +3,7 @@ package io.quarkus.vault.generator;
 import static io.quarkus.vault.generator.utils.Strings.capitalize;
 
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -16,7 +17,7 @@ import io.quarkus.vault.generator.model.Operation;
 
 public class APIContract extends BaseAPIGenerator implements APIGenerator.Contract {
 
-    private static final ClassName UNI_TYPE_NAME = ClassName.get("io.smallrye.mutiny", "Uni");
+    private static final ClassName CS_TYPE_NAME = ClassName.get(CompletionStage.class);
 
     private final ClassName apiName;
     private final ClassName mountableApiName;
@@ -93,7 +94,7 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
 
     @Override
     public TypeName operationReturnTypeName(TypeName type) {
-        return typeName(UNI_TYPE_NAME, type);
+        return typeName(CS_TYPE_NAME, type);
     }
 
     @Override
@@ -129,11 +130,11 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
         body.add("$[return executor.execute(factory.$L($L))\n", operation.name(),
                 parameterNames.map(CodeBlock::of).collect(CodeBlock.joining(", ")));
 
-        body.add(".map($T::getResult)", responseTypeName);
+        body.add(".thenApply($T::getResult)", responseTypeName);
 
         if (operation.result().isPresent() && operation.result().get() instanceof Operation.LeasedResult leasedResult) {
             if (leasedResult.unwrapUsing().isPresent()) {
-                body.add(".map(r -> ");
+                body.add(".thenApply(r -> ");
 
                 var unwrapUsingArguments = leasedResult.unwrapUsingArguments().orElse(List.of()).stream()
                         .map(argument -> {
@@ -147,9 +148,9 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
 
                 body.add(")");
             } else if (leasedResult.unwrapData().orElse(false)) {
-                body.add(".map($T::getData)", typeName("$$.api.common.VaultLeasedResult"));
+                body.add(".thenApply($T::getData)", typeName("$$.api.common.VaultLeasedResult"));
             } else if (leasedResult.unwrapAuth().orElse(false)) {
-                body.add(".map($T::getAuth)", typeName("$$.api.common.VaultLeasedResult"));
+                body.add(".thenApply($T::getAuth)", typeName("$$.api.common.VaultLeasedResult"));
             }
         }
 
@@ -163,8 +164,8 @@ public class APIContract extends BaseAPIGenerator implements APIGenerator.Contra
                         }
                     });
 
-            body.add("\n.onFailure($T.INSTANCE)\n", typeName("$$.api.common.VaultNotFoundPredicate"));
-            body.add(".recoverWithItem(() -> " + recoverNotFound.using() + ")", recoverArguments.toArray());
+            body.add("\n.exceptionallyCompose($T.", typeName("$$.api.common.VaultCompletionStages"));
+            body.add("recoverNotFound(() -> " + recoverNotFound.using() + "))", recoverArguments.toArray());
         });
 
         body.add(";$]");

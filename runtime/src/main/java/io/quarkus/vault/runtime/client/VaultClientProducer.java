@@ -2,7 +2,6 @@ package io.quarkus.vault.runtime.client;
 
 import java.nio.file.Path;
 
-import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
@@ -18,7 +17,7 @@ import io.quarkus.vault.client.http.jdk.JDKVaultHttpClient;
 import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
 import io.quarkus.vault.runtime.VaultConfigHolder;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
-import io.vertx.mutiny.core.Vertx;
+import io.vertx.core.Vertx;
 
 @Singleton
 public class VaultClientProducer {
@@ -125,17 +124,6 @@ public class VaultClientProducer {
                     throw new VaultException("Unsupported authentication type: " + config.getAuthenticationType());
             }
         }
-    }
-
-    @Produces
-    @Singleton
-    @Private
-    public Vertx privateVertx() {
-        return Vertx.vertx();
-    }
-
-    public void destroyPrivateVertx(@Disposes @Private Vertx vertx) {
-        vertx.close().await().indefinitely();
     }
 
 }

@@ -11,14 +11,14 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSysRemountTest {
 
     @Test
-    public void testRemountAndStatus(VaultClient client, @Random String path, @Random String newPath) {
+    public void testRemountAndStatus(VaultClient client, @Random String path, @Random String newPath) throws Exception {
         var remountApi = client.sys().remount();
 
         client.sys().mounts().enable(path, "kv", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var remount = remountApi.remount(path, newPath)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(remount)
                 .isNotNull();
@@ -26,7 +26,7 @@ public class VaultSysRemountTest {
                 .isNotEmpty();
 
         var status = remountApi.status(remount.getMigrationId())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(status)
                 .isNotNull();

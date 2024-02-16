@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Network;
@@ -28,7 +29,6 @@ import io.quarkus.vault.client.auth.VaultKubernetesAuthOptions;
 import io.quarkus.vault.client.test.Random;
 import io.quarkus.vault.client.test.VaultClientTest;
 import io.quarkus.vault.client.test.VaultClientTest.Mount;
-import io.smallrye.mutiny.Uni;
 
 @VaultClientTest(auths = {
         @Mount(type = "kubernetes", path = "kubernetes")
@@ -42,7 +42,7 @@ public class VaultAuthKubernetesTest {
             .withNetwork(Network.SHARED);
 
     @Test
-    public void testUpdateRole(VaultClient client, @Random String role) {
+    public void testUpdateRole(VaultClient client, @Random String role) throws Exception {
         var k8sApi = client.auth().kubernetes();
 
         var policyName = createTestPolicy(role, client);
@@ -61,10 +61,10 @@ public class VaultAuthKubernetesTest {
                 .setTokenNumUses(4)
                 .setTokenPeriod(Duration.ofMinutes(30))
                 .setTokenType(VaultTokenType.DEFAULT))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roleInfo = k8sApi.readRole(role)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roleInfo)
                 .isNotNull();
@@ -97,38 +97,38 @@ public class VaultAuthKubernetesTest {
     }
 
     @Test
-    public void testDeleteRole(VaultClient client, @Random String role) {
+    public void testDeleteRole(VaultClient client, @Random String role) throws Exception {
 
         var k8sApi = client.auth().kubernetes();
 
         k8sApi.updateRole(role, new VaultAuthKubernetesUpdateRoleParams()
                 .setBoundServiceAccountNames(List.of("*"))
                 .setBoundServiceAccountNamespaces(List.of("*")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roles = k8sApi.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .contains(role);
 
         k8sApi.deleteRole(role)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         roles = k8sApi.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
         assertThat(roles)
                 .doesNotContain(role);
     }
 
     @Test
-    public void testLogin(VaultClient client, @Random String role) {
+    public void testLogin(VaultClient client, @Random String role) throws Exception {
         var serviceAccount = createServiceAccount(role);
         var policyName = createTestPolicy(role, client);
         configureK8sAuth(role, serviceAccount, policyName, client);
 
         var loginInfo = client.auth().kubernetes().login(role, serviceAccount.token())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(loginInfo)
                 .isNotNull();
@@ -153,7 +153,7 @@ public class VaultAuthKubernetesTest {
     }
 
     @Test
-    public void testReadConfig(VaultClient client) {
+    public void testReadConfig(VaultClient client) throws Exception {
         var k3sInternalConfig = Config.fromKubeconfig(k3s.generateInternalKubeConfigYaml("kubernetes"));
 
         var caCert = new String(Base64.getDecoder().decode(k3sInternalConfig.getCaCertData()), UTF_8);
@@ -164,10 +164,10 @@ public class VaultAuthKubernetesTest {
                 .setIssuer("test-issuer")
                 .setPemKeys(List.of(caCert))
                 .setDisableLocalCaJwt(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var config = client.auth().kubernetes().readConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(config)
                 .isNotNull();
@@ -186,7 +186,7 @@ public class VaultAuthKubernetesTest {
     }
 
     @Test
-    public void testClientLogin(VaultClient rootClient, @Random String role) {
+    public void testClientLogin(VaultClient rootClient, @Random String role) throws Exception {
         var serviceAccount = createServiceAccount(role);
         var policyName = createTestPolicy(role, rootClient);
         configureK8sAuth(role, serviceAccount, policyName, rootClient);
@@ -194,15 +194,15 @@ public class VaultAuthKubernetesTest {
         var k8sClient = rootClient.configure().kubernetes(
                 VaultKubernetesAuthOptions.builder()
                         .role(role)
-                        .jwtProvider(() -> Uni.createFrom().item(serviceAccount.token()))
+                        .jwtProvider(() -> CompletableFuture.completedStage(serviceAccount.token()))
                         .build())
                 .build();
 
         k8sClient.secrets().kv2().updateSecret(role, null, Map.of("foo", "bar"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var secret = k8sClient.secrets().kv2().readSecret(role)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(secret)
                 .isNotNull();
@@ -210,13 +210,14 @@ public class VaultAuthKubernetesTest {
                 .containsEntry("foo", "bar");
     }
 
-    private void configureK8sAuth(String role, ServiceAccountInfo serviceAccount, String policyName, VaultClient client) {
+    private void configureK8sAuth(String role, ServiceAccountInfo serviceAccount, String policyName, VaultClient client)
+            throws Exception {
         var k3sInternalConfig = Config.fromKubeconfig(k3s.generateInternalKubeConfigYaml("kubernetes"));
 
         client.auth().kubernetes().configure(new VaultAuthKubernetesConfigureParams()
                 .setKubernetesHost(k3sInternalConfig.getMasterUrl())
                 .setKubernetesCaCert(new String(Base64.getDecoder().decode(k3sInternalConfig.getCaCertData()), UTF_8)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         client.auth().kubernetes().updateRole(role, new VaultAuthKubernetesUpdateRoleParams()
                 .setBoundServiceAccountNames(List.of(serviceAccount.name()))
@@ -225,17 +226,17 @@ public class VaultAuthKubernetesTest {
                 .setTokenPolicies(List.of(policyName))
                 .setTokenTtl(Duration.ofHours(1))
                 .setTokenMaxTtl(Duration.ofHours(2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
     }
 
-    private String createTestPolicy(String role, VaultClient client) {
+    private String createTestPolicy(String role, VaultClient client) throws Exception {
         var policyName = role + "-policy";
         client.sys().policy().update(policyName, """
                 path "secret/data/%s" {
                   capabilities = ["create", "read", "update", "delete", "list"]
                 }
                 """.formatted(role))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         return policyName;
     }
 

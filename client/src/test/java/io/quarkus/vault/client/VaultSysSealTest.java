@@ -36,7 +36,7 @@ public class VaultSysSealTest {
     }
 
     @Test
-    public void testUnseal() {
+    public void testUnseal() throws Exception {
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
 
             var client = VaultClient.builder()
@@ -47,7 +47,7 @@ public class VaultSysSealTest {
             var initApi = client.sys().init();
 
             var info = initApi.status()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(info.isInitialized())
                     .isFalse();
@@ -55,7 +55,7 @@ public class VaultSysSealTest {
             var init = initApi.init(new VaultSysInitParams()
                     .setSecretThreshold(3)
                     .setSecretShares(5))
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(init.getKeys())
                     .hasSize(5);
@@ -67,21 +67,21 @@ public class VaultSysSealTest {
             var sealApi = client.sys().seal();
 
             var unseal1 = sealApi.unseal(init.getKeys().get(0), false, false)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
             assertThat(unseal1.isSealed())
                     .isTrue();
             assertThat(unseal1.getProgress())
                     .isEqualTo(1);
 
             var unseal2 = sealApi.unseal(init.getKeys().get(2), false, false)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
             assertThat(unseal2.isSealed())
                     .isTrue();
             assertThat(unseal2.getProgress())
                     .isEqualTo(2);
 
             var unseal3 = sealApi.unseal(init.getKeys().get(4), false, false)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
             assertThat(unseal3.isSealed())
                     .isFalse();
             assertThat(unseal3.getProgress())
@@ -90,7 +90,7 @@ public class VaultSysSealTest {
     }
 
     @Test
-    public void testSeal() {
+    public void testSeal() throws Exception {
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
 
             var client = VaultClient.builder()
@@ -103,7 +103,7 @@ public class VaultSysSealTest {
             var initApi = client.sys().init();
 
             var info = initApi.status()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(info.isInitialized())
                     .isFalse();
@@ -111,7 +111,7 @@ public class VaultSysSealTest {
             var init = initApi.init(new VaultSysInitParams()
                     .setSecretThreshold(2)
                     .setSecretShares(3))
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(init.getKeys())
                     .hasSize(3);
@@ -121,12 +121,12 @@ public class VaultSysSealTest {
             var sealApi = client.sys().seal();
 
             var unseal1 = sealApi.unseal(init.getKeys().get(0), false, false)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
             assertThat(unseal1.isSealed())
                     .isTrue();
 
             var unseal2 = sealApi.unseal(init.getKeys().get(1), false, false)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
             assertThat(unseal2.isSealed())
                     .isFalse();
 
@@ -135,17 +135,17 @@ public class VaultSysSealTest {
             sealApi = client.configure().clientToken(init.getRootToken()).build().sys().seal();
 
             sealApi.seal()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             var status = sealApi.status()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
             assertThat(status.isSealed())
                     .isTrue();
         }
     }
 
     @Test
-    public void testBackendStatus() {
+    public void testBackendStatus() throws Exception {
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
 
             var client = VaultClient.builder()
@@ -156,7 +156,7 @@ public class VaultSysSealTest {
             var initApi = client.sys().init();
 
             var info = initApi.status()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(info.isInitialized())
                     .isFalse();
@@ -164,7 +164,7 @@ public class VaultSysSealTest {
             var init = initApi.init(new VaultSysInitParams()
                     .setSecretThreshold(3)
                     .setSecretShares(5))
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(init.getKeys())
                     .hasSize(5);
@@ -176,7 +176,7 @@ public class VaultSysSealTest {
             var sealApi = client.sys().seal();
 
             var status = sealApi.backendStatus()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             assertThat(status.isHealthy())
                     .isTrue();

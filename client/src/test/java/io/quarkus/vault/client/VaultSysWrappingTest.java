@@ -17,10 +17,10 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSysWrappingTest {
 
     @Test
-    public void testApiWrapping(VaultClient client) {
+    public void testApiWrapping(VaultClient client) throws Exception {
 
         var wrapInfo = client.auth().token().wrapping(Duration.ofMinutes(1), f -> f.create(null))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(wrapInfo)
                 .isNotNull();
@@ -34,7 +34,7 @@ public class VaultSysWrappingTest {
                 .isEqualTo("auth/token/create");
 
         var unwrapped = client.sys().wrapping().unwrapAs(wrapInfo.getToken(), VaultAuthTokenCreateAuthResult.class)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(unwrapped)
                 .isNotNull();
@@ -63,11 +63,11 @@ public class VaultSysWrappingTest {
     }
 
     @Test
-    public void testWrap(VaultClient client) {
+    public void testWrap(VaultClient client) throws Exception {
         var wrappingApi = client.sys().wrapping();
 
         var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofMinutes(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(wrapped.getToken())
                 .isNotEmpty();
@@ -80,17 +80,17 @@ public class VaultSysWrappingTest {
     }
 
     @Test
-    public void testLookup(VaultClient client) {
+    public void testLookup(VaultClient client) throws Exception {
         var wrappingApi = client.sys().wrapping();
 
         var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofMinutes(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(wrapped.getToken())
                 .isNotEmpty();
 
         var lookup = wrappingApi.lookup(wrapped.getToken())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(lookup)
                 .isNotNull();
@@ -103,14 +103,14 @@ public class VaultSysWrappingTest {
     }
 
     @Test
-    public void testUnwrap(VaultClient client) {
+    public void testUnwrap(VaultClient client) throws Exception {
         var wrappingApi = client.sys().wrapping();
 
         var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofMinutes(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var unwrapped = wrappingApi.unwrap(wrapped.getToken())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(unwrapped)
                 .isNotNull();
@@ -131,14 +131,14 @@ public class VaultSysWrappingTest {
     }
 
     @Test
-    public void testRewrap(VaultClient client) {
+    public void testRewrap(VaultClient client) throws Exception {
         var wrappingApi = client.sys().wrapping();
 
         var wrapped = wrappingApi.wrap(Map.of("foo", "bar"), Duration.ofMinutes(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var rewrapped = wrappingApi.rewrap(wrapped.getToken())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(rewrapped)
                 .isNotNull();

@@ -18,11 +18,11 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSysMountsTest {
 
     @Test
-    public void testList(VaultClient client) {
+    public void testList(VaultClient client) throws Exception {
         var mountApi = client.sys().mounts();
 
         var mounts = mountApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(mounts)
                 .isNotNull()
@@ -66,7 +66,7 @@ public class VaultSysMountsTest {
     }
 
     @Test
-    public void testRead(VaultClient client, @Random String mount) {
+    public void testRead(VaultClient client, @Random String mount) throws Exception {
         var mountApi = client.sys().mounts();
 
         mountApi.enable(mount, "kv", "test kv", new VaultSysMountsEnableConfig()
@@ -80,10 +80,10 @@ public class VaultSysMountsTest {
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
                 .setAllowedManagedKeys(List.of("key5", "key6")),
                 Map.of("version", "2"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var kvMountInfo = mountApi.read(mount)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(kvMountInfo.getAccessor())
                 .startsWith("kv_");
@@ -133,52 +133,52 @@ public class VaultSysMountsTest {
     }
 
     @Test
-    public void testEnable(VaultClient client, @Random String path) {
+    public void testEnable(VaultClient client, @Random String path) throws Exception {
         var mountApi = client.sys().mounts();
 
         var mountPath = path + "/";
 
         mountApi.enable(path, "kv", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var mounts = mountApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(mounts)
                 .containsKey(mountPath);
     }
 
     @Test
-    public void testDisable(VaultClient client, @Random String path) {
+    public void testDisable(VaultClient client, @Random String path) throws Exception {
         var mountApi = client.sys().mounts();
 
         var mountPath = path + "/";
 
         mountApi.enable(path, "kv", null, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var mounts = mountApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(mounts)
                 .containsKey(mountPath);
 
         mountApi.disable(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         mounts = mountApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(mounts)
                 .doesNotContainKey(mountPath);
     }
 
     @Test
-    public void testReadTune(VaultClient client) {
+    public void testReadTune(VaultClient client) throws Exception {
         var mountApi = client.sys().mounts();
 
         var kvTuneInfo = mountApi.readTune("secret/")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(kvTuneInfo.getDescription())
                 .isEqualTo("key/value secret storage");
@@ -203,11 +203,11 @@ public class VaultSysMountsTest {
     }
 
     @Test
-    public void testTune(VaultClient client, @Random String path) {
+    public void testTune(VaultClient client, @Random String path) throws Exception {
         var mountApi = client.sys().mounts();
 
         mountApi.enable(path, "kv", null, null, Map.of("version", "1"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         mountApi.tune(path, new VaultSysMountsTuneParams()
                 .setDescription("test mount")
@@ -220,10 +220,10 @@ public class VaultSysMountsTest {
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
                 .setAllowedManagedKeys(List.of("key5", "key6"))
                 .setOptions(Map.of("version", "2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var kvTuneInfo = mountApi.readTune(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(kvTuneInfo.getDefaultLeaseTtl())
                 .isEqualTo(Duration.ofSeconds(90));

@@ -7,11 +7,11 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
+import io.vertx.core.Vertx;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.net.ProxyOptions;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.ext.web.client.WebClient;
 
 public class MutinyVertxClientFactory {
 

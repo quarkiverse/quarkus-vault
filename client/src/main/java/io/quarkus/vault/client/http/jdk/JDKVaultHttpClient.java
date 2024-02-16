@@ -8,12 +8,12 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.http.VaultHttpClient;
-import io.smallrye.mutiny.Uni;
 
 public class JDKVaultHttpClient extends VaultHttpClient {
 
@@ -24,21 +24,18 @@ public class JDKVaultHttpClient extends VaultHttpClient {
     }
 
     @Override
-    public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
-        return Uni.createFrom().item(request)
-                .map(this::buildHTTPRequest)
-                .flatMap((httpRequest) -> {
-                    var sent = httpClient.sendAsync(httpRequest, BodyHandlers.ofByteArray());
-                    return Uni.createFrom().completionStage(sent)
-                            .ifNoItem().after(request.getTimeout()).failWith(TimeoutException::new);
-                })
-                .flatMap(res -> buildResponse(request, res.statusCode(), headers(res), res.body()));
+    public <T> CompletionStage<VaultResponse<T>> execute(VaultRequest<T> request) {
+        return CompletableFuture.completedStage(request)
+                .thenApply(this::buildHTTPRequest)
+                .thenCompose((httpRequest) -> httpClient.sendAsync(httpRequest, BodyHandlers.ofByteArray()))
+                .thenCompose(res -> buildResponse(request, res.statusCode(), headers(res), res.body()));
     }
 
     private HttpRequest buildHTTPRequest(VaultRequest<?> request) {
 
         var requestBuilder = HttpRequest.newBuilder()
-                .uri(request.getUri());
+                .uri(request.getUri())
+                .timeout(request.getTimeout());
 
         request.getHTTPHeaders().forEach(requestBuilder::header);
 

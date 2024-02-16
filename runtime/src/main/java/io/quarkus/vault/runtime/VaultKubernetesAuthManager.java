@@ -36,33 +36,35 @@ public class VaultKubernetesAuthManager implements VaultKubernetesAuthReactiveSe
                 .setKubernetesHost(config.kubernetesHost)
                 .setPemKeys(config.pemKeys)
                 .setTokenReviewerJwt(config.tokenReviewerJwt);
-        return k8s.configure(params);
+        return Uni.createFrom().completionStage(k8s.configure(params));
     }
 
     @Override
     public Uni<VaultKubernetesAuthConfig> getConfig() {
-        return k8s.readConfig().map(result -> new VaultKubernetesAuthConfig()
-                .setKubernetesCaCert(result.getKubernetesCaCert())
-                .setKubernetesHost(result.getKubernetesHost())
-                .setIssuer(result.getIssuer())
-                .setPemKeys(result.getPemKeys())
-                .setTokenReviewerJwt(result.getTokenReviewerJwt()));
+        return Uni.createFrom().completionStage(k8s.readConfig())
+                .map(result -> new VaultKubernetesAuthConfig()
+                        .setKubernetesCaCert(result.getKubernetesCaCert())
+                        .setKubernetesHost(result.getKubernetesHost())
+                        .setIssuer(result.getIssuer())
+                        .setPemKeys(result.getPemKeys())
+                        .setTokenReviewerJwt(result.getTokenReviewerJwt()));
     }
 
     public Uni<VaultKubernetesAuthRole> getRole(String name) {
-        return k8s.readRole(name).map(result -> new VaultKubernetesAuthRole()
-                .setBoundServiceAccountNames(result.getBoundServiceAccountNames())
-                .setBoundServiceAccountNamespaces(result.getBoundServiceAccountNamespaces())
-                .setAudience(result.getAudience())
-                .setTokenTtl(toDurationSeconds(result.getTokenTtl()))
-                .setTokenMaxTtl(toDurationSeconds(result.getTokenMaxTtl()))
-                .setTokenPolicies(result.getTokenPolicies())
-                .setTokenBoundCidrs(result.getTokenBoundCidrs())
-                .setTokenExplicitMaxTtl(toDurationSeconds(result.getTokenExplicitMaxTtl()))
-                .setTokenNoDefaultPolicy(result.isTokenNoDefaultPolicy())
-                .setTokenNumUses(result.getTokenNumUses())
-                .setTokenPeriod(toDurationSeconds(result.getTokenPeriod()))
-                .setTokenType(result.getTokenType() != null ? result.getTokenType().getValue() : null));
+        return Uni.createFrom().completionStage(k8s.readRole(name))
+                .map(result -> new VaultKubernetesAuthRole()
+                        .setBoundServiceAccountNames(result.getBoundServiceAccountNames())
+                        .setBoundServiceAccountNamespaces(result.getBoundServiceAccountNamespaces())
+                        .setAudience(result.getAudience())
+                        .setTokenTtl(toDurationSeconds(result.getTokenTtl()))
+                        .setTokenMaxTtl(toDurationSeconds(result.getTokenMaxTtl()))
+                        .setTokenPolicies(result.getTokenPolicies())
+                        .setTokenBoundCidrs(result.getTokenBoundCidrs())
+                        .setTokenExplicitMaxTtl(toDurationSeconds(result.getTokenExplicitMaxTtl()))
+                        .setTokenNoDefaultPolicy(result.isTokenNoDefaultPolicy())
+                        .setTokenNumUses(result.getTokenNumUses())
+                        .setTokenPeriod(toDurationSeconds(result.getTokenPeriod()))
+                        .setTokenType(result.getTokenType() != null ? result.getTokenType().getValue() : null));
     }
 
     public Uni<Void> createRole(String name, VaultKubernetesAuthRole role) {
@@ -79,16 +81,16 @@ public class VaultKubernetesAuthManager implements VaultKubernetesAuthReactiveSe
                 .setTokenNumUses(role.tokenNumUses)
                 .setTokenPeriod(fromVaultDuration(role.tokenPeriod))
                 .setTokenType(VaultTokenType.from(role.tokenType));
-        return k8s.updateRole(name, params);
+        return Uni.createFrom().completionStage(k8s.updateRole(name, params));
     }
 
     @Override
     public Uni<List<String>> getRoles() {
-        return k8s.listRoles();
+        return Uni.createFrom().completionStage(k8s.listRoles());
     }
 
     @Override
     public Uni<Void> deleteRole(String name) {
-        return k8s.deleteRole(name);
+        return Uni.createFrom().completionStage(k8s.deleteRole(name));
     }
 }

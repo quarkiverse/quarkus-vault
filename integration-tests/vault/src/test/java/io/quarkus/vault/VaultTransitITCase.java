@@ -227,7 +227,7 @@ public class VaultTransitITCase {
     }
 
     @Test
-    public void keyVersionEncryption() {
+    public void keyVersionEncryption() throws Exception {
 
         rotate(ENCRYPTION_KEY2_NAME);
 
@@ -244,9 +244,9 @@ public class VaultTransitITCase {
 
     }
 
-    private void rotate(String keyName) {
+    private void rotate(String keyName) throws Exception {
         client.secrets().transit().rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
     }
 
     private String encrypt(int keyVersion) {
@@ -265,7 +265,7 @@ public class VaultTransitITCase {
     }
 
     @Test
-    public void keyVersionSign() {
+    public void keyVersionSign() throws Exception {
 
         rotate(SIGN_KEY2_NAME);
 

@@ -1,18 +1,18 @@
 package io.quarkus.vault.client.auth;
 
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.api.auth.approle.VaultAuthAppRole;
 import io.quarkus.vault.client.common.VaultResponse;
-import io.smallrye.mutiny.Uni;
 
 public class VaultAppRoleTokenProvider implements VaultTokenProvider {
     private final String mountPath;
     private final String roleId;
-    private final Function<VaultAuthRequest, Uni<String>> secretIdProvider;
+    private final Function<VaultAuthRequest, CompletionStage<String>> secretIdProvider;
 
     public VaultAppRoleTokenProvider(String mountPath, String roleId,
-            Function<VaultAuthRequest, Uni<String>> secretIdProvider) {
+            Function<VaultAuthRequest, CompletionStage<String>> secretIdProvider) {
         this.mountPath = mountPath;
         this.roleId = roleId;
         this.secretIdProvider = secretIdProvider;
@@ -23,12 +23,12 @@ public class VaultAppRoleTokenProvider implements VaultTokenProvider {
     }
 
     @Override
-    public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
+    public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
         var executor = authRequest.getExecutor();
         return secretIdProvider.apply(authRequest)
-                .flatMap(secretId -> executor.execute(VaultAuthAppRole.FACTORY.login(mountPath, roleId, secretId)))
-                .map(VaultResponse::getResult)
-                .map(res -> {
+                .thenCompose(secretId -> executor.execute(VaultAuthAppRole.FACTORY.login(mountPath, roleId, secretId)))
+                .thenApply(VaultResponse::getResult)
+                .thenApply(res -> {
                     var auth = res.getAuth();
                     return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration(),
                             authRequest.getInstantSource());

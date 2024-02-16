@@ -1,11 +1,12 @@
 package io.quarkus.vault.client.auth.unwrap;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.auth.VaultAuthRequest;
-import io.smallrye.mutiny.Uni;
 
-public interface VaultValueProvider extends Function<VaultAuthRequest, Uni<String>> {
+public interface VaultValueProvider extends Function<VaultAuthRequest, CompletionStage<String>> {
 
     static VaultValueProvider staticValue(String unwrappedToken) {
         return new StaticValueProvider(unwrappedToken);
@@ -19,8 +20,8 @@ public interface VaultValueProvider extends Function<VaultAuthRequest, Uni<Strin
         }
 
         @Override
-        public Uni<String> apply(VaultAuthRequest request) {
-            return Uni.createFrom().item(unwrappedToken);
+        public CompletionStage<String> apply(VaultAuthRequest request) {
+            return CompletableFuture.completedStage(unwrappedToken);
         }
     }
 

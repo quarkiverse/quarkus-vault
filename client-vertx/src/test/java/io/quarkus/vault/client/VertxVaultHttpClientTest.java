@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,8 +14,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.vault.VaultContainer;
 
 import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
-import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.ext.web.client.WebClient;
+import io.vertx.core.Vertx;
+import io.vertx.ext.web.client.WebClient;
 
 @Testcontainers
 public class VertxVaultHttpClientTest {
@@ -44,54 +45,55 @@ public class VertxVaultHttpClientTest {
     }
 
     @Test
-    public void testGet() {
+    public void testGet() throws Exception {
         var kv1 = client.secrets().kv1("kv1");
 
         kv1.update("foo", Map.of("bar", "baz"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var result = kv1.read("foo")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(result)
                 .containsEntry("bar", "baz");
     }
 
     @Test
-    public void testList() {
+    public void testList() throws Exception {
         var kv1 = client.secrets().kv1("kv1");
 
         kv1.update("foo", Map.of("bar", "baz"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var result = kv1.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(result)
                 .contains("foo");
     }
 
     @Test
-    public void testDelete() {
+    public void testDelete() throws Exception {
         var kv1 = client.secrets().kv1("kv1");
 
         kv1.update("foo", Map.of("bar", "baz"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         kv1.delete("foo")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
-        assertThatThrownBy(() -> kv1.list().await().indefinitely())
+        assertThatThrownBy(() -> kv1.list().toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .asString().contains("status=404");
     }
 
     @Test
-    public void testHead() {
+    public void testHead() throws Exception {
         var health = client.sys().health();
 
         var result = health.statusCode()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(result)
                 .isEqualTo(200);

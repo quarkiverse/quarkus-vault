@@ -81,18 +81,18 @@ types:
 methods:
 
 - name: status
-  returnType: io.smallrye.mutiny.Uni<$$.api.sys.health.VaultHealthStatus>
+  returnType: java.util.concurrent.CompletionStage<$$.api.sys.health.VaultHealthStatus>
   parameters:
     standbyOk: Boolean
     perfStandbyOk: Boolean
   body: |
-    return statusCode(standbyOk, perfStandbyOk).map($health:T::fromStatusCode);
+    return statusCode(standbyOk, perfStandbyOk).thenApply($health:T::fromStatusCode);
   bodyArguments:
     health: <type>$$.api.sys.health.VaultHealthStatus
 
 - name: status
-  returnType: io.smallrye.mutiny.Uni<$$.api.sys.health.VaultHealthStatus>
+  returnType: java.util.concurrent.CompletionStage<$$.api.sys.health.VaultHealthStatus>
   body: |
-    return statusCode().map($health:T::fromStatusCode);
+    return statusCode().thenApply($health:T::fromStatusCode);
   bodyArguments:
     health: <type>$$.api.sys.health.VaultHealthStatus

@@ -44,34 +44,35 @@ public class VaultTOTPManager implements VaultTOTPSecretReactiveEngine {
                 .setSkew(createKeyParameters.getSkew())
                 .setUrl(createKeyParameters.getUrl());
 
-        return totp.createKey(name, params)
+        return Uni.createFrom().completionStage(totp.createKey(name, params))
                 .map(opt -> opt.map(result -> new KeyDefinition(result.getBarcode(), result.getUrl())));
     }
 
     @Override
     public Uni<KeyConfiguration> readKey(String name) {
-        return totp.readKey(name).map(result -> new KeyConfiguration(result.getAccountName(),
-                result.getAlgorithm(), result.getDigits(),
-                result.getIssuer(), result.getPeriod() != null ? (int) result.getPeriod().toSeconds() : 0));
+        return Uni.createFrom().completionStage(totp.readKey(name))
+                .map(result -> new KeyConfiguration(result.getAccountName(),
+                        result.getAlgorithm(), result.getDigits(),
+                        result.getIssuer(), result.getPeriod() != null ? (int) result.getPeriod().toSeconds() : 0));
     }
 
     @Override
     public Uni<List<String>> listKeys() {
-        return totp.listKeys();
+        return Uni.createFrom().completionStage(totp.listKeys());
     }
 
     @Override
     public Uni<Void> deleteKey(String name) {
-        return totp.deleteKey(name);
+        return Uni.createFrom().completionStage(totp.deleteKey(name));
     }
 
     @Override
     public Uni<String> generateCode(String name) {
-        return totp.generateCode(name);
+        return Uni.createFrom().completionStage(totp.generateCode(name));
     }
 
     @Override
     public Uni<Boolean> validateCode(String name, String code) {
-        return totp.validateCode(name, code);
+        return Uni.createFrom().completionStage(totp.validateCode(name, code));
     }
 }

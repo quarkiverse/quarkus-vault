@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -20,24 +21,24 @@ import io.quarkus.vault.client.test.VaultClientTest.Mount;
 public class VaultAuthUserPassTest {
 
     @Test
-    public void testLoginProcess(VaultClient client, @Random String user) {
+    public void testLoginProcess(VaultClient client, @Random String user) throws Exception {
         var userPassApi = client.auth().userPass();
 
         // Create user
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Login
         var login = userPassApi.login(user, "test")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(login.getClientToken())
                 .isNotNull();
     }
 
     @Test
-    public void testUpdateUser(VaultClient client, @Random String user) {
+    public void testUpdateUser(VaultClient client, @Random String user) throws Exception {
         var userPassApi = client.auth().userPass();
 
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
@@ -51,10 +52,10 @@ public class VaultAuthUserPassTest {
                 .setTokenExplicitMaxTtl(Duration.ofHours(3))
                 .setPassword("test")
                 .setTokenType(VaultTokenType.DEFAULT))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var userInfo = userPassApi.readUser(user)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(userInfo.getTokenBoundCidrs())
                 .contains("127.0.0.1");
@@ -78,7 +79,7 @@ public class VaultAuthUserPassTest {
 
     @Disabled("updateUserPolicies succeeds but doesnt apply policies, unknown if this is a bug in Vault or the client")
     @Test
-    public void testUpdateUserPolicies(VaultClient client, @Random String user) {
+    public void testUpdateUserPolicies(VaultClient client, @Random String user) throws Exception {
         var userPassApi = client.auth().userPass();
 
         var userPolicy = user + "-policy";
@@ -88,25 +89,25 @@ public class VaultAuthUserPassTest {
                 path "secret/*" {
                     capabilities = [ "read" ]
                 }""")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Create user
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         userPassApi.updateUserPolicies(user, List.of(userPolicy))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Validate policies
         var userInfo = userPassApi.readUser(user)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(userInfo.getTokenPolicies())
                 .containsExactly(userPolicy);
     }
 
     @Test
-    public void testUpdateUserPoliciesViaRegularUpdate(VaultClient client, @Random String user) {
+    public void testUpdateUserPoliciesViaRegularUpdate(VaultClient client, @Random String user) throws Exception {
         var userPassApi = client.auth().userPass();
 
         var userPolicy = user + "-policy";
@@ -116,23 +117,23 @@ public class VaultAuthUserPassTest {
                 path "secret/*" {
                     capabilities = [ "read" ]
                 }""")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Create user
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test")
                 .setTokenMaxTtl(Duration.ofHours(15)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Update user
 
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setTokenPolicies(List.of(userPolicy)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Validate policies (and verify that token max ttl is still set)
         var userInfo = userPassApi.readUser(user)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(userInfo.getTokenPolicies())
                 .contains(userPolicy);
@@ -141,18 +142,18 @@ public class VaultAuthUserPassTest {
     }
 
     @Test
-    public void testUpdateUserPassword(VaultClient client, @Random String user) {
+    public void testUpdateUserPassword(VaultClient client, @Random String user) throws Exception {
         var userPassApi = client.auth().userPass();
 
         // Create user
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Validate via login
 
         var login = userPassApi.login(user, "test")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(login.getClientToken())
                 .isNotNull();
@@ -160,19 +161,19 @@ public class VaultAuthUserPassTest {
         // Update password
 
         userPassApi.updateUserPassword(user, "test2")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Validate via login
 
         var login2 = userPassApi.login(user, "test2")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(login2.getClientToken())
                 .isNotNull();
     }
 
     @Test
-    public void testListUsers(VaultClient client, @Random String user) {
+    public void testListUsers(VaultClient client, @Random String user) throws Exception {
         var userPassApi = client.auth().userPass();
 
         var user1 = user.toLowerCase() + "1";
@@ -181,21 +182,21 @@ public class VaultAuthUserPassTest {
         // Create users
         userPassApi.updateUser(user1, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         userPassApi.updateUser(user2, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // List users
         var users = userPassApi.listUsers()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(users)
                 .contains(user1, user2);
     }
 
     @Test
-    public void testDeleteUser(VaultClient client, @Random String user) {
+    public void testDeleteUser(VaultClient client, @Random String user) throws Exception {
         var userPassApi = client.auth().userPass();
 
         var user1 = user.toLowerCase() + "1";
@@ -204,33 +205,33 @@ public class VaultAuthUserPassTest {
         // Create users
         userPassApi.updateUser(user1, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         userPassApi.updateUser(user2, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // List users
         var users = userPassApi.listUsers()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(users)
                 .contains(user1, user2);
 
         // Delete user
         userPassApi.deleteUser(user1)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Validate
 
         var users2 = userPassApi.listUsers()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(users2)
                 .contains(user2);
     }
 
     @Test
-    public void testClientLogin(VaultClient client, @Random String user) {
+    public void testClientLogin(VaultClient client, @Random String user) throws Exception {
         var userPassApi = client.auth().userPass();
 
         var userPolicy = user + "-policy";
@@ -240,14 +241,14 @@ public class VaultAuthUserPassTest {
                 path "sys/mounts/*" {
                     capabilities = [ "read" ]
                 }""")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Create user with policy
         userPassApi.updateUser(user, new VaultAuthUserPassUpdateUserParams()
                 .setPassword("test")
                 .setTokenPolicies(List.of(userPolicy))
                 .setTokenNoDefaultPolicy(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         // Login
         var authClient = client.configure()
@@ -256,12 +257,13 @@ public class VaultAuthUserPassTest {
 
         // Validate
 
-        assertThatThrownBy(() -> authClient.sys().auth().read("token").await().indefinitely())
+        assertThatThrownBy(() -> authClient.sys().auth().read("token").toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasMessageContaining("permission denied");
 
         var mountInfo = authClient.sys().mounts().read("secret")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(mountInfo.getDescription())
                 .isNotNull();

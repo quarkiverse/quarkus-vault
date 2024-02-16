@@ -7,6 +7,9 @@ import static org.mockito.Mockito.*;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +20,6 @@ import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultRequestExecutor;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
-import io.smallrye.mutiny.Uni;
 
 public class VaultClientTest {
 
@@ -26,17 +28,17 @@ public class VaultClientTest {
 
         var executor = spy(new VaultRequestExecutor() {
             @Override
-            public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
-                return Uni.createFrom()
-                        .failure(new VaultClientException("Test", "/test", 403, List.of("permission denied"), null));
+            public <T> CompletionStage<VaultResponse<T>> execute(VaultRequest<T> request) {
+                return CompletableFuture
+                        .failedStage(new VaultClientException("Test", "/test", 403, List.of("permission denied"), null));
             }
         });
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
-            public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
                 var token = VaultToken.from("test", true, Duration.ofMinutes(1), authRequest.getInstantSource())
                         .cached();
-                return Uni.createFrom().item(token);
+                return CompletableFuture.completedStage(token);
             }
         });
 
@@ -46,7 +48,8 @@ public class VaultClientTest {
                 .tokenProvider(tokenProvider)
                 .build();
 
-        assertThatThrownBy(() -> client.secrets().kv1().list().await().indefinitely())
+        assertThatThrownBy(() -> client.secrets().kv1().list().toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasMessageContaining("permission denied");
 
@@ -60,14 +63,14 @@ public class VaultClientTest {
     public void testBuilder() throws Exception {
         var executor = new VaultRequestExecutor() {
             @Override
-            public <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request) {
-                return Uni.createFrom().nullItem();
+            public <T> CompletionStage<VaultResponse<T>> execute(VaultRequest<T> request) {
+                return CompletableFuture.completedStage(null);
             }
         };
         var tokenProvider = new VaultTokenProvider() {
             @Override
-            public Uni<VaultToken> apply(VaultAuthRequest authRequest) {
-                return Uni.createFrom().nullItem();
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                return CompletableFuture.completedStage(null);
             }
         };
 

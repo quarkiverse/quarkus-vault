@@ -18,11 +18,11 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSysAuthTest {
 
     @Test
-    public void testList(VaultClient client) {
+    public void testList(VaultClient client) throws Exception {
         var authApi = client.sys().auth();
 
         var auths = authApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(auths)
                 .isNotNull()
@@ -64,7 +64,7 @@ public class VaultSysAuthTest {
     }
 
     @Test
-    public void testRead(VaultClient client, @Random String mount) {
+    public void testRead(VaultClient client, @Random String mount) throws Exception {
         var authApi = client.sys().auth();
 
         authApi.enable(mount, "userpass", "userpass auth", new VaultSysAuthEnableConfig()
@@ -76,10 +76,10 @@ public class VaultSysAuthTest {
                 .setListingVisibility(VaultSysAuthListingVisibility.HIDDEN)
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenAuthInfo = authApi.read(mount)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenAuthInfo.getAccessor())
                 .startsWith("auth_userpass_");
@@ -127,52 +127,52 @@ public class VaultSysAuthTest {
     }
 
     @Test
-    public void testEnable(VaultClient client, @Random String path) {
+    public void testEnable(VaultClient client, @Random String path) throws Exception {
         var authApi = client.sys().auth();
 
         var authPath = path + "/";
 
         authApi.enable(path, "userpass", null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var auths = authApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(auths)
                 .containsKey(authPath);
     }
 
     @Test
-    public void testDisable(VaultClient client, @Random String path) {
+    public void testDisable(VaultClient client, @Random String path) throws Exception {
         var authApi = client.sys().auth();
 
         var authPath = path + "/";
 
         authApi.enable(path, "userpass", null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var auths = authApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(auths)
                 .containsKey(authPath);
 
         authApi.disable(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         auths = authApi.list()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(auths)
                 .doesNotContainKey(authPath);
     }
 
     @Test
-    public void testReadTune(VaultClient client) {
+    public void testReadTune(VaultClient client) throws Exception {
         var authApi = client.sys().auth();
 
         var tokenAuthInfo = authApi.readTune("token")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenAuthInfo.getDescription())
                 .isEqualTo("token based credentials");
@@ -197,11 +197,11 @@ public class VaultSysAuthTest {
     }
 
     @Test
-    public void testTune(VaultClient client, @Random String path) {
+    public void testTune(VaultClient client, @Random String path) throws Exception {
         var authApi = client.sys().auth();
 
         authApi.enable(path, "userpass", "test mount", null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         authApi.tune(path, new VaultSysAuthTuneOptions()
                 .setDescription("test mount")
@@ -213,10 +213,10 @@ public class VaultSysAuthTest {
                 .setPassthroughRequestHeaders(List.of("header1", "header2"))
                 .setAllowedResponseHeaders(List.of("header3", "header4"))
                 .setTokenType(VaultTokenType.SERVICE))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var kvTuneInfo = authApi.readTune(path)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(kvTuneInfo.getDefaultLeaseTtl())
                 .isEqualTo(Duration.ofSeconds(90));

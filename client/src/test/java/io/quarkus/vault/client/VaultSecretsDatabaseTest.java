@@ -35,7 +35,7 @@ public class VaultSecretsDatabaseTest {
             .withPassword("test");
 
     @Test
-    public void testConfigConnection(VaultClient client, @Random String connName) {
+    public void testConfigConnection(VaultClient client, @Random String connName) throws Exception {
         var dbApi = client.secrets().database();
 
         var roleName = connName + "-role";
@@ -54,10 +54,10 @@ public class VaultSecretsDatabaseTest {
                 .disableEscaping(true)
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var config = dbApi.readConnection(connName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(config)
                 .isNotNull();
@@ -88,7 +88,7 @@ public class VaultSecretsDatabaseTest {
     }
 
     @Test
-    public void testUpdateRole(VaultClient client, @Random String roleName) {
+    public void testUpdateRole(VaultClient client, @Random String roleName) throws Exception {
         var dbApi = client.secrets().database();
 
         dbApi.updateRole(roleName, new VaultSecretsDatabaseUpdateRoleParams()
@@ -98,10 +98,10 @@ public class VaultSecretsDatabaseTest {
                 .setCredentialType(VaultSecretsDatabaseCredentialType.PASSWORD)
                 .setCredentialConfig(new VaultSecretsDatabasePasswordCredentialConfig()
                         .setPasswordPolicy("test")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var role = dbApi.readRole(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(role)
                 .isNotNull();
@@ -128,7 +128,7 @@ public class VaultSecretsDatabaseTest {
     }
 
     @Test
-    public void testListRoles(VaultClient client, @Random String roleName) {
+    public void testListRoles(VaultClient client, @Random String roleName) throws Exception {
         var dbApi = client.secrets().database();
 
         dbApi.updateRole(roleName, new VaultSecretsDatabaseUpdateRoleParams()
@@ -138,17 +138,17 @@ public class VaultSecretsDatabaseTest {
                 .setCredentialType(VaultSecretsDatabaseCredentialType.PASSWORD)
                 .setCredentialConfig(new VaultSecretsDatabasePasswordCredentialConfig()
                         .setPasswordPolicy("test")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roles = dbApi.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .contains(roleName);
     }
 
     @Test
-    public void testDeleteRole(VaultClient client, @Random String roleName) {
+    public void testDeleteRole(VaultClient client, @Random String roleName) throws Exception {
         var dbApi = client.secrets().database();
 
         dbApi.updateRole(roleName, new VaultSecretsDatabaseUpdateRoleParams()
@@ -158,19 +158,19 @@ public class VaultSecretsDatabaseTest {
                 .setCredentialType(VaultSecretsDatabaseCredentialType.PASSWORD)
                 .setCredentialConfig(new VaultSecretsDatabasePasswordCredentialConfig()
                         .setPasswordPolicy("test")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roles = dbApi.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .contains(roleName);
 
         dbApi.deleteRole(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         roles = dbApi.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .doesNotContain(roleName);
@@ -193,17 +193,17 @@ public class VaultSecretsDatabaseTest {
                 .password(postgres.getPassword())
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         dbApi.updateRole(roleName, new VaultSecretsDatabaseUpdateRoleParams()
                 .setDbName(connName)
                 .setDefaultTtl(Duration.ofSeconds(10))
                 .setMaxTtl(Duration.ofSeconds(20))
                 .setCreationStatements(creationStatements))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var credsResult = dbApi.generateCredentials(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(credsResult)
                 .isNotNull();
@@ -241,10 +241,10 @@ public class VaultSecretsDatabaseTest {
                 .password(postgres.getPassword())
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         dbApi.rotateRootCredentials(connName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
     }
 
     @Test
@@ -259,7 +259,7 @@ public class VaultSecretsDatabaseTest {
                 .password(postgres.getPassword())
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         createDbRole(roleName);
 
@@ -270,10 +270,10 @@ public class VaultSecretsDatabaseTest {
                 .setRotationStatements(List.of(
                         "ALTER ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}';"))
                 .setCredentialType(VaultSecretsDatabaseCredentialType.PASSWORD))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var role = dbApi.readStaticRole(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(role)
                 .isNotNull();
@@ -299,7 +299,7 @@ public class VaultSecretsDatabaseTest {
                 .password(postgres.getPassword())
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         createDbRole(roleName);
 
@@ -310,10 +310,10 @@ public class VaultSecretsDatabaseTest {
                 .setRotationStatements(List.of(
                         "ALTER ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}';"))
                 .setCredentialType(VaultSecretsDatabaseCredentialType.PASSWORD))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roles = dbApi.listStaticRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .contains(roleName);
@@ -331,7 +331,7 @@ public class VaultSecretsDatabaseTest {
                 .password(postgres.getPassword())
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         createDbRole(roleName);
 
@@ -342,19 +342,19 @@ public class VaultSecretsDatabaseTest {
                 .setRotationStatements(List.of(
                         "ALTER ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}';"))
                 .setCredentialType(VaultSecretsDatabaseCredentialType.PASSWORD))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roles = dbApi.listStaticRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .contains(roleName);
 
         dbApi.deleteStaticRole(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         roles = dbApi.listStaticRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .doesNotContain(roleName);
@@ -372,7 +372,7 @@ public class VaultSecretsDatabaseTest {
                 .password(postgres.getPassword())
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         createDbRole(roleName);
 
@@ -383,10 +383,10 @@ public class VaultSecretsDatabaseTest {
                 .setRotationStatements(List.of(
                         "ALTER ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}';"))
                 .setCredentialType(VaultSecretsDatabaseCredentialType.PASSWORD))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var credsResult = dbApi.generateStaticRoleCredentials(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(credsResult)
                 .isNotNull();
@@ -420,7 +420,7 @@ public class VaultSecretsDatabaseTest {
                 .password(postgres.getPassword())
                 .passwordAuthentication(SCRAM_SHA_256)
                 .build())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         createDbRole(roleName);
 
@@ -431,10 +431,10 @@ public class VaultSecretsDatabaseTest {
                 .setRotationStatements(List.of(
                         "ALTER ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}';"))
                 .setCredentialType(VaultSecretsDatabaseCredentialType.PASSWORD))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var credsResult = dbApi.generateStaticRoleCredentials(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(credsResult)
                 .isNotNull();
@@ -447,10 +447,10 @@ public class VaultSecretsDatabaseTest {
         var originalPassword = Objects.toString(credsResult.getData().get("password"));
 
         dbApi.rotateStaticCredentials(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         credsResult = dbApi.generateStaticRoleCredentials(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(credsResult)
                 .isNotNull();

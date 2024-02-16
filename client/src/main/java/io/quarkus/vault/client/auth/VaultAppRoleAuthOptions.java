@@ -5,18 +5,18 @@ import static io.quarkus.vault.client.auth.VaultCachingTokenProvider.DEFAULT_REN
 
 import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.auth.unwrap.VaultSecretIdUnwrappingProvider;
 import io.quarkus.vault.client.auth.unwrap.VaultValueProvider;
-import io.smallrye.mutiny.Uni;
 
 public class VaultAppRoleAuthOptions extends VaultAuthOptions {
 
     public static class Builder {
         private String mountPath = DEFAULT_APPROLE_MOUNT_PATH;
         private String roleId;
-        private Function<VaultAuthRequest, Uni<String>> secretIdProvider;
+        private Function<VaultAuthRequest, CompletionStage<String>> secretIdProvider;
         private Duration cachingRenewGracePeriod = DEFAULT_RENEW_GRACE_PERIOD;
 
         public Builder mountPath(String mountPath) {
@@ -39,7 +39,7 @@ public class VaultAppRoleAuthOptions extends VaultAuthOptions {
             return this;
         }
 
-        public Builder customSecretIdProvider(Function<VaultAuthRequest, Uni<String>> secretIdProvider) {
+        public Builder customSecretIdProvider(Function<VaultAuthRequest, CompletionStage<String>> secretIdProvider) {
             this.secretIdProvider = secretIdProvider;
             return this;
         }
@@ -61,7 +61,7 @@ public class VaultAppRoleAuthOptions extends VaultAuthOptions {
 
     public final String mountPath;
     public final String roleId;
-    public final Function<VaultAuthRequest, Uni<String>> secretIdProvider;
+    public final Function<VaultAuthRequest, CompletionStage<String>> secretIdProvider;
 
     private VaultAppRoleAuthOptions(Builder builder) {
         super(builder.cachingRenewGracePeriod);

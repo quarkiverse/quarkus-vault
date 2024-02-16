@@ -66,7 +66,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<CertificateData> getCertificateAuthority(DataFormat format) {
-        return pki.readIssuerCaCert()
+        return Uni.createFrom().completionStage(pki.readIssuerCaCert())
                 .map(Unchecked.function(result -> {
                     var certData = new CertificateData.PEM(result.getCertificate());
                     if (format == DataFormat.PEM) {
@@ -79,7 +79,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<Void> configCertificateAuthority(String pemBundle) {
-        return pki.configCa(pemBundle).map(r -> null);
+        return Uni.createFrom().completionStage(pki.configCa(pemBundle)).map(r -> null);
     }
 
     @Override
@@ -90,12 +90,12 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setCrlDistributionPoints(options.crlDistributionPoints)
                 .setOcspServers(options.ocspServers);
 
-        return pki.configUrls(params);
+        return Uni.createFrom().completionStage(pki.configUrls(params));
     }
 
     @Override
     public Uni<ConfigURLsOptions> readURLsConfig() {
-        return pki.readUrlsConfig()
+        return Uni.createFrom().completionStage(pki.readUrlsConfig())
                 .map(result -> {
                     var options = new ConfigURLsOptions();
                     options.issuingCertificates = result.getIssuingCertificates();
@@ -112,12 +112,12 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setExpiry(fromVaultDuration(options.expiry))
                 .setDisable(options.disable);
 
-        return pki.configCrl(params);
+        return Uni.createFrom().completionStage(pki.configCrl(params));
     }
 
     @Override
     public Uni<ConfigCRLOptions> readCRLConfig() {
-        return pki.readCrlConfig()
+        return Uni.createFrom().completionStage(pki.readCrlConfig())
                 .map(result -> {
                     var options = new ConfigCRLOptions();
                     options.expiry = toVaultDuration(result.getExpiry());
@@ -128,7 +128,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<CAChainData.PEM> getCertificateAuthorityChain() {
-        return pki.readIssuerCaChain().map(CAChainData.PEM::new);
+        return Uni.createFrom().completionStage(pki.readIssuerCaChain()).map(CAChainData.PEM::new);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<CRLData> getCertificateRevocationList(DataFormat format) {
-        return pki.readIssuerCrl()
+        return Uni.createFrom().completionStage(pki.readIssuerCrl())
                 .map(Unchecked.function(result -> {
                     var crlData = new CRLData.PEM(result);
                     if (format == DataFormat.PEM) {
@@ -151,23 +151,24 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<Boolean> rotateCertificateRevocationList() {
-        return pki.rotateCrl().map(VaultSecretsPKIRotateCrlResultData::isSuccess);
+        return Uni.createFrom().completionStage(pki.rotateCrl()).map(VaultSecretsPKIRotateCrlResultData::isSuccess);
     }
 
     @Override
     public Uni<List<String>> getCertificates() {
-        return pki.listCertificates().map(results -> {
-            var serials = new ArrayList<String>();
-            for (String serial : results) {
-                serials.add(serial.replaceAll("-", ":"));
-            }
-            return serials;
-        });
+        return Uni.createFrom().completionStage(pki.listCertificates())
+                .map(results -> {
+                    var serials = new ArrayList<String>();
+                    for (String serial : results) {
+                        serials.add(serial.replaceAll("-", ":"));
+                    }
+                    return serials;
+                });
     }
 
     @Override
     public Uni<CertificateData.PEM> getCertificate(String serial) {
-        return pki.readCertificate(serial)
+        return Uni.createFrom().completionStage(pki.readCertificate(serial))
                 .map(result -> new CertificateData.PEM(result.getCertificate()));
     }
 
@@ -185,7 +186,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setTtl(fromVaultDuration(options.timeToLive))
                 .setExcludeCommonNameFromSubjectAlternativeNames(options.excludeCommonNameFromSubjectAlternativeNames);
 
-        return pki.issue(role, params)
+        return Uni.createFrom().completionStage(pki.issue(role, params))
                 .map(data -> {
 
                     GeneratedCertificate result = new GeneratedCertificate();
@@ -214,7 +215,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setTtl(fromVaultDuration(options.timeToLive))
                 .setExcludeCommonNameFromSubjectAlternativeNames(options.excludeCommonNameFromSubjectAlternativeNames);
 
-        return pki.sign(role, params)
+        return Uni.createFrom().completionStage(pki.sign(role, params))
                 .map(data -> {
 
                     SignedCertificate result = new SignedCertificate();
@@ -232,7 +233,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         var params = new VaultSecretsPKIRevokeParams()
                 .setSerialNumber(serialNumber);
 
-        return pki.revoke(params)
+        return Uni.createFrom().completionStage(pki.revoke(params))
                 .map(VaultSecretsPKIRevokeResultData::getRevocationTime);
     }
 
@@ -281,12 +282,12 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setBasicConstraintsValidForNonCa(options.basicConstraintsValidForNonCA)
                 .setNotBefore(fromVaultDuration(options.notBeforeDuration));
 
-        return pki.updateRole(role, params);
+        return Uni.createFrom().completionStage(pki.updateRole(role, params));
     }
 
     @Override
     public Uni<RoleOptions> getRole(String role) {
-        return pki.readRole(role)
+        return Uni.createFrom().completionStage(pki.readRole(role))
                 .map(info -> {
                     RoleOptions result = new RoleOptions();
                     result.timeToLive = toStringDurationSeconds(info.getTtl());
@@ -334,7 +335,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<List<String>> getRoles() {
-        return pki.listRoles()
+        return Uni.createFrom().completionStage(pki.listRoles())
                 .onFailure(VaultClientException.class).recoverWithUni(x -> {
                     VaultClientException vx = (VaultClientException) x;
                     // Translate 404 to empty list
@@ -348,7 +349,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<Void> deleteRole(String role) {
-        return pki.deleteRole(role);
+        return Uni.createFrom().completionStage(pki.deleteRole(role));
     }
 
     @Override
@@ -379,8 +380,10 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setCountry(commaStringToStringList(options.subjectCountry))
                 .setSerialNumber(options.subjectSerialNumber);
 
-        return pki.generateRoot(
-                options.exportPrivateKey ? VaultSecretsPKIManageType.EXPORTED : VaultSecretsPKIManageType.INTERNAL, params)
+        return Uni.createFrom()
+                .completionStage(pki.generateRoot(
+                        options.exportPrivateKey ? VaultSecretsPKIManageType.EXPORTED : VaultSecretsPKIManageType.INTERNAL,
+                        params))
                 .map(data -> {
 
                     GeneratedRootCertificate result = new GeneratedRootCertificate();
@@ -396,7 +399,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<Void> deleteRoot() {
-        return pki.deleteIssuer("default");
+        return Uni.createFrom().completionStage(pki.deleteIssuer("default"));
     }
 
     @Override
@@ -424,7 +427,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setCountry(commaStringToStringList(options.subjectCountry))
                 .setSerialNumber(options.subjectSerialNumber);
 
-        return pki.signIntermediate(params)
+        return Uni.createFrom().completionStage(pki.signIntermediate(params))
                 .map(data -> {
 
                     SignedCertificate result = new SignedCertificate();
@@ -461,8 +464,10 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setCountry(commaStringToStringList(options.subjectCountry))
                 .setSerialNumber(options.subjectSerialNumber);
 
-        return pki.generateIntermediateCsr(
-                options.exportPrivateKey ? VaultSecretsPKIManageType.EXPORTED : VaultSecretsPKIManageType.INTERNAL, params)
+        return Uni.createFrom()
+                .completionStage(pki.generateIntermediateCsr(
+                        options.exportPrivateKey ? VaultSecretsPKIManageType.EXPORTED : VaultSecretsPKIManageType.INTERNAL,
+                        params))
                 .map(data -> {
 
                     GeneratedIntermediateCSRResult result = new GeneratedIntermediateCSRResult();
@@ -476,7 +481,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
 
     @Override
     public Uni<Void> setSignedIntermediateCA(String pemCert) {
-        return pki.setSignedIntermediate(pemCert).map(r -> null);
+        return Uni.createFrom().completionStage(pki.setSignedIntermediate(pemCert)).map(r -> null);
     }
 
     @Override
@@ -487,7 +492,7 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
                 .setTidyRevokedCerts(options.tidyRevokedCerts)
                 .setSafetyBuffer(fromVaultDuration(options.safetyBuffer));
 
-        return pki.tidy(params);
+        return Uni.createFrom().completionStage(pki.tidy(params));
     }
 
     private String stringListToCommaString(List<String> values) {
@@ -536,14 +541,11 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         if (data == null) {
             return null;
         }
-        switch (nonNullFormat(format)) {
-            case DER:
-                return new CertificateData.DER(Base64.getDecoder().decode(data));
-            case PEM:
-                return new CertificateData.PEM(data);
-            default:
-                throw new VaultException("Unsupported certificate format");
-        }
+        return switch (nonNullFormat(format)) {
+            case DER -> new CertificateData.DER(Base64.getDecoder().decode(data));
+            case PEM -> new CertificateData.PEM(data);
+            default -> throw new VaultException("Unsupported certificate format");
+        };
     }
 
     private List<CertificateData> createCertificateDataList(List<String> datas, VaultSecretsPKIFormat format) {
@@ -561,14 +563,11 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
         if (data == null) {
             return null;
         }
-        switch (nonNullFormat(format)) {
-            case DER:
-                return new CSRData.DER(Base64.getDecoder().decode(data));
-            case PEM:
-                return new CSRData.PEM(data);
-            default:
-                throw new VaultException("Unsupported certification request format");
-        }
+        return switch (nonNullFormat(format)) {
+            case DER -> new CSRData.DER(Base64.getDecoder().decode(data));
+            case PEM -> new CSRData.PEM(data);
+            default -> throw new VaultException("Unsupported certification request format");
+        };
     }
 
     private PrivateKeyData createPrivateKeyData(String data, VaultSecretsPKIFormat format,
@@ -577,14 +576,11 @@ public class VaultPKIManager implements VaultPKISecretReactiveEngine {
             return null;
         }
         boolean pkcs8 = privateKeyFormat == VaultSecretsPKIPrivateKeyFormat.PKCS8;
-        switch (nonNullFormat(format)) {
-            case DER:
-                return new PrivateKeyData.DER(Base64.getDecoder().decode(data), pkcs8);
-            case PEM:
-                return new PrivateKeyData.PEM(data, pkcs8);
-            default:
-                throw new VaultException("Unsupported private key format");
-        }
+        return switch (nonNullFormat(format)) {
+            case DER -> new PrivateKeyData.DER(Base64.getDecoder().decode(data), pkcs8);
+            case PEM -> new PrivateKeyData.PEM(data, pkcs8);
+            default -> throw new VaultException("Unsupported private key format");
+        };
     }
 
     private static List<VaultSecretsPKIKeyUsage> mapKeyUsagesToClient(List<CertificateKeyUsage> keyUsages) {

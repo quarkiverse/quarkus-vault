@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,26 +20,26 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultAuthTokenTest {
 
     @Test
-    public void testListAccessors(VaultClient client) {
+    public void testListAccessors(VaultClient client) throws Exception {
         var tokenApi = client.auth().token();
 
         var createdToken = tokenApi.create(false, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var accessors = tokenApi.listAccessors()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(accessors)
                 .contains(createdToken.getAccessor());
     }
 
     @Test
-    public void testCreateToken(VaultClient client) {
+    public void testCreateToken(VaultClient client) throws Exception {
         var tokenApi = client.auth().token();
 
         var tokenInfo = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
                 .setMeta(Map.of("foo", "bar")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenInfo)
                 .isNotNull();
@@ -69,19 +70,19 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testCreateTokenWithRole(VaultClient client, @Random String role) {
+    public void testCreateTokenWithRole(VaultClient client, @Random String role) throws Exception {
         var tokenApi = client.auth().token();
 
         tokenApi.updateRole(role, new VaultAuthTokenUpdateRoleParams()
                 .setAllowedPolicies(List.of("root")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var createdToken = tokenApi.create(role, new VaultAuthTokenCreateTokenParams()
                 .setRoleName(role))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenInfo = tokenApi.lookup(createdToken.getClientToken())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenInfo)
                 .isNotNull();
@@ -90,7 +91,7 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testLookupToken(VaultClient client, @Random String tokenId) {
+    public void testLookupToken(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var policy = tokenId + "-policy";
@@ -99,7 +100,7 @@ public class VaultAuthTokenTest {
                 path "secret/*" {
                     capabilities = [ "read" ]
                 }""")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
                 .setId(tokenId)
@@ -108,10 +109,10 @@ public class VaultAuthTokenTest {
                 .setMeta(Map.of("foo", "bar"))
                 .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenInfo = tokenApi.lookup(createdToken.getClientToken())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenInfo)
                 .isNotNull();
@@ -154,7 +155,7 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testLookupSelfToken(VaultClient client, @Random String tokenId) {
+    public void testLookupSelfToken(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var policy = tokenId + "-policy";
@@ -163,7 +164,7 @@ public class VaultAuthTokenTest {
                 path "secret/*" {
                     capabilities = [ "read" ]
                 }""")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
                 .setId(tokenId)
@@ -172,12 +173,12 @@ public class VaultAuthTokenTest {
                 .setMeta(Map.of("foo", "bar"))
                 .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenClient = client.configure().clientToken(createdToken.getClientToken()).build();
 
         var tokenInfo = tokenClient.auth().token().lookupSelf()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenInfo)
                 .isNotNull();
@@ -216,7 +217,7 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testLookupTokenAccessor(VaultClient client, @Random String tokenId) {
+    public void testLookupTokenAccessor(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
@@ -225,10 +226,10 @@ public class VaultAuthTokenTest {
                 .setMeta(Map.of("foo", "bar"))
                 .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var accessorInfo = tokenApi.lookupAccessor(createdToken.getAccessor())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(accessorInfo)
                 .isNotNull();
@@ -269,7 +270,7 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testRenewToken(VaultClient client, @Random String tokenId) {
+    public void testRenewToken(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var policy = tokenId + "-policy";
@@ -278,7 +279,7 @@ public class VaultAuthTokenTest {
                 path "secret/*" {
                     capabilities = [ "read" ]
                 }""")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
                 .setId(tokenId)
@@ -287,10 +288,10 @@ public class VaultAuthTokenTest {
                 .setMeta(Map.of("foo", "bar"))
                 .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenInfo = tokenApi.renew(createdToken.getClientToken(), Duration.ofSeconds(30))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenInfo)
                 .isNotNull();
@@ -321,7 +322,7 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testRenewSelfToken(VaultClient client, @Random String tokenId) {
+    public void testRenewSelfToken(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var policy = tokenId + "-policy";
@@ -330,7 +331,7 @@ public class VaultAuthTokenTest {
                 path "secret/*" {
                     capabilities = [ "read" ]
                 }""")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
                 .setId(tokenId)
@@ -339,12 +340,12 @@ public class VaultAuthTokenTest {
                 .setMeta(Map.of("foo", "bar"))
                 .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenClient = client.configure().clientToken(createdToken.getClientToken()).build();
 
         var tokenInfo = tokenClient.auth().token().renewSelf(Duration.ofSeconds(30))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenInfo)
                 .isNotNull();
@@ -375,7 +376,7 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testRenewAccessor(VaultClient client, @Random String tokenId) {
+    public void testRenewAccessor(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var policy = tokenId + "-policy";
@@ -384,7 +385,7 @@ public class VaultAuthTokenTest {
                 path "secret/*" {
                     capabilities = [ "read" ]
                 }""")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var createdToken = tokenApi.create(false, new VaultAuthTokenCreateTokenParams()
                 .setId(tokenId)
@@ -393,10 +394,10 @@ public class VaultAuthTokenTest {
                 .setMeta(Map.of("foo", "bar"))
                 .setTtl(Duration.ofMinutes(1))
                 .setNumUses(5))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenInfo = tokenApi.renewAccessor(createdToken.getAccessor(), Duration.ofSeconds(30))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenInfo)
                 .isNotNull();
@@ -427,77 +428,80 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testRevokeToken(VaultClient client) {
+    public void testRevokeToken(VaultClient client) throws Exception {
         var tokenApi = client.auth().token();
 
         var createdToken = tokenApi.create(false, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         tokenApi.revoke(createdToken.getClientToken())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatThrownBy(() -> tokenApi.lookup(createdToken.getClientToken())
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 403);
     }
 
     @Test
-    public void testRevokeSelfToken(VaultClient client) {
+    public void testRevokeSelfToken(VaultClient client) throws Exception {
         var tokenApi = client.auth().token();
 
         var createdToken = tokenApi.create(false, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenClient = client.configure().clientToken(createdToken.getClientToken()).build();
 
         tokenClient.auth().token().revokeSelf()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatThrownBy(() -> client.auth().token().lookup(createdToken.getClientToken())
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 403);
     }
 
     @Test
-    public void testRevokeOrphanToken(VaultClient client) {
+    public void testRevokeOrphanToken(VaultClient client) throws Exception {
         var tokenApi = client.auth().token();
 
         var createdToken = tokenApi.create(null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         tokenApi.revoke(true, createdToken.getClientToken())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatThrownBy(() -> tokenApi.lookup(createdToken.getClientToken())
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 403);
     }
 
     @Test
-    public void testRevokeAccessor(VaultClient client) {
+    public void testRevokeAccessor(VaultClient client) throws Exception {
         var tokenApi = client.auth().token();
 
         var createdToken = tokenApi.create(null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         tokenApi.lookupAccessor(createdToken.getAccessor())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         tokenApi.revokeAccessor(createdToken.getAccessor())
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var accessors = tokenApi.listAccessors()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(accessors)
                 .doesNotContain(createdToken.getAccessor());
     }
 
     @Test
-    public void testUpdateTokenRole(VaultClient client, @Random String tokenId) {
+    public void testUpdateTokenRole(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var role = tokenId + "-role";
@@ -518,10 +522,10 @@ public class VaultAuthTokenTest {
                 .setTokenNumUses(5)
                 .setTokenPeriod(Duration.ofSeconds(90))
                 .setTokenType(VaultTokenType.SERVICE))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roleInfo = tokenApi.readRole(role)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roleInfo)
                 .isNotNull();
@@ -558,50 +562,51 @@ public class VaultAuthTokenTest {
     }
 
     @Test
-    public void testDeleteTokenRole(VaultClient client, @Random String tokenId) {
+    public void testDeleteTokenRole(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var role = tokenId + "-role";
 
         tokenApi.updateRole(role, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var tokenInfo = tokenApi.readRole(role)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(tokenInfo)
                 .isNotNull();
 
         tokenApi.deleteRole(role)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatThrownBy(() -> tokenApi.readRole(role)
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test
-    public void testListTokenRoles(VaultClient client, @Random String tokenId) {
+    public void testListTokenRoles(VaultClient client, @Random String tokenId) throws Exception {
         var tokenApi = client.auth().token();
 
         var role = tokenId + "-role";
 
         tokenApi.updateRole(role, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roles = tokenApi.listRoles()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roles)
                 .contains(role);
     }
 
     @Test
-    public void testTidyTokens(VaultClient client) {
+    public void testTidyTokens(VaultClient client) throws Exception {
         var tokenApi = client.auth().token();
 
-        assertThatCode(() -> tokenApi.tidyTokens().await().indefinitely())
+        assertThatCode(() -> tokenApi.tidyTokens().toCompletableFuture().get())
                 .doesNotThrowAnyException();
     }
 

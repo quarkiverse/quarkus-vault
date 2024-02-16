@@ -1,6 +1,5 @@
 package io.quarkus.vault.test;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +30,7 @@ public class VaultTestLifecycleManager implements QuarkusTestResourceLifecycleMa
 
         try {
             vaultTestExtension.start();
-        } catch (InterruptedException | IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

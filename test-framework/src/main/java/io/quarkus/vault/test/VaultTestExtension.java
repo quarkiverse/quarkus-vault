@@ -48,9 +48,9 @@ import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.api.sys.init.VaultSysInitParams;
 import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
 import io.quarkus.vault.runtime.VaultVersions;
+import io.vertx.core.Vertx;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.ext.web.client.WebClient;
 
 public class VaultTestExtension {
 
@@ -181,7 +181,7 @@ public class VaultTestExtension {
         }
     }
 
-    public void start() throws InterruptedException, IOException {
+    public void start() throws Exception {
 
         log.info("start containers on " + System.getProperty("os.name"));
 
@@ -248,7 +248,7 @@ public class VaultTestExtension {
         return "hashicorp/vault:" + VaultVersions.VAULT_TEST_VERSION;
     }
 
-    private void initVault() throws InterruptedException, IOException {
+    private void initVault() throws Exception {
 
         waitForContainerToStart();
 
@@ -259,7 +259,7 @@ public class VaultTestExtension {
         var vaultInit = vaultClient.sys().init().init(new VaultSysInitParams()
                 .setSecretShares(1)
                 .setSecretThreshold(1))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         String unsealKey = vaultInit.getKeys().get(0);
         rootToken = vaultInit.getRootToken();
 
@@ -267,7 +267,7 @@ public class VaultTestExtension {
 
         try {
             vaultClient.sys().health().statusCode(false, false)
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         } catch (VaultClientException e) {
             // https://www.vaultproject.io/api/system/health.html
             // 503 = sealed
@@ -277,7 +277,7 @@ public class VaultTestExtension {
         // unseal
         execVault("vault operator unseal " + unsealKey);
 
-        var sealStatus = vaultClient.sys().seal().status().await().indefinitely();
+        var sealStatus = vaultClient.sys().seal().status().toCompletableFuture().get();
         assertFalse(sealStatus.isSealed());
 
         // userpass auth
@@ -292,17 +292,17 @@ public class VaultTestExtension {
         execVault("vault auth enable approle");
         execVault(format("vault write auth/approle/role/%s policies=%s",
                 VAULT_AUTH_APPROLE, VAULT_POLICY));
-        appRoleSecretId = vaultClient.auth().appRole().generateSecretId(VAULT_AUTH_APPROLE, null).await()
-                .indefinitely().getSecretId();
-        appRoleRoleId = vaultClient.auth().appRole().readRoleId(VAULT_AUTH_APPROLE).await().indefinitely();
+        appRoleSecretId = vaultClient.auth().appRole().generateSecretId(VAULT_AUTH_APPROLE, null)
+                .toCompletableFuture().get()
+                .getSecretId();
+        appRoleRoleId = vaultClient.auth().appRole().readRoleId(VAULT_AUTH_APPROLE).toCompletableFuture().get();
         log.info(
                 format("generated role_id=%s secret_id=%s for approle=%s", appRoleRoleId, appRoleSecretId, VAULT_AUTH_APPROLE));
 
         // policy
         String policyContent = readResourceContent("vault.policy");
         vaultClient.sys().policy().update(VAULT_POLICY, policyContent)
-                .await()
-                .indefinitely();
+                .toCompletableFuture().get();
 
         // executable permission for test-plugin
         execVault("chmod +x /vault/plugins/test-plugin");
@@ -468,13 +468,13 @@ public class VaultTestExtension {
         fail("vault failed to start");
     }
 
-    private void waitForVaultAPIToBeReady(VaultClient vaultClient) throws InterruptedException {
+    private void waitForVaultAPIToBeReady(VaultClient vaultClient) throws Exception {
         Instant started = Instant.now();
         while (Instant.now().isBefore(started.plusSeconds(20))) {
             try {
                 log.info("checking seal status");
                 var sealStatus = vaultClient.sys().seal().status()
-                        .await().indefinitely();
+                        .toCompletableFuture().get();
                 log.info(sealStatus);
                 return;
             } catch (VaultException e) {

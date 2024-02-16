@@ -36,18 +36,18 @@ public class VaultClientExampleTest {
             var healthApi = client.sys().health();
 
             var statusResult = healthApi.status()
-                    .await().indefinitely();
-            assertEquals(statusResult, 200);
+                    .toCompletableFuture().get();
+            assertEquals(statusResult.getStatusCode(), 200);
 
             var infoResult = healthApi.info()
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
 
             System.out.println(JsonMapping.mapper.writeValueAsString(infoResult));
 
             // Try reading a secret without authentication
 
             assertThrows(VaultClientException.class, () -> client.secrets().kv2().readSecret("hello")
-                    .await().indefinitely());
+                    .toCompletableFuture().get());
 
             // Switch to root token authentication and try reading a secret
 
@@ -55,13 +55,13 @@ public class VaultClientExampleTest {
                     .clientToken("root")
                     .build()
                     .secrets().kv2().readSecret("hello")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
         }
     }
 
     @Disabled("Example for client usage, replicated in other tests")
     @Test
-    void testKV1(@Vault URL baseURL) {
+    void testKV1(@Vault URL baseURL) throws Exception {
         try (var httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient())) {
 
             var client = VaultClient.builder()
@@ -73,7 +73,7 @@ public class VaultClientExampleTest {
             var kvApi = client.secrets().kv2();
 
             var secret = kvApi.readSecret("hello")
-                    .await().indefinitely();
+                    .toCompletableFuture().get();
             assertEquals(secret.getData().get("value"), "world");
         }
     }

@@ -1,12 +1,12 @@
 package io.quarkus.vault.client.api.common;
 
 import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 import io.quarkus.vault.client.common.VaultLeasedResultExtractor;
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultRequestExecutor;
-import io.smallrye.mutiny.Uni;
 
 public class VaultAPI<F extends VaultRequestFactory> {
 
@@ -22,12 +22,12 @@ public class VaultAPI<F extends VaultRequestFactory> {
         return executor;
     }
 
-    public <T> Uni<VaultWrapInfo> wrapping(Duration wrapTTL, Function<F, VaultRequest<T>> builder) {
+    public <T> CompletionStage<VaultWrapInfo> wrapping(Duration wrapTTL, Function<F, VaultRequest<T>> builder) {
         var request = builder.apply(factory);
         var wrapRequest = request.builder().wrapTTL(wrapTTL)
                 .build(VaultLeasedResultExtractor.of(VaultWrappedResult.class));
         return executor.execute(wrapRequest)
-                .map(r -> r.getResult().getWrapInfo());
+                .thenApply(r -> r.getResult().getWrapInfo());
     }
 
 }

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Network;
@@ -29,7 +30,7 @@ public class VaultSecretsRabbitMQTest {
             .withNetwork(Network.SHARED);
 
     @Test
-    public void testConfigureConnection(VaultClient client) {
+    public void testConfigureConnection(VaultClient client) throws Exception {
         var rmqApi = client.secrets().rabbitMQ();
 
         rmqApi.configureConnection(new VaultSecretsRabbitMQConfigureConnectionParams()
@@ -37,24 +38,24 @@ public class VaultSecretsRabbitMQTest {
                 .setUsername("guest")
                 .setPassword("guest")
                 .setUsernameTemplate("{{.DisplayName}}_{{.RoleName}}"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
     }
 
     @Test
-    public void testConfigureLease(VaultClient client) {
+    public void testConfigureLease(VaultClient client) throws Exception {
         var rmqApi = client.secrets().rabbitMQ();
 
         rmqApi.configureConnection(new VaultSecretsRabbitMQConfigureConnectionParams()
                 .setConnectionUri("http://rmq:15672")
                 .setUsername("guest")
                 .setPassword("guest"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         rmqApi.configureLease(Duration.ofMinutes(1), Duration.ofMinutes(5))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var config = rmqApi.readLeaseConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(config.getTtl())
                 .isEqualTo(Duration.ofMinutes(1));
@@ -63,17 +64,17 @@ public class VaultSecretsRabbitMQTest {
     }
 
     @Test
-    public void testUpdateRole(VaultClient client, @Random String roleName) {
+    public void testUpdateRole(VaultClient client, @Random String roleName) throws Exception {
         var rmqApi = client.secrets().rabbitMQ();
 
         var vhosts = new VaultSecretsRabbitMQVHosts()
                 .add("/", ".*", ".*", ".*");
 
         rmqApi.updateRole(roleName, List.of("administrator", "guest"), vhosts, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roleInfo = rmqApi.readRole(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roleInfo.getTags())
                 .contains("administrator", "guest");
@@ -90,32 +91,33 @@ public class VaultSecretsRabbitMQTest {
     }
 
     @Test
-    public void testDeleteRole(VaultClient client, @Random String roleName) {
+    public void testDeleteRole(VaultClient client, @Random String roleName) throws Exception {
         var rmqApi = client.secrets().rabbitMQ();
 
         var vhosts = new VaultSecretsRabbitMQVHosts()
                 .add("/", ".*", ".*", ".*");
 
         rmqApi.updateRole(roleName, List.of("administrator", "guest"), vhosts, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var roleInfo = rmqApi.readRole(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(roleInfo)
                 .isNotNull();
 
         rmqApi.deleteRole(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThatThrownBy(() -> rmqApi.readRole(roleName)
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasFieldOrPropertyWithValue("status", 404);
     }
 
     @Test
-    public void testGenerateCredentials(VaultClient client, @Random String roleName) {
+    public void testGenerateCredentials(VaultClient client, @Random String roleName) throws Exception {
         var rmqApi = client.secrets().rabbitMQ();
 
         configure(client);
@@ -124,13 +126,13 @@ public class VaultSecretsRabbitMQTest {
                 .add("/", ".*", ".*", ".*");
 
         rmqApi.updateRole(roleName, List.of("administrator", "guest"), vhosts, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         rmqApi.configureLease(Duration.ofMinutes(1), Duration.ofMinutes(5))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var credentials = rmqApi.generateCredentials(roleName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(credentials)
                 .isNotNull();
@@ -144,13 +146,13 @@ public class VaultSecretsRabbitMQTest {
                 .isNotNull();
     }
 
-    private void configure(VaultClient client) {
+    private void configure(VaultClient client) throws Exception {
         var rmqApi = client.secrets().rabbitMQ();
 
         rmqApi.configureConnection(new VaultSecretsRabbitMQConfigureConnectionParams()
                 .setConnectionUri("http://rmq:15672")
                 .setUsername("guest")
                 .setPassword("guest"))
-                .await().indefinitely();
+                .toCompletableFuture().get();
     }
 }

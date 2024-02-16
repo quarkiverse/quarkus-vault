@@ -1,9 +1,9 @@
 package io.quarkus.vault.client.common;
 
-import io.smallrye.mutiny.Uni;
+import java.util.concurrent.CompletionStage;
 
 public interface VaultRequestExecutor {
 
-    <T> Uni<VaultResponse<T>> execute(VaultRequest<T> request);
+    <T> CompletionStage<VaultResponse<T>> execute(VaultRequest<T> request);
 
 }

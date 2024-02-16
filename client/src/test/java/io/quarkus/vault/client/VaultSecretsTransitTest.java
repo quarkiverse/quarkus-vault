@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -42,12 +43,12 @@ public class VaultSecretsTransitTest {
     static final HexFormat HEX = HexFormat.of();
 
     @Test
-    public void testCreateKey(VaultClient client, @Random String keyName) {
+    public void testCreateKey(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var key = transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(key)
                 .isNotNull()
@@ -83,15 +84,15 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testReadKey(VaultClient client, @Random String keyName) {
+    public void testReadKey(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var key = transitApi.readKey(keyName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(key)
                 .isNotNull()
@@ -127,15 +128,15 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testListKeys(VaultClient client, @Random String keyName) {
+    public void testListKeys(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keys = transitApi.listKeys()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys)
                 .isNotNull()
@@ -143,44 +144,44 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testDeleteKey(VaultClient client, @Random String keyName) {
+    public void testDeleteKey(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var key = transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(key)
                 .isNotNull();
 
         transitApi.updateKey(keyName, new VaultSecretsTransitUpdateKeyParams()
                 .setDeletionAllowed(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.deleteKey(keyName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var keys = transitApi.listKeys()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(keys)
                 .doesNotContain(keyName);
     }
 
     @Test
-    public void testRotateKey(VaultClient client, @Random String keyName) {
+    public void testRotateKey(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var key = transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(key)
                 .isNotNull();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var rotatedKey = transitApi.readKey(keyName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(rotatedKey)
                 .isNotNull()
@@ -188,17 +189,17 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testEncryptDecrypt(VaultClient client, @Random String keyName) {
+    public void testEncryptDecrypt(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext = "test".getBytes(UTF_8);
 
         var encrypted = transitApi.encrypt(keyName, new VaultSecretsTransitEncryptParams()
                 .setPlaintext(plaintext))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .isNotNull();
@@ -209,29 +210,29 @@ public class VaultSecretsTransitTest {
 
         var decrypted = transitApi.decrypt(keyName, new VaultSecretsTransitDecryptParams()
                 .setCiphertext(encrypted.getCiphertext()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .isEqualTo(plaintext);
     }
 
     @Test
-    public void testEncryptDecryptWithDerivation(VaultClient client, @Random String keyName) {
+    public void testEncryptDecryptWithDerivation(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext = "test".getBytes(UTF_8);
 
         var context = client.sys().tools().random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var encrypted = transitApi.encrypt(keyName, new VaultSecretsTransitEncryptParams()
                 .setPlaintext(plaintext)
                 .setContext(context))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .isNotNull();
@@ -243,30 +244,30 @@ public class VaultSecretsTransitTest {
         var decrypted = transitApi.decrypt(keyName, new VaultSecretsTransitDecryptParams()
                 .setCiphertext(encrypted.getCiphertext())
                 .setContext(context))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .isEqualTo(plaintext);
     }
 
     @Test
-    public void testEncryptDecryptWithConvergentAndDerivation(VaultClient client, @Random String keyName) {
+    public void testEncryptDecryptWithConvergentAndDerivation(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setConvergentEncryption(true)
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext = "test".getBytes(UTF_8);
 
         var context = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var encrypted = transitApi.encrypt(keyName, new VaultSecretsTransitEncryptParams()
                 .setPlaintext(plaintext)
                 .setContext(context))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .isNotNull();
@@ -278,18 +279,18 @@ public class VaultSecretsTransitTest {
         var decrypted = transitApi.decrypt(keyName, new VaultSecretsTransitDecryptParams()
                 .setCiphertext(encrypted.getCiphertext())
                 .setContext(context))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .isEqualTo(plaintext);
     }
 
     @Test
-    public void testEncryptDecryptWithAD(VaultClient client, @Random String keyName) {
+    public void testEncryptDecryptWithAD(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext = "test".getBytes(UTF_8);
         var associatedData = "something-else".getBytes(UTF_8);
@@ -297,7 +298,7 @@ public class VaultSecretsTransitTest {
         var encrypted = transitApi.encrypt(keyName, new VaultSecretsTransitEncryptParams()
                 .setPlaintext(plaintext)
                 .setAssociatedData(associatedData))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .isNotNull();
@@ -309,30 +310,30 @@ public class VaultSecretsTransitTest {
         var decrypted = transitApi.decrypt(keyName, new VaultSecretsTransitDecryptParams()
                 .setCiphertext(encrypted.getCiphertext())
                 .setAssociatedData(associatedData))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .isEqualTo(plaintext);
     }
 
     @Test
-    public void testEncryptWithConvergent(VaultClient client, @Random String keyName) {
+    public void testEncryptWithConvergent(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setConvergentEncryption(true)
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext = "test".getBytes(UTF_8);
 
         var context = client.sys().tools().random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var encrypted1 = transitApi.encrypt(keyName, new VaultSecretsTransitEncryptParams()
                 .setPlaintext(plaintext)
                 .setContext(context))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted1)
                 .isNotNull();
@@ -342,7 +343,7 @@ public class VaultSecretsTransitTest {
         var encrypted2 = transitApi.encrypt(keyName, new VaultSecretsTransitEncryptParams()
                 .setPlaintext(plaintext)
                 .setContext(context))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted2)
                 .isNotNull();
@@ -354,11 +355,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBatchEncryptDecrypt(VaultClient client, @Random String keyName) {
+    public void testBatchEncryptDecrypt(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
@@ -370,7 +371,7 @@ public class VaultSecretsTransitTest {
                                 .setReference("item1"),
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2))))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .hasSize(2);
@@ -401,7 +402,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitDecryptBatchItem()
                                 .setCiphertext(result2.getCiphertext())
                                 .setReference("item2"))))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .hasSize(2);
@@ -422,20 +423,20 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBatchEncryptDecryptWithDerivation(VaultClient client, @Random String keyName) {
+    public void testBatchEncryptDecryptWithDerivation(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
 
         var context1 = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         var context2 = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var encrypted = transitApi.encryptBatch(keyName, new VaultSecretsTransitEncryptBatchParams()
                 .setBatchInput(List.of(
@@ -445,7 +446,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)
                                 .setContext(context2))))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .hasSize(2);
@@ -468,7 +469,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitDecryptBatchItem()
                                 .setCiphertext(result2.getCiphertext())
                                 .setContext(context2))))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .hasSize(2);
@@ -485,21 +486,22 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBatchEncryptDecryptWithConvergentAndDerivation(VaultClient client, @Random String keyName) {
+    public void testBatchEncryptDecryptWithConvergentAndDerivation(VaultClient client, @Random String keyName)
+            throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setConvergentEncryption(true)
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
 
         var context1 = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         var context2 = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var encrypted = transitApi.encryptBatch(keyName, new VaultSecretsTransitEncryptBatchParams()
                 .setBatchInput(List.of(
@@ -509,7 +511,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)
                                 .setContext(context2))))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .hasSize(2);
@@ -532,7 +534,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitDecryptBatchItem()
                                 .setCiphertext(result2.getCiphertext())
                                 .setContext(context2))))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .hasSize(2);
@@ -549,11 +551,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBatchEncryptDecryptWithAD(VaultClient client, @Random String keyName) {
+    public void testBatchEncryptDecryptWithAD(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var associatedData1 = "something-else".getBytes(UTF_8);
@@ -568,7 +570,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)
                                 .setAssociatedData(associatedData2))))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .hasSize(2);
@@ -593,7 +595,7 @@ public class VaultSecretsTransitTest {
                                 .setCiphertext(result2.getCiphertext())
                                 .setAssociatedData(associatedData2)
                                 .setReference("item2"))))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .hasSize(2);
@@ -610,14 +612,14 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBatchEncryptDecryptWithKeyVersion(VaultClient client, @Random String keyName) {
+    public void testBatchEncryptDecryptWithKeyVersion(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
@@ -631,7 +633,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)
                                 .setKeyVersion(2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .hasSize(2);
@@ -657,7 +659,7 @@ public class VaultSecretsTransitTest {
                 .addBatchItem(
                         new VaultSecretsTransitDecryptBatchItem()
                                 .setCiphertext(result2.getCiphertext())))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .hasSize(2);
@@ -674,21 +676,21 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBatchEncryptWithConvergent(VaultClient client, @Random String keyName) {
+    public void testBatchEncryptWithConvergent(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setConvergentEncryption(true)
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
 
         var context1 = client.sys().tools().random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         var context2 = client.sys().tools().random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var encrypted1 = transitApi.encryptBatch(keyName, new VaultSecretsTransitEncryptBatchParams()
                 .addBatchItem(
@@ -699,7 +701,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)
                                 .setContext(context2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted1)
                 .hasSize(2);
@@ -723,7 +725,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)
                                 .setContext(context2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted2)
                 .hasSize(2);
@@ -740,11 +742,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBatchEncryptWithIndividualErrors(VaultClient client, @Random String keyName) {
+    public void testBatchEncryptWithIndividualErrors(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
@@ -758,7 +760,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)
                                 .setKeyVersion(2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted1)
                 .hasSize(2);
@@ -777,11 +779,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBatchDecryptWithIndividualErrors(VaultClient client, @Random String keyName) {
+    public void testBatchDecryptWithIndividualErrors(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
@@ -793,7 +795,7 @@ public class VaultSecretsTransitTest {
                 .addBatchItem(
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .hasSize(2);
@@ -806,7 +808,7 @@ public class VaultSecretsTransitTest {
                 .addBatchItem(
                         new VaultSecretsTransitDecryptBatchItem()
                                 .setCiphertext("junk")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(decrypted)
                 .hasSize(2);
@@ -828,17 +830,17 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testRewrap(VaultClient client, @Random String keyName) {
+    public void testRewrap(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext = "test".getBytes(UTF_8);
 
         var encrypted = transitApi.encrypt(keyName, new VaultSecretsTransitEncryptParams()
                 .setPlaintext(plaintext))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .isNotNull();
@@ -846,12 +848,12 @@ public class VaultSecretsTransitTest {
                 .isNotEmpty();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var rewrapped = transitApi.rewrap(keyName, new VaultSecretsTransitRewrapParams()
                 .setKeyVersion(2)
                 .setCiphertext(encrypted.getCiphertext()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(rewrapped)
                 .isNotNull();
@@ -862,11 +864,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testRewrapBatch(VaultClient client, @Random String keyName) {
+    public void testRewrapBatch(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
@@ -878,16 +880,16 @@ public class VaultSecretsTransitTest {
                 .addBatchItem(
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .hasSize(2);
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var rewrapped = transitApi.rewrapBatch(keyName, new VaultSecretsTransitRewrapBatchParams()
                 .addBatchItem(
@@ -898,7 +900,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitRewrapBatchItem()
                                 .setKeyVersion(3)
                                 .setCiphertext(encrypted.get(1).getCiphertext())))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(rewrapped)
                 .hasSize(2);
@@ -919,11 +921,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testRewrapBatchWithIndividualErrors(VaultClient client, @Random String keyName) {
+    public void testRewrapBatchWithIndividualErrors(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var plaintext1 = "hello".getBytes(UTF_8);
         var plaintext2 = "transit".getBytes(UTF_8);
@@ -935,13 +937,13 @@ public class VaultSecretsTransitTest {
                 .addBatchItem(
                         new VaultSecretsTransitEncryptBatchItem()
                                 .setPlaintext(plaintext2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(encrypted)
                 .hasSize(2);
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var rewrapped = transitApi.rewrapBatch(keyName, new VaultSecretsTransitRewrapBatchParams()
                 .addBatchItem(
@@ -952,7 +954,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitRewrapBatchItem()
                                 .setKeyVersion(3)
                                 .setCiphertext(encrypted.get(1).getCiphertext())))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(rewrapped)
                 .hasSize(2);
@@ -974,11 +976,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testRandomBase64(VaultClient client) {
+    public void testRandomBase64(VaultClient client) throws Exception {
         var transitApi = client.secrets().transit();
 
         var random = transitApi.random(32, VaultRandomSource.ALL, VaultFormat.BASE64)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(random)
                 .isNotNull()
@@ -986,11 +988,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testRandomHex(VaultClient client) {
+    public void testRandomHex(VaultClient client) throws Exception {
         var transitApi = client.secrets().transit();
 
         var random = transitApi.random(32, VaultRandomSource.PLATFORM, VaultFormat.HEX)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(random)
                 .isNotNull()
@@ -998,11 +1000,11 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testRandomWithDefaults(VaultClient client) {
+    public void testRandomWithDefaults(VaultClient client) throws Exception {
         var transitApi = client.secrets().transit();
 
         var random = transitApi.random(32, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(random)
                 .isNotNull()
@@ -1010,13 +1012,13 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testHash(VaultClient client) throws NoSuchAlgorithmException {
+    public void testHash(VaultClient client) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         var hash = transitApi.hash(SHA2_512, data, VaultFormat.BASE64)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var localHash = B64_ENC.encodeToString(MessageDigest.getInstance("SHA-512").digest(data));
 
@@ -1025,13 +1027,13 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testHashWithDefaultParams(VaultClient client) throws NoSuchAlgorithmException {
+    public void testHashWithDefaultParams(VaultClient client) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         var hash = transitApi.hash(null, data, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var localHash = HEX.formatHex(MessageDigest.getInstance("SHA-256").digest(data));
 
@@ -1048,13 +1050,13 @@ public class VaultSecretsTransitTest {
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(AES256_GCM96)
                 .setExportable(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var export = transitApi.exportKey(HMAC_KEY, keyName, "latest")
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var hmac = transitApi.hmac(keyName, SHA2_512, data, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var mac = Mac.getInstance("HmacSHA512");
         mac.init(new SecretKeySpec(B64_DEC.decode(export.getKeys().get("1")), "HmacSHA512"));
@@ -1075,13 +1077,13 @@ public class VaultSecretsTransitTest {
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(AES256_GCM96)
                 .setExportable(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var export = transitApi.exportKey(HMAC_KEY, keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var hmac = transitApi.hmacBatch(keyName, new VaultSecretsTransitHmacBatchParams()
                 .setAlgorithm(SHA2_512)
@@ -1092,7 +1094,7 @@ public class VaultSecretsTransitTest {
                 .addBatchItem(
                         new VaultSecretsTransitHmacBatchItem()
                                 .setInput(data2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(hmac)
                 .hasSize(2);
@@ -1117,7 +1119,7 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testHmacBatchWithIndividualErrors(VaultClient client, @Random String keyName) {
+    public void testHmacBatchWithIndividualErrors(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "test".getBytes();
@@ -1125,7 +1127,7 @@ public class VaultSecretsTransitTest {
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(AES256_GCM96)
                 .setExportable(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var hmac = transitApi.hmacBatch(keyName, new VaultSecretsTransitHmacBatchParams()
                 .setAlgorithm(SHA2_512)
@@ -1135,7 +1137,7 @@ public class VaultSecretsTransitTest {
                 .addBatchItem(
                         new VaultSecretsTransitHmacBatchItem()
                                 .setInput(null)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(hmac)
                 .hasSize(2);
@@ -1154,19 +1156,19 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testSign(VaultClient client, @Random String keyName) {
+    public void testSign(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signature = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setHashAlgorithm(SHA2_512))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signature)
                 .isNotNull();
@@ -1179,24 +1181,24 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testSignDerived(VaultClient client, @Random String keyName) {
+    public void testSignDerived(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         var context = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ED25519)
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signature = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setContext(context)
                 .setHashAlgorithm(SHA2_512))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signature)
                 .isNotNull();
@@ -1216,13 +1218,13 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(RSA_2048))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setHashAlgorithm(SHA2_512)
                 .setSignatureAlgorithm(PKCS1V15))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .isNotNull();
@@ -1251,12 +1253,12 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(RSA_2048))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setSaltLength(23))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .isNotNull();
@@ -1286,12 +1288,12 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setMarshalingAlgorithm(VaultSecretsTransitMarshalingAlgorithm.JWS))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .isNotNull();
@@ -1309,7 +1311,7 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testSignBatch(VaultClient client, @Random String keyName) {
+    public void testSignBatch(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "hello".getBytes();
@@ -1317,10 +1319,10 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signature = transitApi.signBatch(keyName, new VaultSecretsTransitSignBatchParams()
                 .setHashAlgorithm(SHA2_512)
@@ -1333,7 +1335,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitSignBatchItem()
                                 .setInput(data2)
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signature)
                 .hasSize(2);
@@ -1366,21 +1368,21 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testSignBatchDerived(VaultClient client, @Random String keyName) {
+    public void testSignBatchDerived(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "hello".getBytes();
         var data2 = "transit".getBytes();
 
         var context1 = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         var context2 = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ED25519)
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signature = transitApi.signBatch(keyName, new VaultSecretsTransitSignBatchParams()
                 .setHashAlgorithm(SHA2_512)
@@ -1392,7 +1394,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitSignBatchItem()
                                 .setInput(data2)
                                 .setContext(context2)))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signature)
                 .hasSize(2);
@@ -1417,14 +1419,14 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testSignBatchWithIndividualErrors(VaultClient client, @Random String keyName) {
+    public void testSignBatchWithIndividualErrors(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "hello".getBytes();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signature = transitApi.signBatch(keyName, new VaultSecretsTransitSignBatchParams()
                 .setHashAlgorithm(SHA2_512)
@@ -1435,7 +1437,7 @@ public class VaultSecretsTransitTest {
                 .addBatchItem(
                         new VaultSecretsTransitSignBatchItem()
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signature)
                 .hasSize(2);
@@ -1466,18 +1468,18 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testVerify(VaultClient client, @Random String keyName) {
+    public void testVerify(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .isNotNull();
@@ -1485,24 +1487,24 @@ public class VaultSecretsTransitTest {
         var verifyResult = transitApi.verify(keyName, new VaultSecretsTransitVerifyParams()
                 .setInput(data)
                 .setSignature(signResult.getSignature()))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verifyResult)
                 .isTrue();
     }
 
     @Test
-    public void testVerifyHmac(VaultClient client, @Random String keyName) {
+    public void testVerifyHmac(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var hmac = transitApi.hmac(keyName, null, data, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(hmac)
                 .isNotNull();
@@ -1510,26 +1512,26 @@ public class VaultSecretsTransitTest {
         var verifyResult = transitApi.verify(keyName, new VaultSecretsTransitVerifyParams()
                 .setInput(data)
                 .setHmac(hmac))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verifyResult)
                 .isTrue();
     }
 
     @Test
-    public void testVerifyRSA(VaultClient client, @Random String keyName) {
+    public void testVerifyRSA(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(RSA_2048))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setSignatureAlgorithm(PKCS1V15))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .isNotNull();
@@ -1538,14 +1540,14 @@ public class VaultSecretsTransitTest {
                 .setInput(data)
                 .setSignature(signResult.getSignature())
                 .setSignatureAlgorithm(PKCS1V15))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verifyResult)
                 .isTrue();
     }
 
     @Test
-    public void testVerifyDerived(VaultClient client, @Random String keyName) {
+    public void testVerifyDerived(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
@@ -1553,15 +1555,15 @@ public class VaultSecretsTransitTest {
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ED25519)
                 .setDerived(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var context = transitApi.random(16, null, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setContext(context))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .isNotNull();
@@ -1570,26 +1572,26 @@ public class VaultSecretsTransitTest {
                 .setInput(data)
                 .setSignature(signResult.getSignature())
                 .setContext(context))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verifyResult)
                 .isTrue();
     }
 
     @Test
-    public void testVerifySaltLength(VaultClient client, @Random String keyName) {
+    public void testVerifySaltLength(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(RSA_2048))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setSaltLength(23))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .isNotNull();
@@ -1598,26 +1600,26 @@ public class VaultSecretsTransitTest {
                 .setInput(data)
                 .setSignature(signResult.getSignature())
                 .setSaltLength(23))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verifyResult)
                 .isTrue();
     }
 
     @Test
-    public void testVerifyMarshalingAlg(VaultClient client, @Random String keyName) {
+    public void testVerifyMarshalingAlg(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data = "test".getBytes();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
                 .setMarshalingAlgorithm(VaultSecretsTransitMarshalingAlgorithm.JWS))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .isNotNull();
@@ -1626,14 +1628,14 @@ public class VaultSecretsTransitTest {
                 .setInput(data)
                 .setSignature(signResult.getSignature())
                 .setMarshalingAlgorithm(VaultSecretsTransitMarshalingAlgorithm.JWS))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verifyResult)
                 .isTrue();
     }
 
     @Test
-    public void testVerifyBatch(VaultClient client, @Random String keyName) {
+    public void testVerifyBatch(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "hello".getBytes();
@@ -1641,7 +1643,7 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signature = transitApi.signBatch(keyName, new VaultSecretsTransitSignBatchParams()
                 .addBatchItem(
@@ -1652,7 +1654,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitSignBatchItem()
                                 .setInput(data2)
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signature)
                 .hasSize(2);
@@ -1668,7 +1670,7 @@ public class VaultSecretsTransitTest {
                                 .setInput(data2)
                                 .setSignature(signature.get(1).getSignature())
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verify)
                 .hasSize(2);
@@ -1693,7 +1695,7 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testVerifyBatchHMAC(VaultClient client, @Random String keyName) {
+    public void testVerifyBatchHMAC(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "hello".getBytes();
@@ -1701,7 +1703,7 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(ECDSA_P256))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var hmac = transitApi.hmacBatch(keyName, new VaultSecretsTransitHmacBatchParams()
                 .addBatchItem(
@@ -1712,7 +1714,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitHmacBatchItem()
                                 .setInput(data2)
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(hmac)
                 .hasSize(2);
@@ -1728,7 +1730,7 @@ public class VaultSecretsTransitTest {
                                 .setInput(data2)
                                 .setHmac(hmac.get(1).getHmac())
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verify)
                 .hasSize(2);
@@ -1739,7 +1741,7 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testVerifyBatchRSA(VaultClient client, @Random String keyName) {
+    public void testVerifyBatchRSA(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "hello".getBytes();
@@ -1747,7 +1749,7 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(RSA_2048))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.signBatch(keyName, new VaultSecretsTransitSignBatchParams()
                 .setSignatureAlgorithm(PKCS1V15)
@@ -1759,7 +1761,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitSignBatchItem()
                                 .setInput(data2)
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .hasSize(2);
@@ -1776,7 +1778,7 @@ public class VaultSecretsTransitTest {
                                 .setInput(data2)
                                 .setSignature(signResult.get(1).getSignature())
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verify)
                 .hasSize(2);
@@ -1787,7 +1789,7 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testVerifyBatchSaltLength(VaultClient client, @Random String keyName) {
+    public void testVerifyBatchSaltLength(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "hello".getBytes();
@@ -1795,7 +1797,7 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(RSA_2048))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.signBatch(keyName, new VaultSecretsTransitSignBatchParams()
                 .setSaltLength(23)
@@ -1807,7 +1809,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitSignBatchItem()
                                 .setInput(data2)
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .hasSize(2);
@@ -1824,7 +1826,7 @@ public class VaultSecretsTransitTest {
                                 .setInput(data2)
                                 .setSignature(signResult.get(1).getSignature())
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verify)
                 .hasSize(2);
@@ -1835,7 +1837,7 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testVerifyBatchMarshalingAlg(VaultClient client, @Random String keyName) {
+    public void testVerifyBatchMarshalingAlg(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var data1 = "hello".getBytes();
@@ -1843,7 +1845,7 @@ public class VaultSecretsTransitTest {
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(RSA_2048))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var signResult = transitApi.signBatch(keyName, new VaultSecretsTransitSignBatchParams()
                 .setMarshalingAlgorithm(VaultSecretsTransitMarshalingAlgorithm.JWS)
@@ -1855,7 +1857,7 @@ public class VaultSecretsTransitTest {
                         new VaultSecretsTransitSignBatchItem()
                                 .setInput(data2)
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(signResult)
                 .hasSize(2);
@@ -1872,7 +1874,7 @@ public class VaultSecretsTransitTest {
                                 .setInput(data2)
                                 .setSignature(signResult.get(1).getSignature())
                                 .setReference("item2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(verify)
                 .hasSize(2);
@@ -1883,58 +1885,59 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testBackupResource(VaultClient client, @Random String keyName) {
+    public void testBackupResource(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setExportable(true)
                 .setAllowPlaintextBackup(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var backup = transitApi.backupKey(keyName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(backup)
                 .isNotEmpty();
 
         assertThatCode(() -> transitApi.restoreKey(keyName, backup, null)
-                .await().indefinitely())
+                .toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
                 .isInstanceOf(VaultClientException.class)
                 .hasMessageContaining("already exists");
 
         transitApi.restoreKey(keyName, backup, true)
-                .await().indefinitely();
+                .toCompletableFuture().get();
     }
 
     @Test
-    public void testTrimKey(VaultClient client, @Random String keyName) {
+    public void testTrimKey(VaultClient client, @Random String keyName) throws Exception {
         var transitApi = client.secrets().transit();
 
         var key = transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(AES256_GCM96))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(key)
                 .isNotNull();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.updateKey(keyName, new VaultSecretsTransitUpdateKeyParams()
                 .setMinDecryptionVersion(2)
                 .setMinEncryptionVersion(2))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.trimKey(keyName, 2)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var trimmed = transitApi.readKey(keyName)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(trimmed)
                 .isNotNull();
@@ -1949,29 +1952,29 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testUpdateCacheConfig(VaultClient client) {
+    public void testUpdateCacheConfig(VaultClient client) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.updateCacheConfig(123)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var size = transitApi.readCacheConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(size)
                 .isEqualTo(123);
     }
 
     @Test
-    public void testAllKeysConfig(VaultClient client) {
+    public void testAllKeysConfig(VaultClient client) throws Exception {
         var transitApi = client.secrets().transit();
 
         transitApi.updateKeysConfig(new VaultSecretsTransitUpdateKeysConfigParams()
                 .setDisableUpsert(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var config = transitApi.readKeysConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(config)
                 .isNotNull();
@@ -1980,10 +1983,10 @@ public class VaultSecretsTransitTest {
 
         transitApi.updateKeysConfig(new VaultSecretsTransitUpdateKeysConfigParams()
                 .setDisableUpsert(false))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         config = transitApi.readKeysConfig()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(config)
                 .isNotNull();
@@ -1992,29 +1995,29 @@ public class VaultSecretsTransitTest {
     }
 
     @Test
-    public void testSecureExportImport(VaultClient client, @Random String keyName, @Random String keyName2) {
+    public void testSecureExportImport(VaultClient client, @Random String keyName, @Random String keyName2) throws Exception {
         var transitApi = client.secrets().transit();
 
         var wrappingKey = transitApi.getWrappingKey()
-                .await().indefinitely();
+                .toCompletableFuture().get();
         transitApi.importKey("wrapping-key", new VaultSecretsTransitImportKeyParams()
                 .setType(RSA_4096)
                 .setPublicKey(wrappingKey))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var key = transitApi.createKey(keyName, new VaultSecretsTransitCreateKeyParams()
                 .setType(AES256_GCM96)
                 .setExportable(true))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         transitApi.rotateKey(keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(key)
                 .isNotNull();
 
         var export = transitApi.secureExportKey("wrapping-key", keyName, null)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(export)
                 .isNotNull();
@@ -2023,13 +2026,13 @@ public class VaultSecretsTransitTest {
 
         transitApi.importKey(keyName2, new VaultSecretsTransitImportKeyParams()
                 .setCiphertext(export.getKeys().get("1")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
         transitApi.importKeyVersion(keyName2, new VaultSecretsTransitImportKeyVersionParams()
                 .setCiphertext(export.getKeys().get("2")))
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         var read = transitApi.readKey(keyName2)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(read)
                 .isNotNull();
@@ -2041,7 +2044,7 @@ public class VaultSecretsTransitTest {
             throws Exception {
 
         var key = transitApi.exportKey(PUBLIC_KEY, keyName, String.valueOf(version))
-                .await().indefinitely()
+                .toCompletableFuture().get()
                 .getKeys().get(String.valueOf(version));
 
         var spki = (SubjectPublicKeyInfo) new PEMParser(new StringReader(key)).readObject();

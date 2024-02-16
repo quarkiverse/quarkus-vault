@@ -12,22 +12,22 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSysHealthTest {
 
     @Test
-    public void testStatus(VaultClient client) {
+    public void testStatus(VaultClient client) throws Exception {
         var healthApi = client.sys().health();
 
         var status = healthApi.status()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(status)
                 .isEqualTo(INITIALIZED_UNSEALED_ACTIVE);
     }
 
     @Test
-    public void testInfo(VaultClient client) {
+    public void testInfo(VaultClient client) throws Exception {
         var healthApi = client.sys().health();
 
         var health = healthApi.info()
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(health.isInitialized())
                 .isTrue();
@@ -52,12 +52,12 @@ public class VaultSysHealthTest {
     }
 
     @Test
-    public void testInfoWithOptions(VaultClient client) {
+    public void testInfoWithOptions(VaultClient client) throws Exception {
 
         var healthApi = client.sys().health();
 
         var health = healthApi.info(true, false)
-                .await().indefinitely();
+                .toCompletableFuture().get();
 
         assertThat(health.isInitialized())
                 .isTrue();
