@@ -10,7 +10,7 @@ h|[[quarkus-vault_configuration]]link:#quarkus-vault_configuration[Configuration
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.enabled]]`link:#quarkus-vault_quarkus.vault.health.enabled[quarkus.vault.health.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-health-enabled]]`link:#quarkus-vault_quarkus-vault-health-enabled[quarkus.vault.health.enabled]`
 
 
 [.description]
@@ -27,7 +27,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.stand-by-ok]]`link:#quarkus-vault_quarkus.vault.health.stand-by-ok[quarkus.vault.health.stand-by-ok]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-health-stand-by-ok]]`link:#quarkus-vault_quarkus-vault-health-stand-by-ok[quarkus.vault.health.stand-by-ok]`
 
 
 [.description]
@@ -44,7 +44,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.health.performance-stand-by-ok]]`link:#quarkus-vault_quarkus.vault.health.performance-stand-by-ok[quarkus.vault.health.performance-stand-by-ok]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-health-performance-stand-by-ok]]`link:#quarkus-vault_quarkus-vault-health-performance-stand-by-ok[quarkus.vault.health.performance-stand-by-ok]`
 
 
 [.description]
@@ -61,7 +61,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.enabled]]`link:#quarkus-vault_quarkus.vault.devservices.enabled[quarkus.vault.devservices.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices-enabled]]`link:#quarkus-vault_quarkus-vault-devservices-enabled[quarkus.vault.devservices.enabled]`
 
 
 [.description]
@@ -80,7 +80,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.image-name]]`link:#quarkus-vault_quarkus.vault.devservices.image-name[quarkus.vault.devservices.image-name]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices-image-name]]`link:#quarkus-vault_quarkus-vault-devservices-image-name[quarkus.vault.devservices.image-name]`
 
 
 [.description]
@@ -97,7 +97,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.shared]]`link:#quarkus-vault_quarkus.vault.devservices.shared[quarkus.vault.devservices.shared]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices-shared]]`link:#quarkus-vault_quarkus-vault-devservices-shared[quarkus.vault.devservices.shared]`
 
 
 [.description]
@@ -118,7 +118,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.service-name]]`link:#quarkus-vault_quarkus.vault.devservices.service-name[quarkus.vault.devservices.service-name]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices-service-name]]`link:#quarkus-vault_quarkus-vault-devservices-service-name[quarkus.vault.devservices.service-name]`
 
 
 [.description]
@@ -137,7 +137,7 @@ endif::add-copy-button-to-env-var[]
 |`vault`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.port]]`link:#quarkus-vault_quarkus.vault.devservices.port[quarkus.vault.devservices.port]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices-port]]`link:#quarkus-vault_quarkus-vault-devservices-port[quarkus.vault.devservices.port]`
 
 
 [.description]
@@ -156,7 +156,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.transit-enabled]]`link:#quarkus-vault_quarkus.vault.devservices.transit-enabled[quarkus.vault.devservices.transit-enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices-transit-enabled]]`link:#quarkus-vault_quarkus-vault-devservices-transit-enabled[quarkus.vault.devservices.transit-enabled]`
 
 
 [.description]
@@ -173,7 +173,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.pki-enabled]]`link:#quarkus-vault_quarkus.vault.devservices.pki-enabled[quarkus.vault.devservices.pki-enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices-pki-enabled]]`link:#quarkus-vault_quarkus-vault-devservices-pki-enabled[quarkus.vault.devservices.pki-enabled]`
 
 
 [.description]
@@ -190,7 +190,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus.vault.devservices.init-commands]]`link:#quarkus-vault_quarkus.vault.devservices.init-commands[quarkus.vault.devservices.init-commands]`
+a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices-init-commands]]`link:#quarkus-vault_quarkus-vault-devservices-init-commands[quarkus.vault.devservices.init-commands]`
 
 
 [.description]
@@ -207,7 +207,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.config-ordinal]]`link:#quarkus-vault_quarkus.vault.config-ordinal[quarkus.vault.config-ordinal]`
+a| [[quarkus-vault_quarkus-vault-config-ordinal]]`link:#quarkus-vault_quarkus-vault-config-ordinal[quarkus.vault.config-ordinal]`
 
 
 [.description]
@@ -228,7 +228,7 @@ endif::add-copy-button-to-env-var[]
 |`270`
 
 
-a| [[quarkus-vault_quarkus.vault.url]]`link:#quarkus-vault_quarkus.vault.url[quarkus.vault.url]`
+a| [[quarkus-vault_quarkus-vault-url]]`link:#quarkus-vault_quarkus-vault-url[quarkus.vault.url]`
 
 
 [.description]
@@ -251,7 +251,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.renew-grace-period]]`link:#quarkus-vault_quarkus.vault.renew-grace-period[quarkus.vault.renew-grace-period]`
+a| [[quarkus-vault_quarkus-vault-renew-grace-period]]`link:#quarkus-vault_quarkus-vault-renew-grace-period[quarkus.vault.renew-grace-period]`
 
 
 [.description]
@@ -277,11 +277,11 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_RENEW_GRACE_PERIOD+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`1H`
 
 
-a| [[quarkus-vault_quarkus.vault.secret-config-cache-period]]`link:#quarkus-vault_quarkus.vault.secret-config-cache-period[quarkus.vault.secret-config-cache-period]`
+a| [[quarkus-vault_quarkus-vault-secret-config-cache-period]]`link:#quarkus-vault_quarkus-vault-secret-config-cache-period[quarkus.vault.secret-config-cache-period]`
 
 
 [.description]
@@ -299,11 +299,11 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_SECRET_CONFIG_CACHE_PERIOD+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`10M`
 
 
-a| [[quarkus-vault_quarkus.vault.secret-config-kv-path]]`link:#quarkus-vault_quarkus.vault.secret-config-kv-path[quarkus.vault.secret-config-kv-path]`
+a| [[quarkus-vault_quarkus-vault-secret-config-kv-path]]`link:#quarkus-vault_quarkus-vault-secret-config-kv-path[quarkus.vault.secret-config-kv-path]`
 
 
 [.description]
@@ -337,7 +337,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.mp-config-initial-attempts]]`link:#quarkus-vault_quarkus.vault.mp-config-initial-attempts[quarkus.vault.mp-config-initial-attempts]`
+a| [[quarkus-vault_quarkus-vault-mp-config-initial-attempts]]`link:#quarkus-vault_quarkus-vault-mp-config-initial-attempts[quarkus.vault.mp-config-initial-attempts]`
 
 
 [.description]
@@ -354,7 +354,7 @@ endif::add-copy-button-to-env-var[]
 |`1`
 
 
-a| [[quarkus-vault_quarkus.vault.log-confidentiality-level]]`link:#quarkus-vault_quarkus.vault.log-confidentiality-level[quarkus.vault.log-confidentiality-level]`
+a| [[quarkus-vault_quarkus-vault-log-confidentiality-level]]`link:#quarkus-vault_quarkus-vault-log-confidentiality-level[quarkus.vault.log-confidentiality-level]`
 
 
 [.description]
@@ -377,7 +377,7 @@ endif::add-copy-button-to-env-var[]
 |`medium`
 
 
-a| [[quarkus-vault_quarkus.vault.kv-secret-engine-version]]`link:#quarkus-vault_quarkus.vault.kv-secret-engine-version[quarkus.vault.kv-secret-engine-version]`
+a| [[quarkus-vault_quarkus-vault-kv-secret-engine-version]]`link:#quarkus-vault_quarkus-vault-kv-secret-engine-version[quarkus.vault.kv-secret-engine-version]`
 
 
 [.description]
@@ -396,7 +396,7 @@ endif::add-copy-button-to-env-var[]
 |`2`
 
 
-a| [[quarkus-vault_quarkus.vault.kv-secret-engine-mount-path]]`link:#quarkus-vault_quarkus.vault.kv-secret-engine-mount-path[quarkus.vault.kv-secret-engine-mount-path]`
+a| [[quarkus-vault_quarkus-vault-kv-secret-engine-mount-path]]`link:#quarkus-vault_quarkus-vault-kv-secret-engine-mount-path[quarkus.vault.kv-secret-engine-mount-path]`
 
 
 [.description]
@@ -432,7 +432,7 @@ endif::add-copy-button-to-env-var[]
 |`secret`
 
 
-a| [[quarkus-vault_quarkus.vault.connect-timeout]]`link:#quarkus-vault_quarkus.vault.connect-timeout[quarkus.vault.connect-timeout]`
+a| [[quarkus-vault_quarkus-vault-connect-timeout]]`link:#quarkus-vault_quarkus-vault-connect-timeout[quarkus.vault.connect-timeout]`
 
 
 [.description]
@@ -446,11 +446,11 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_CONNECT_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`5S`
 
 
-a| [[quarkus-vault_quarkus.vault.read-timeout]]`link:#quarkus-vault_quarkus.vault.read-timeout[quarkus.vault.read-timeout]`
+a| [[quarkus-vault_quarkus-vault-read-timeout]]`link:#quarkus-vault_quarkus-vault-read-timeout[quarkus.vault.read-timeout]`
 
 
 [.description]
@@ -464,11 +464,11 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_VAULT_READ_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`5S`
 
 
-a| [[quarkus-vault_quarkus.vault.non-proxy-hosts]]`link:#quarkus-vault_quarkus.vault.non-proxy-hosts[quarkus.vault.non-proxy-hosts]`
+a| [[quarkus-vault_quarkus-vault-non-proxy-hosts]]`link:#quarkus-vault_quarkus-vault-non-proxy-hosts[quarkus.vault.non-proxy-hosts]`
 
 
 [.description]
@@ -487,7 +487,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.proxy-host]]`link:#quarkus-vault_quarkus.vault.proxy-host[quarkus.vault.proxy-host]`
+a| [[quarkus-vault_quarkus-vault-proxy-host]]`link:#quarkus-vault_quarkus-vault-proxy-host[quarkus.vault.proxy-host]`
 
 
 [.description]
@@ -504,7 +504,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.proxy-port]]`link:#quarkus-vault_quarkus.vault.proxy-port[quarkus.vault.proxy-port]`
+a| [[quarkus-vault_quarkus-vault-proxy-port]]`link:#quarkus-vault_quarkus-vault-proxy-port[quarkus.vault.proxy-port]`
 
 
 [.description]
@@ -521,7 +521,7 @@ endif::add-copy-button-to-env-var[]
 |`3128`
 
 
-a| [[quarkus-vault_quarkus.vault.secret-config-kv-path.-prefix]]`link:#quarkus-vault_quarkus.vault.secret-config-kv-path.-prefix[quarkus.vault.secret-config-kv-path."prefix"]`
+a| [[quarkus-vault_quarkus-vault-secret-config-kv-path-prefix]]`link:#quarkus-vault_quarkus-vault-secret-config-kv-path-prefix[quarkus.vault.secret-config-kv-path."prefix"]`
 
 
 [.description]
@@ -550,7 +550,7 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-role]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-role[quarkus.vault.credentials-provider."credentials-provider".credentials-role]`
+a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-credentials-role]]`link:#quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-credentials-role[quarkus.vault.credentials-provider."credentials-provider".credentials-role]`
 
 
 [.description]
@@ -573,7 +573,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-mount]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-mount[quarkus.vault.credentials-provider."credentials-provider".credentials-mount]`
+a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-credentials-mount]]`link:#quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-credentials-mount[quarkus.vault.credentials-provider."credentials-provider".credentials-mount]`
 
 
 [.description]
@@ -592,7 +592,7 @@ endif::add-copy-button-to-env-var[]
 |`database`
 
 
-a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-request-path]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.credentials-request-path[quarkus.vault.credentials-provider."credentials-provider".credentials-request-path]`
+a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-credentials-request-path]]`link:#quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-credentials-request-path[quarkus.vault.credentials-provider."credentials-provider".credentials-request-path]`
 
 
 [.description]
@@ -614,7 +614,7 @@ endif::add-copy-button-to-env-var[]
 |`creds`
 
 
-a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-path]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-path[quarkus.vault.credentials-provider."credentials-provider".kv-path]`
+a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-path]]`link:#quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-path[quarkus.vault.credentials-provider."credentials-provider".kv-path]`
 
 
 [.description]
@@ -635,7 +635,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-key]]`link:#quarkus-vault_quarkus.vault.credentials-provider.-credentials-provider-.kv-key[quarkus.vault.credentials-provider."credentials-provider".kv-key]`
+a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-key]]`link:#quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-key[quarkus.vault.credentials-provider."credentials-provider".kv-key]`
 
 
 [.description]
@@ -656,12 +656,12 @@ endif::add-copy-button-to-env-var[]
 |`password`
 
 
-h|[[quarkus-vault_quarkus.vault.enterprise-vault-enterprise]]link:#quarkus-vault_quarkus.vault.enterprise-vault-enterprise[Vault Enterprise]
+h|[[quarkus-vault_quarkus-vault-enterprise-vault-enterprise]]link:#quarkus-vault_quarkus-vault-enterprise-vault-enterprise[Vault Enterprise]
 
 h|Type
 h|Default
 
-a| [[quarkus-vault_quarkus.vault.enterprise.namespace]]`link:#quarkus-vault_quarkus.vault.enterprise.namespace[quarkus.vault.enterprise.namespace]`
+a| [[quarkus-vault_quarkus-vault-enterprise-namespace]]`link:#quarkus-vault_quarkus-vault-enterprise-namespace[quarkus.vault.enterprise.namespace]`
 
 
 [.description]
@@ -682,12 +682,12 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-h|[[quarkus-vault_quarkus.vault.authentication-authentication]]link:#quarkus-vault_quarkus.vault.authentication-authentication[Authentication]
+h|[[quarkus-vault_quarkus-vault-authentication-authentication]]link:#quarkus-vault_quarkus-vault-authentication-authentication[Authentication]
 
 h|Type
 h|Default
 
-a| [[quarkus-vault_quarkus.vault.authentication.client-token]]`link:#quarkus-vault_quarkus.vault.authentication.client-token[quarkus.vault.authentication.client-token]`
+a| [[quarkus-vault_quarkus-vault-authentication-client-token]]`link:#quarkus-vault_quarkus-vault-authentication-client-token[quarkus.vault.authentication.client-token]`
 
 
 [.description]
@@ -704,7 +704,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.client-token-wrapping-token]]`link:#quarkus-vault_quarkus.vault.authentication.client-token-wrapping-token[quarkus.vault.authentication.client-token-wrapping-token]`
+a| [[quarkus-vault_quarkus-vault-authentication-client-token-wrapping-token]]`link:#quarkus-vault_quarkus-vault-authentication-client-token-wrapping-token[quarkus.vault.authentication.client-token-wrapping-token]`
 
 
 [.description]
@@ -725,7 +725,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.app-role.role-id]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.role-id[quarkus.vault.authentication.app-role.role-id]`
+a| [[quarkus-vault_quarkus-vault-authentication-app-role-role-id]]`link:#quarkus-vault_quarkus-vault-authentication-app-role-role-id[quarkus.vault.authentication.app-role.role-id]`
 
 
 [.description]
@@ -742,7 +742,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.app-role.secret-id]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.secret-id[quarkus.vault.authentication.app-role.secret-id]`
+a| [[quarkus-vault_quarkus-vault-authentication-app-role-secret-id]]`link:#quarkus-vault_quarkus-vault-authentication-app-role-secret-id[quarkus.vault.authentication.app-role.secret-id]`
 
 
 [.description]
@@ -759,7 +759,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.app-role.secret-id-wrapping-token]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.secret-id-wrapping-token[quarkus.vault.authentication.app-role.secret-id-wrapping-token]`
+a| [[quarkus-vault_quarkus-vault-authentication-app-role-secret-id-wrapping-token]]`link:#quarkus-vault_quarkus-vault-authentication-app-role-secret-id-wrapping-token[quarkus.vault.authentication.app-role.secret-id-wrapping-token]`
 
 
 [.description]
@@ -780,7 +780,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.app-role.auth-mount-path]]`link:#quarkus-vault_quarkus.vault.authentication.app-role.auth-mount-path[quarkus.vault.authentication.app-role.auth-mount-path]`
+a| [[quarkus-vault_quarkus-vault-authentication-app-role-auth-mount-path]]`link:#quarkus-vault_quarkus-vault-authentication-app-role-auth-mount-path[quarkus.vault.authentication.app-role.auth-mount-path]`
 
 
 [.description]
@@ -797,7 +797,7 @@ endif::add-copy-button-to-env-var[]
 |`auth/approle`
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.userpass.username]]`link:#quarkus-vault_quarkus.vault.authentication.userpass.username[quarkus.vault.authentication.userpass.username]`
+a| [[quarkus-vault_quarkus-vault-authentication-userpass-username]]`link:#quarkus-vault_quarkus-vault-authentication-userpass-username[quarkus.vault.authentication.userpass.username]`
 
 
 [.description]
@@ -814,7 +814,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.userpass.password]]`link:#quarkus-vault_quarkus.vault.authentication.userpass.password[quarkus.vault.authentication.userpass.password]`
+a| [[quarkus-vault_quarkus-vault-authentication-userpass-password]]`link:#quarkus-vault_quarkus-vault-authentication-userpass-password[quarkus.vault.authentication.userpass.password]`
 
 
 [.description]
@@ -831,7 +831,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.userpass.password-wrapping-token]]`link:#quarkus-vault_quarkus.vault.authentication.userpass.password-wrapping-token[quarkus.vault.authentication.userpass.password-wrapping-token]`
+a| [[quarkus-vault_quarkus-vault-authentication-userpass-password-wrapping-token]]`link:#quarkus-vault_quarkus-vault-authentication-userpass-password-wrapping-token[quarkus.vault.authentication.userpass.password-wrapping-token]`
 
 
 [.description]
@@ -856,7 +856,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.role]]`link:#quarkus-vault_quarkus.vault.authentication.kubernetes.role[quarkus.vault.authentication.kubernetes.role]`
+a| [[quarkus-vault_quarkus-vault-authentication-kubernetes-role]]`link:#quarkus-vault_quarkus-vault-authentication-kubernetes-role[quarkus.vault.authentication.kubernetes.role]`
 
 
 [.description]
@@ -873,7 +873,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.jwt-token-path]]`link:#quarkus-vault_quarkus.vault.authentication.kubernetes.jwt-token-path[quarkus.vault.authentication.kubernetes.jwt-token-path]`
+a| [[quarkus-vault_quarkus-vault-authentication-kubernetes-jwt-token-path]]`link:#quarkus-vault_quarkus-vault-authentication-kubernetes-jwt-token-path[quarkus.vault.authentication.kubernetes.jwt-token-path]`
 
 
 [.description]
@@ -890,7 +890,7 @@ endif::add-copy-button-to-env-var[]
 |`/var/run/secrets/kubernetes.io/serviceaccount/token`
 
 
-a| [[quarkus-vault_quarkus.vault.authentication.kubernetes.auth-mount-path]]`link:#quarkus-vault_quarkus.vault.authentication.kubernetes.auth-mount-path[quarkus.vault.authentication.kubernetes.auth-mount-path]`
+a| [[quarkus-vault_quarkus-vault-authentication-kubernetes-auth-mount-path]]`link:#quarkus-vault_quarkus-vault-authentication-kubernetes-auth-mount-path[quarkus.vault.authentication.kubernetes.auth-mount-path]`
 
 
 [.description]
@@ -907,12 +907,12 @@ endif::add-copy-button-to-env-var[]
 |`auth/kubernetes`
 
 
-h|[[quarkus-vault_quarkus.vault.tls-tls]]link:#quarkus-vault_quarkus.vault.tls-tls[TLS]
+h|[[quarkus-vault_quarkus-vault-tls-tls]]link:#quarkus-vault_quarkus-vault-tls-tls[TLS]
 
 h|Type
 h|Default
 
-a| [[quarkus-vault_quarkus.vault.tls.skip-verify]]`link:#quarkus-vault_quarkus.vault.tls.skip-verify[quarkus.vault.tls.skip-verify]`
+a| [[quarkus-vault_quarkus-vault-tls-skip-verify]]`link:#quarkus-vault_quarkus-vault-tls-skip-verify[quarkus.vault.tls.skip-verify]`
 
 
 [.description]
@@ -931,7 +931,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.tls.ca-cert]]`link:#quarkus-vault_quarkus.vault.tls.ca-cert[quarkus.vault.tls.ca-cert]`
+a| [[quarkus-vault_quarkus-vault-tls-ca-cert]]`link:#quarkus-vault_quarkus-vault-tls-ca-cert[quarkus.vault.tls.ca-cert]`
 
 
 [.description]
@@ -950,7 +950,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.tls.use-kubernetes-ca-cert]]`link:#quarkus-vault_quarkus.vault.tls.use-kubernetes-ca-cert[quarkus.vault.tls.use-kubernetes-ca-cert]`
+a| [[quarkus-vault_quarkus-vault-tls-use-kubernetes-ca-cert]]`link:#quarkus-vault_quarkus-vault-tls-use-kubernetes-ca-cert[quarkus.vault.tls.use-kubernetes-ca-cert]`
 
 
 [.description]
@@ -967,12 +967,12 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-h|[[quarkus-vault_quarkus.vault.transit-transit-engine]]link:#quarkus-vault_quarkus.vault.transit-transit-engine[Transit Engine]
+h|[[quarkus-vault_quarkus-vault-transit-transit-engine]]link:#quarkus-vault_quarkus-vault-transit-transit-engine[Transit Engine]
 
 h|Type
 h|Default
 
-a| [[quarkus-vault_quarkus.vault.transit.key.-key-.name]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.name[quarkus.vault.transit.key."key".name]`
+a| [[quarkus-vault_quarkus-vault-transit-key-key-name]]`link:#quarkus-vault_quarkus-vault-transit-key-key-name[quarkus.vault.transit.key."key".name]`
 
 
 [.description]
@@ -1000,7 +1000,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.transit.key.-key-.prehashed]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.prehashed[quarkus.vault.transit.key."key".prehashed]`
+a| [[quarkus-vault_quarkus-vault-transit-key-key-prehashed]]`link:#quarkus-vault_quarkus-vault-transit-key-key-prehashed[quarkus.vault.transit.key."key".prehashed]`
 
 
 [.description]
@@ -1017,7 +1017,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.transit.key.-key-.signature-algorithm]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.signature-algorithm[quarkus.vault.transit.key."key".signature-algorithm]`
+a| [[quarkus-vault_quarkus-vault-transit-key-key-signature-algorithm]]`link:#quarkus-vault_quarkus-vault-transit-key-key-signature-algorithm[quarkus.vault.transit.key."key".signature-algorithm]`
 
 
 [.description]
@@ -1034,7 +1034,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.transit.key.-key-.hash-algorithm]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.hash-algorithm[quarkus.vault.transit.key."key".hash-algorithm]`
+a| [[quarkus-vault_quarkus-vault-transit-key-key-hash-algorithm]]`link:#quarkus-vault_quarkus-vault-transit-key-key-hash-algorithm[quarkus.vault.transit.key."key".hash-algorithm]`
 
 
 [.description]
@@ -1051,7 +1051,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.transit.key.-key-.type]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.type[quarkus.vault.transit.key."key".type]`
+a| [[quarkus-vault_quarkus-vault-transit-key-key-type]]`link:#quarkus-vault_quarkus-vault-transit-key-key-type[quarkus.vault.transit.key."key".type]`
 
 
 [.description]
@@ -1068,7 +1068,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus.vault.transit.key.-key-.convergent-encryption]]`link:#quarkus-vault_quarkus.vault.transit.key.-key-.convergent-encryption[quarkus.vault.transit.key."key".convergent-encryption]`
+a| [[quarkus-vault_quarkus-vault-transit-key-key-convergent-encryption]]`link:#quarkus-vault_quarkus-vault-transit-key-key-convergent-encryption[quarkus.vault.transit.key."key".convergent-encryption]`
 
 
 [.description]
@@ -1091,7 +1091,7 @@ ifndef::no-duration-note[]
 .About the Duration format
 ====
 To write duration values, use the standard `java.time.Duration` format.
-See the link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() javadoc] for more information.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
 
 You can also use a simplified format, starting with a number:
 
