@@ -13,9 +13,6 @@
     <description>Generates the Java client for Hashicorp Vault</description>
     <properties>
         <maven.compiler.parameters>true</maven.compiler.parameters>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-        <maven.compiler.release>${maven.compiler.source}</maven.compiler.release>
     </properties>
     <dependencies>
         <dependency>

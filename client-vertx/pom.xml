@@ -12,9 +12,6 @@
     <name>Quarkus - Vault - Client Vert.x</name>
     <description>Vert.x HTTP implementation for standalone Quarkus Vault Java client</description>
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jacoco.version>0.8.10</jacoco.version>
     </properties>
