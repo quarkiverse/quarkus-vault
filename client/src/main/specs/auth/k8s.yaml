@@ -1,0 +1,183 @@
+name: Kubernetes
+category: auth
+traceNameTag: k8s
+basePath: auth
+
+operations:
+
+- name: login
+  method: POST
+  path: login
+  authenticated: false
+  bodyFrom: [role, jwt]
+  parameters:
+  - name: role
+    type: String
+  - name: jwt
+    type: String
+  result:
+    kind: leased
+    unwrapAuth: true
+    auth:
+    - name: role
+      type: String
+    - name: serviceAccountName
+      type: String
+    - name: serviceAccountNamespace
+      type: String
+    - name: serviceAccountUid
+      type: String
+    - name: serviceAccountSecretName
+      type: String
+
+
+- name: configure
+  method: POST
+  path: "config"
+  parameters:
+  - name: params
+    body: true
+    object:
+    - name: kubernetesHost
+      type: String
+    - name: kubernetesCaCert
+      type: String
+    - name: tokenReviewerJwt
+      type: String
+    - name: pemKeys
+      type: java.util.List<String>
+    - name: disableLocalCaJwt
+      type: Boolean
+    - name: disableIssValidation
+      type: Boolean
+    - name: issuer
+      type: String
+
+
+- name: readConfig
+  method: GET
+  path: "config"
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: kubernetesHost
+      type: String
+    - name: kubernetesCaCert
+      type: String
+    - name: tokenReviewerJwt
+      type: String
+    - name: pemKeys
+      type: java.util.List<String>
+    - name: disableLocalCaJwt
+      type: Boolean
+    - name: disableIssValidation
+      type: Boolean
+    - name: issuer
+      type: String
+
+
+- name: updateRole
+  method: POST
+  path: "role/:roleName"
+  parameters:
+  - name: roleName
+    type: String
+  - name: params
+    body: true
+    object:
+    - name: boundServiceAccountNames
+      type: java.util.List<String>
+    - name: boundServiceAccountNamespaces
+      type: java.util.List<String>
+    - name: audience
+      type: String
+    - name: aliasNameSource
+      type: $AliasNameSource
+    - name: tokenTtl
+      type: java.time.Duration
+    - name: tokenMaxTtl
+      type: java.time.Duration
+    - name: tokenPolicies
+      type: java.util.List<String>
+    - name: tokenBoundCidrs
+      type: java.util.List<String>
+    - name: tokenExplicitMaxTtl
+      type: java.time.Duration
+    - name: tokenNoDefaultPolicy
+      type: Boolean
+    - name: tokenNumUses
+      type: Integer
+    - name: tokenPeriod
+      type: java.time.Duration
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+
+
+- name: readRole
+  method: GET
+  path: "role/:roleName"
+  parameters:
+  - name: roleName
+    type: String
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: boundServiceAccountNames
+      type: java.util.List<String>
+    - name: boundServiceAccountNamespaces
+      type: java.util.List<String>
+    - name: audience
+      type: String
+    - name: aliasNameSource
+      type: $AliasNameSource
+    - name: tokenTtl
+      type: java.time.Duration
+    - name: tokenMaxTtl
+      type: java.time.Duration
+    - name: tokenPolicies
+      type: java.util.List<String>
+    - name: tokenBoundCidrs
+      type: java.util.List<String>
+    - name: tokenExplicitMaxTtl
+      type: java.time.Duration
+    - name: tokenNoDefaultPolicy
+      type: Boolean
+    - name: tokenNumUses
+      type: Integer
+    - name: tokenPeriod
+      type: java.time.Duration
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+
+
+- name: listRoles
+  method: LIST
+  path: "role"
+  result:
+    kind: leased
+    unwrapUsing: r.getData().getKeys()
+    unwrappedType: java.util.List<String>
+    data:
+    - name: keys
+      type: java.util.List<String>
+  recoverNotFound:
+    using: $T.of()
+    arguments:
+      - <type>java.util.List
+
+
+- name: deleteRole
+  method: DELETE
+  path: "role/:roleName"
+  parameters:
+  - name: roleName
+    type: String
+
+
+enums:
+- name: AliasNameSource
+  values:
+  - serviceaccount_uid
+  - serviceaccount_name

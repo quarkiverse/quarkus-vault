@@ -1,6 +1,10 @@
 package io.quarkus.vault.runtime;
 
+import static io.quarkus.vault.runtime.DurationHelper.*;
+import static java.util.stream.Collectors.toMap;
+
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.Nullable;
@@ -8,13 +12,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.quarkus.vault.VaultSystemBackendReactiveEngine;
-import io.quarkus.vault.runtime.client.VaultClient;
-import io.quarkus.vault.runtime.client.VaultClientException;
-import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
-import io.quarkus.vault.runtime.client.dto.sys.VaultEnableEngineBody;
-import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
-import io.quarkus.vault.runtime.client.dto.sys.VaultRegisterPluginBody;
-import io.quarkus.vault.runtime.client.dto.sys.VaultTuneBody;
+import io.quarkus.vault.client.VaultClient;
+import io.quarkus.vault.client.VaultClientException;
+import io.quarkus.vault.client.api.sys.init.VaultSysInitParams;
+import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsEnableConfig;
+import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsListingVisibility;
+import io.quarkus.vault.client.api.sys.mounts.VaultSysMountsTuneParams;
+import io.quarkus.vault.client.api.sys.plugins.VaultSysPluginsRegisterParams;
+import io.quarkus.vault.client.api.sys.policy.VaultSysPolicyReadResultData;
 import io.quarkus.vault.runtime.config.VaultBuildTimeConfig;
 import io.quarkus.vault.sys.EnableEngineOptions;
 import io.quarkus.vault.sys.EngineListingVisibility;
@@ -35,15 +40,13 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     VaultClient vaultClient;
     @Inject
     VaultBuildTimeConfig buildTimeConfig;
-    @Inject
-    VaultAuthManager vaultAuthManager;
-    @Inject
-    VaultInternalSystemBackend vaultInternalSystemBackend;
 
     @Override
     public Uni<VaultInit> init(int secretShares, int secretThreshold) {
-        return vaultInternalSystemBackend.init(vaultClient, secretShares, secretThreshold)
-                .map(init -> new VaultInit(init.keys, init.keysBase64, init.rootToken));
+        return Uni.createFrom().completionStage(vaultClient.sys().init().init(new VaultSysInitParams()
+                .setSecretShares(secretShares)
+                .setSecretThreshold(secretThreshold)))
+                .map(init -> new VaultInit(init.getKeys(), init.getKeysBase64(), init.getRootToken()));
     }
 
     @Override
@@ -64,147 +67,137 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
 
     @Override
     public Uni<VaultSealStatus> sealStatus() {
-        return vaultInternalSystemBackend.systemSealStatus(vaultClient)
-                .map(vaultSealStatusResult -> {
-
+        return Uni.createFrom().completionStage(vaultClient.sys().seal().status())
+                .map(result -> {
                     final VaultSealStatus vaultSealStatus = new VaultSealStatus();
-                    vaultSealStatus.setClusterId(vaultSealStatusResult.clusterId);
-                    vaultSealStatus.setClusterName(vaultSealStatusResult.clusterName);
-                    vaultSealStatus.setInitialized(vaultSealStatusResult.initialized);
-                    vaultSealStatus.setMigration(vaultSealStatusResult.migration);
-                    vaultSealStatus.setN(vaultSealStatusResult.n);
-                    vaultSealStatus.setNonce(vaultSealStatusResult.nonce);
-                    vaultSealStatus.setProgress(vaultSealStatusResult.progress);
-                    vaultSealStatus.setRecoverySeal(vaultSealStatusResult.recoverySeal);
-                    vaultSealStatus.setSealed(vaultSealStatusResult.sealedStatus);
-                    vaultSealStatus.setT(vaultSealStatusResult.t);
-                    vaultSealStatus.setType(vaultSealStatusResult.type);
-                    vaultSealStatus.setVersion(vaultSealStatusResult.version);
+                    vaultSealStatus.setClusterId(result.getClusterId());
+                    vaultSealStatus.setClusterName(result.getClusterName());
+                    vaultSealStatus.setInitialized(result.isInitialized());
+                    vaultSealStatus.setMigration(result.isMigration());
+                    vaultSealStatus.setN(result.getN());
+                    vaultSealStatus.setNonce(result.getNonce());
+                    vaultSealStatus.setProgress(result.getProgress());
+                    vaultSealStatus.setRecoverySeal(result.isRecoverySeal());
+                    vaultSealStatus.setSealed(result.isSealed());
+                    vaultSealStatus.setT(result.getT());
+                    vaultSealStatus.setType(result.getType());
+                    vaultSealStatus.setVersion(result.getVersion());
 
                     return vaultSealStatus;
                 });
     }
 
     private Uni<VaultHealthStatus> healthStatus(boolean isStandByOk, boolean isPerfStandByOk) {
-        return vaultInternalSystemBackend.systemHealthStatus(vaultClient, isStandByOk, isPerfStandByOk)
-                .map(vaultHealthResult -> {
+        return Uni.createFrom().completionStage(vaultClient.sys().health().info(isStandByOk, isPerfStandByOk))
+                .map(result -> {
 
                     final VaultHealthStatus vaultHealthStatus = new VaultHealthStatus();
-                    vaultHealthStatus.setClusterId(vaultHealthResult.clusterId);
-                    vaultHealthStatus.setClusterName(vaultHealthResult.clusterName);
-                    vaultHealthStatus.setInitialized(vaultHealthResult.initialized);
-                    vaultHealthStatus.setPerformanceStandby(vaultHealthResult.performanceStandby);
-                    vaultHealthStatus.setReplicationDrMode(vaultHealthResult.replicationDrMode);
-                    vaultHealthStatus.setReplicationPerfMode(vaultHealthResult.replicationPerfMode);
-                    vaultHealthStatus.setSealed(vaultHealthResult.sealedStatus);
-                    vaultHealthStatus.setServerTimeUtc(vaultHealthResult.serverTimeUtc);
-                    vaultHealthStatus.setStandby(vaultHealthResult.standby);
-                    vaultHealthStatus.setVersion(vaultHealthResult.version);
+                    vaultHealthStatus.setClusterId(result.getClusterId());
+                    vaultHealthStatus.setClusterName(result.getClusterName());
+                    vaultHealthStatus.setInitialized(result.isInitialized());
+                    vaultHealthStatus.setPerformanceStandby(result.isPerformanceStandby());
+                    vaultHealthStatus.setReplicationDrMode(result.getReplicationDrMode());
+                    vaultHealthStatus.setReplicationPerfMode(result.getReplicationPerformanceMode());
+                    vaultHealthStatus.setSealed(result.isSealed());
+                    vaultHealthStatus.setServerTimeUtc(result.getServerTimeUtc());
+                    vaultHealthStatus.setStandby(result.isStandby());
+                    vaultHealthStatus.setVersion(result.getVersion());
 
                     return vaultHealthStatus;
                 });
     }
 
     private Uni<VaultHealth> health(boolean isStandByOk, boolean isPerfStandByOk) {
-        return vaultInternalSystemBackend.systemHealth(vaultClient, isStandByOk, isPerfStandByOk)
+        return Uni.createFrom().completionStage(vaultClient.sys().health().statusCode(isStandByOk, isPerfStandByOk))
                 .map(VaultHealth::new);
     }
 
     @Override
     public Uni<String> getPolicyRules(String name) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.getPolicy(vaultClient, token, name).map(r -> r.data.rules);
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().policy().read(name))
+                .map(VaultSysPolicyReadResultData::getRules);
     }
 
     @Override
     public Uni<Void> createUpdatePolicy(String name, String policy) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.createUpdatePolicy(vaultClient, token, name, new VaultPolicyBody(policy));
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().policy().update(name, policy));
     }
 
     @Override
     public Uni<Void> deletePolicy(String name) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.deletePolicy(vaultClient, token, name);
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().policy().delete(name));
     }
 
     @Override
     public Uni<List<String>> getPolicies() {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.listPolicies(vaultClient, token).map(r -> r.data.policies);
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().policy().list());
     }
 
     @Override
     public Uni<VaultSecretEngineInfo> getSecretEngineInfo(String mount) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.getSecretEngineInfo(vaultClient, token, mount)
-                    .map(result -> {
-                        VaultSecretEngineInfo info = new VaultSecretEngineInfo();
-                        info.setDescription(result.data.description);
-                        info.setType(result.data.type);
-                        info.setLocal(result.data.local);
-                        info.setExternalEntropyAccess(result.data.externalEntropyAccess);
-                        info.setSealWrap(result.data.sealWrap);
-                        info.setPluginVersion(result.data.pluginVersion);
-                        info.setRunningPluginVersion(result.data.runningPluginVersion);
-                        info.setRunningSha256(result.data.runningSha256);
-                        info.setDefaultLeaseTimeToLive(result.data.config.defaultLeaseTimeToLive);
-                        info.setMaxLeaseTimeToLive(result.data.config.maxLeaseTimeToLive);
-                        info.setForceNoCache(result.data.config.forceNoCache);
-                        info.setOptions(result.data.options);
-                        info.setAuditNonHMACRequestKeys(result.data.config.auditNonHMACRequestKeys);
-                        info.setAuditNonHMACResponseKeys(result.data.config.auditNonHMACResponseKeys);
-                        info.setListingVisibility(result.data.config.listingVisibility != null
-                                ? EngineListingVisibility.valueOf(result.data.config.listingVisibility
-                                        .toUpperCase())
-                                : null);
-                        info.setPassthroughRequestHeaders(result.data.config.passthroughRequestHeaders);
-                        info.setAllowedResponseHeaders(result.data.config.allowedResponseHeaders);
-                        info.setAllowedManagedKeys(result.data.config.allowedManagedKeys);
-                        return info;
-                    });
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().mounts().read(mount))
+                .map(result -> {
+                    VaultSecretEngineInfo info = new VaultSecretEngineInfo();
+                    info.setDescription(result.getDescription());
+                    info.setType(result.getType());
+                    info.setLocal(result.isLocal());
+                    info.setExternalEntropyAccess(result.isExternalEntropyAccess());
+                    info.setSealWrap(result.isSealWrap());
+                    info.setPluginVersion(result.getPluginVersion());
+                    info.setRunningPluginVersion(result.getRunningPluginVersion());
+                    info.setRunningSha256(result.getRunningSha256());
+                    info.setDefaultLeaseTimeToLive(toLongDurationSeconds(result.getConfig().getDefaultLeaseTtl()));
+                    info.setMaxLeaseTimeToLive(toLongDurationSeconds(result.getConfig().getMaxLeaseTtl()));
+                    info.setForceNoCache(result.getConfig().isForceNoCache());
+                    info.setOptions(result.getOptions());
+                    info.setAuditNonHMACRequestKeys(result.getConfig().getAuditNonHmacRequestKeys());
+                    info.setAuditNonHMACResponseKeys(result.getConfig().getAuditNonHmacResponseKeys());
+                    info.setListingVisibility(result.getConfig().getListingVisibility() != null
+                            ? EngineListingVisibility.from(result.getConfig().getListingVisibility().getValue())
+                            : null);
+                    info.setPassthroughRequestHeaders(result.getConfig().getPassthroughRequestHeaders());
+                    info.setAllowedResponseHeaders(result.getConfig().getAllowedResponseHeaders());
+                    info.setAllowedManagedKeys(result.getConfig().getAllowedManagedKeys());
+                    return info;
+                });
     }
 
     public Uni<VaultTuneInfo> getTuneInfo(String mount) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.getTuneInfo(vaultClient, token, mount)
-                    .map(vaultTuneResult -> {
-                        VaultTuneInfo tuneInfo = new VaultTuneInfo();
-                        tuneInfo.setDefaultLeaseTimeToLive(vaultTuneResult.data.defaultLeaseTimeToLive);
-                        tuneInfo.setMaxLeaseTimeToLive(vaultTuneResult.data.maxLeaseTimeToLive);
-                        tuneInfo.setDescription(vaultTuneResult.data.description);
-                        tuneInfo.setForceNoCache(vaultTuneResult.data.forceNoCache);
-                        tuneInfo.setOptions(vaultTuneResult.data.options);
-                        tuneInfo.setAuditNonHMACRequestKeys(vaultTuneResult.data.auditNonHMACRequestKeys);
-                        tuneInfo.setAuditNonHMACResponseKeys(vaultTuneResult.data.auditNonHMACResponseKeys);
-                        tuneInfo.setListingVisibility(vaultTuneResult.data.listingVisibility != null
-                                ? EngineListingVisibility.valueOf(vaultTuneResult.data.listingVisibility
-                                        .toUpperCase())
-                                : null);
-                        tuneInfo.setPassthroughRequestHeaders(vaultTuneResult.data.passthroughRequestHeaders);
-                        tuneInfo.setAllowedResponseHeaders(vaultTuneResult.data.allowedResponseHeaders);
-                        tuneInfo.setAllowedManagedKeys(vaultTuneResult.data.allowedManagedKeys);
-                        return tuneInfo;
-                    });
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().mounts().readTune(mount))
+                .map(result -> {
+                    VaultTuneInfo tuneInfo = new VaultTuneInfo();
+                    tuneInfo.setDefaultLeaseTimeToLive(toLongDurationSeconds(result.getDefaultLeaseTtl()));
+                    tuneInfo.setMaxLeaseTimeToLive(toLongDurationSeconds(result.getMaxLeaseTtl()));
+                    tuneInfo.setDescription(result.getDescription());
+                    tuneInfo.setForceNoCache(result.isForceNoCache());
+                    tuneInfo.setOptions(result.getOptions());
+                    tuneInfo.setAuditNonHMACRequestKeys(result.getAuditNonHmacRequestKeys());
+                    tuneInfo.setAuditNonHMACResponseKeys(result.getAuditNonHmacResponseKeys());
+                    tuneInfo.setListingVisibility(result.getListingVisibility() != null
+                            ? EngineListingVisibility.from(result.getListingVisibility().getValue())
+                            : null);
+                    tuneInfo.setPassthroughRequestHeaders(result.getPassthroughRequestHeaders());
+                    tuneInfo.setAllowedResponseHeaders(result.getAllowedResponseHeaders());
+                    tuneInfo.setAllowedManagedKeys(result.getAllowedManagedKeys());
+                    return tuneInfo;
+                });
     }
 
     @Override
     public Uni<Void> updateTuneInfo(String mount, VaultTuneInfo tuneInfoUpdates) {
-        VaultTuneBody body = new VaultTuneBody();
-        body.description = tuneInfoUpdates.getDescription();
-        body.defaultLeaseTimeToLive = tuneInfoUpdates.getDefaultLeaseTimeToLive();
-        body.maxLeaseTimeToLive = tuneInfoUpdates.getMaxLeaseTimeToLive();
-        body.forceNoCache = tuneInfoUpdates.getForceNoCache();
-
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.updateTuneInfo(vaultClient, token, mount, body);
-        });
+        var params = new VaultSysMountsTuneParams()
+                .setDescription(tuneInfoUpdates.getDescription())
+                .setDefaultLeaseTtl(fromSeconds(tuneInfoUpdates.getDefaultLeaseTimeToLive()))
+                .setMaxLeaseTtl(fromSeconds(tuneInfoUpdates.getMaxLeaseTimeToLive()))
+                .setAuditNonHmacRequestKeys(tuneInfoUpdates.getAuditNonHMACRequestKeys())
+                .setAuditNonHmacResponseKeys(tuneInfoUpdates.getAuditNonHMACResponseKeys())
+                .setListingVisibility(tuneInfoUpdates.getListingVisibility() != null
+                        ? VaultSysMountsListingVisibility.from(tuneInfoUpdates.getListingVisibility().getValue())
+                        : null)
+                .setPassthroughRequestHeaders(tuneInfoUpdates.getPassthroughRequestHeaders())
+                .setAllowedResponseHeaders(tuneInfoUpdates.getAllowedResponseHeaders())
+                .setAllowedManagedKeys(tuneInfoUpdates.getAllowedManagedKeys());
+        return Uni.createFrom().completionStage(vaultClient.sys().mounts().tune(mount, params));
     }
 
     @Override
@@ -230,77 +223,68 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     }
 
     public Uni<Void> enable(String engineType, String mount, String description, EnableEngineOptions options) {
-        VaultEnableEngineBody body = new VaultEnableEngineBody();
-        body.type = engineType;
-        body.description = description;
-        body.config = new VaultEnableEngineBody.Config();
-        body.config.defaultLeaseTimeToLive = options.defaultLeaseTimeToLive;
-        body.config.maxLeaseTimeToLive = options.maxLeaseTimeToLive;
-        body.config.forceNoCache = options.forceNoCache;
-        body.config.auditNonHMACRequestKeys = options.auditNonHMACRequestKeys;
-        body.config.auditNonHMACResponseKeys = options.auditNonHMACResponseKeys;
-        body.config.listingVisibility = options.listingVisibility != null ? options.listingVisibility.name().toLowerCase()
-                : null;
-        body.config.passthroughRequestHeaders = options.passthroughRequestHeaders;
-        body.config.allowedResponseHeaders = options.allowedResponseHeaders;
-        body.config.pluginVersion = options.pluginVersion;
-        body.config.allowedManagedKeys = options.allowedManagedKeys;
-        body.options = options.options;
-
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.enableEngine(vaultClient, token, mount, body);
-        });
+        var config = new VaultSysMountsEnableConfig()
+                .setDefaultLeaseTtl(fromVaultDuration(options.defaultLeaseTimeToLive))
+                .setMaxLeaseTtl(fromVaultDuration(options.maxLeaseTimeToLive))
+                .setForceNoCache(options.forceNoCache)
+                .setAuditNonHmacRequestKeys(options.auditNonHMACRequestKeys)
+                .setAuditNonHmacResponseKeys(options.auditNonHMACResponseKeys)
+                .setListingVisibility(options.listingVisibility != null
+                        ? VaultSysMountsListingVisibility.from(options.listingVisibility.getValue())
+                        : null)
+                .setPassthroughRequestHeaders(options.passthroughRequestHeaders)
+                .setAllowedResponseHeaders(options.allowedResponseHeaders)
+                .setAllowedManagedKeys(options.allowedManagedKeys)
+                .setPluginVersion(options.pluginVersion);
+        return Uni.createFrom()
+                .completionStage(vaultClient.sys().mounts().enable(mount, engineType, description, config,
+                        options.options != null
+                                ? options.options.entrySet().stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue))
+                                : null));
     }
 
     @Override
     public Uni<Void> disable(String mount) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.disableEngine(vaultClient, token, mount);
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().mounts().disable(mount));
     }
 
     @Override
     public Uni<VaultPlugins> listPlugins() {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.listPlugins(vaultClient, token).map(r -> new VaultPlugins()
-                    .setAuth(r.data.auth)
-                    .setDatabase(r.data.database)
-                    .setSecret(r.data.secret)
-                    .setDetailed(r.data.detailed.stream().map(d -> new VaultPluginDetails()
-                            .setBuiltin(d.builtin)
-                            .setDeprecationStatus(d.deprecationStatus)
-                            .setName(d.name)
-                            .setType(d.type)
-                            .setVersion(d.version)
-                            .setSha256(d.sha256)
-                            .setCommand(d.command)
-                            .setArgs(d.args)
-                            .setEnv(d.env)).collect(Collectors.toList())));
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().plugins().list())
+                .map(r -> new VaultPlugins()
+                        .setAuth(r.getAuth())
+                        .setDatabase(r.getDatabase())
+                        .setSecret(r.getSecret())
+                        .setDetailed(r.getDetailed().stream().map(d -> new VaultPluginDetails()
+                                .setBuiltin(d.isBuiltin())
+                                .setDeprecationStatus(d.getDeprecationStatus())
+                                .setName(d.getName())
+                                .setType(d.getType())
+                                .setSha256(d.getSha256())
+                                .setVersion(d.getVersion())).collect(Collectors.toList())));
     }
 
     @Override
     public Uni<List<String>> listPlugins(String type) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.listPlugins(vaultClient, token, type).map(r -> r.data.keys);
-        });
+        return switch (type.toLowerCase()) {
+            case "auth" -> Uni.createFrom().completionStage(vaultClient.sys().plugins().listAuth());
+            case "database" -> Uni.createFrom().completionStage(vaultClient.sys().plugins().listDatabase());
+            case "secret" -> Uni.createFrom().completionStage(vaultClient.sys().plugins().listSecret());
+            default -> Uni.createFrom().failure(new IllegalArgumentException("Unknown plugin type: " + type));
+        };
     }
 
     @Override
     public Uni<VaultPluginDetails> getPluginDetails(String type, String name, @Nullable String version) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.getPluginDetails(vaultClient, token, type, name, version)
-                    .map(r -> new VaultPluginDetails()
-                            .setBuiltin(r.data.builtin)
-                            .setDeprecationStatus(r.data.deprecationStatus)
-                            .setName(r.data.name)
-                            .setType(r.data.type)
-                            .setVersion(r.data.version)
-                            .setSha256(r.data.sha256)
-                            .setCommand(r.data.command)
-                            .setArgs(r.data.args)
-                            .setEnv(r.data.env));
-        })
+        return Uni.createFrom().completionStage(vaultClient.sys().plugins().read(type, name, version))
+                .map(r -> new VaultPluginDetails()
+                        .setBuiltin(r.isBuiltin())
+                        .setName(r.getName())
+                        .setVersion(r.getVersion())
+                        .setSha256(r.getSha256())
+                        .setCommand(r.getCommand())
+                        .setArgs(r.getArgs())
+                        .setDeprecationStatus(r.getDeprecationStatus()))
                 .onFailure(VaultClientException.class).recoverWithUni(x -> {
                     VaultClientException vx = (VaultClientException) x;
                     if (vx.getStatus() == 404) {
@@ -314,22 +298,18 @@ public class VaultSystemBackendManager implements VaultSystemBackendReactiveEngi
     @Override
     public Uni<Void> registerPlugin(String type, String name, @Nullable String version, String sha256, String command,
             @Nullable List<String> args, @Nullable List<String> env) {
-        var body = new VaultRegisterPluginBody();
-        body.version = version;
-        body.sha256 = sha256;
-        body.command = command;
-        body.args = args;
-        body.env = env;
+        var params = new VaultSysPluginsRegisterParams()
+                .setVersion(version)
+                .setSha256(sha256)
+                .setCommand(command)
+                .setArgs(args)
+                .setEnv(env);
 
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.registerPlugin(vaultClient, token, type, name, body);
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().plugins().register(type, name, params));
     }
 
     @Override
     public Uni<Void> removePlugin(String type, String name, @Nullable String version) {
-        return vaultAuthManager.getClientToken(vaultClient).flatMap(token -> {
-            return vaultInternalSystemBackend.removePlugin(vaultClient, token, type, name, version);
-        });
+        return Uni.createFrom().completionStage(vaultClient.sys().plugins().remove(type, name, version));
     }
 }

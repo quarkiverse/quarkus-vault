@@ -1,7 +1,6 @@
 package io.quarkus.vault.test;
 
 import static io.quarkus.credentials.CredentialsProvider.PASSWORD_PROPERTY_NAME;
-import static io.quarkus.vault.runtime.VaultAuthManager.USERPASS_WRAPPING_TOKEN_PASSWORD_KEY;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.regex.Pattern.MULTILINE;
@@ -9,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.testcontainers.containers.BindMode.READ_ONLY;
 import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
 
@@ -24,7 +21,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,23 +41,16 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.containers.output.OutputFrame;
 
-import io.quarkus.vault.VaultException;
 import io.quarkus.vault.VaultKVSecretEngine;
-import io.quarkus.vault.runtime.LogConfidentialityLevel;
-import io.quarkus.vault.runtime.VaultConfigHolder;
-import io.quarkus.vault.runtime.VaultIOException;
+import io.quarkus.vault.client.VaultClient;
+import io.quarkus.vault.client.VaultClientException;
+import io.quarkus.vault.client.VaultException;
+import io.quarkus.vault.client.api.sys.init.VaultSysInitParams;
+import io.quarkus.vault.client.http.vertx.VertxVaultHttpClient;
 import io.quarkus.vault.runtime.VaultVersions;
-import io.quarkus.vault.runtime.client.VaultClientException;
-import io.quarkus.vault.runtime.client.backend.VaultInternalSystemBackend;
-import io.quarkus.vault.runtime.client.dto.sys.VaultInitResponse;
-import io.quarkus.vault.runtime.client.dto.sys.VaultPolicyBody;
-import io.quarkus.vault.runtime.client.dto.sys.VaultSealStatusResult;
-import io.quarkus.vault.runtime.config.VaultAuthenticationConfig;
-import io.quarkus.vault.runtime.config.VaultEnterpriseConfig;
-import io.quarkus.vault.runtime.config.VaultKubernetesAuthenticationConfig;
-import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
-import io.quarkus.vault.runtime.config.VaultTlsConfig;
-import io.quarkus.vault.test.client.TestVaultClient;
+import io.vertx.core.Vertx;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 
 public class VaultTestExtension {
 
@@ -123,8 +112,6 @@ public class VaultTestExtension {
     public String passwordKvv2WrappingToken = null;
     public String anotherPasswordKvv2WrappingToken = null;
 
-    private TestVaultClient vaultClient;
-
     private String db_default_ttl = "1m";
     private String db_max_ttl = "10m";
 
@@ -175,41 +162,15 @@ public class VaultTestExtension {
         return new TreeMap<>(secret).toString();
     }
 
-    private TestVaultClient createVaultClient() {
-        VaultRuntimeConfig config = mock(VaultRuntimeConfig.class);
-        when(config.url()).thenReturn(getVaultUrl());
-        when(config.renewGracePeriod()).thenReturn(Duration.ofHours(1));
-        when(config.secretConfigCachePeriod()).thenReturn(Duration.ofMinutes(10));
-        when(config.secretConfigKvPath()).thenReturn(Optional.empty());
-        when(config.secretConfigKvPathPrefix()).thenReturn(Map.of());
-        when(config.mpConfigInitialAttempts()).thenReturn(1);
-        when(config.logConfidentialityLevel()).thenReturn(LogConfidentialityLevel.MEDIUM);
-        when(config.kvSecretEngineVersion()).thenReturn(2);
-        when(config.kvSecretEngineMountPath()).thenReturn("secret");
-        when(config.connectTimeout()).thenReturn(Duration.ofSeconds(30));
-        when(config.readTimeout()).thenReturn(Duration.ofSeconds(5));
-        when(config.nonProxyHosts()).thenReturn(Optional.empty());
-        when(config.proxyHost()).thenReturn(Optional.empty());
-        when(config.proxyPort()).thenReturn(3128);
-        when(config.credentialsProvider()).thenReturn(Map.of());
-
-        VaultTlsConfig tls = mock(VaultTlsConfig.class);
-        when(config.tls()).thenReturn(tls);
-        when(tls.skipVerify()).thenReturn(Optional.of(true));
-        when(tls.caCert()).thenReturn(Optional.empty());
-        when(tls.useKubernetesCaCert()).thenReturn(true);
-
-        VaultEnterpriseConfig enterprise = mock(VaultEnterpriseConfig.class);
-        when(config.enterprise()).thenReturn(enterprise);
-        when(enterprise.namespace()).thenReturn(Optional.empty());
-
-        VaultAuthenticationConfig authentication = mock(VaultAuthenticationConfig.class);
-        when(config.authentication()).thenReturn(authentication);
-
-        VaultKubernetesAuthenticationConfig kubernetesAuthentication = mock(VaultKubernetesAuthenticationConfig.class);
-        when(authentication.kubernetes()).thenReturn(kubernetesAuthentication);
-
-        return new TestVaultClient(new VaultConfigHolder().setVaultRuntimeConfig(config));
+    private VaultClient createVaultClient() {
+        var webClient = WebClient.create(Vertx.vertx(), new WebClientOptions()
+                .setTrustAll(true)
+                .setVerifyHost(false));
+        VertxVaultHttpClient httpClient = new VertxVaultHttpClient(webClient);
+        return VaultClient.builder()
+                .executor(httpClient)
+                .baseUrl(getVaultUrl().orElseThrow())
+                .build();
     }
 
     private static Optional<URL> getVaultUrl() {
@@ -220,7 +181,7 @@ public class VaultTestExtension {
         }
     }
 
-    public void start() throws InterruptedException, IOException {
+    public void start() throws Exception {
 
         log.info("start containers on " + System.getProperty("os.name"));
 
@@ -287,19 +248,26 @@ public class VaultTestExtension {
         return "hashicorp/vault:" + VaultVersions.VAULT_TEST_VERSION;
     }
 
-    private void initVault() throws InterruptedException, IOException {
+    private void initVault() throws Exception {
 
         waitForContainerToStart();
-        vaultClient = createVaultClient();
-        VaultInternalSystemBackend vaultInternalSystemBackend = new VaultInternalSystemBackend();
-        waitForVaultAPIToBeReady(vaultInternalSystemBackend);
 
-        VaultInitResponse vaultInit = vaultInternalSystemBackend.init(vaultClient, 1, 1).await().indefinitely();
-        String unsealKey = vaultInit.keys.get(0);
-        rootToken = vaultInit.rootToken;
+        var vaultClient = createVaultClient();
+
+        waitForVaultAPIToBeReady(vaultClient);
+
+        var vaultInit = vaultClient.sys().init().init(new VaultSysInitParams()
+                .setSecretShares(1)
+                .setSecretThreshold(1))
+                .toCompletableFuture().get();
+        String unsealKey = vaultInit.getKeys().get(0);
+        rootToken = vaultInit.getRootToken();
+
+        vaultClient = vaultClient.configure().clientToken(rootToken).build();
 
         try {
-            vaultInternalSystemBackend.systemHealthStatus(vaultClient, false, false).await().indefinitely();
+            vaultClient.sys().health().statusCode(false, false)
+                    .toCompletableFuture().get();
         } catch (VaultClientException e) {
             // https://www.vaultproject.io/api/system/health.html
             // 503 = sealed
@@ -309,8 +277,8 @@ public class VaultTestExtension {
         // unseal
         execVault("vault operator unseal " + unsealKey);
 
-        VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus(vaultClient).await().indefinitely();
-        assertFalse(sealStatus.sealedStatus);
+        var sealStatus = vaultClient.sys().seal().status().toCompletableFuture().get();
+        assertFalse(sealStatus.isSealed());
 
         // userpass auth
         execVault("vault auth enable userpass");
@@ -324,17 +292,17 @@ public class VaultTestExtension {
         execVault("vault auth enable approle");
         execVault(format("vault write auth/approle/role/%s policies=%s",
                 VAULT_AUTH_APPROLE, VAULT_POLICY));
-        appRoleSecretId = vaultClient.generateAppRoleSecretId(rootToken, VAULT_AUTH_APPROLE).await()
-                .indefinitely().data.secretId;
-        appRoleRoleId = vaultClient.getAppRoleRoleId(rootToken, VAULT_AUTH_APPROLE).await().indefinitely().data.roleId;
+        appRoleSecretId = vaultClient.auth().appRole().generateSecretId(VAULT_AUTH_APPROLE, null)
+                .toCompletableFuture().get()
+                .getSecretId();
+        appRoleRoleId = vaultClient.auth().appRole().readRoleId(VAULT_AUTH_APPROLE).toCompletableFuture().get();
         log.info(
                 format("generated role_id=%s secret_id=%s for approle=%s", appRoleRoleId, appRoleSecretId, VAULT_AUTH_APPROLE));
 
         // policy
         String policyContent = readResourceContent("vault.policy");
-        vaultInternalSystemBackend.createUpdatePolicy(vaultClient, rootToken, VAULT_POLICY, new VaultPolicyBody(policyContent))
-                .await()
-                .indefinitely();
+        vaultClient.sys().policy().update(VAULT_POLICY, policyContent)
+                .toCompletableFuture().get();
 
         // executable permission for test-plugin
         execVault("chmod +x /vault/plugins/test-plugin");
@@ -373,13 +341,13 @@ public class VaultTestExtension {
                 execVault(format("vault token create -wrap-ttl=120s -ttl=10m -policy=%s", VAULT_POLICY)));
         log.info("clientTokenWrappingToken=" + clientTokenWrappingToken);
 
-        execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V1, WRAPPING_TEST_PATH, USERPASS_WRAPPING_TOKEN_PASSWORD_KEY,
+        execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V1, WRAPPING_TEST_PATH, "password",
                 VAULT_AUTH_USERPASS_PASSWORD));
         passwordKvv1WrappingToken = fetchWrappingToken(
                 execVault(format("vault kv get -wrap-ttl=120s %s/%s", SECRET_PATH_V1, WRAPPING_TEST_PATH)));
         log.info("passwordKvv1WrappingToken=" + passwordKvv1WrappingToken);
 
-        execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V2, WRAPPING_TEST_PATH, USERPASS_WRAPPING_TOKEN_PASSWORD_KEY,
+        execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V2, WRAPPING_TEST_PATH, "password",
                 VAULT_AUTH_USERPASS_PASSWORD));
         passwordKvv2WrappingToken = fetchWrappingToken(
                 execVault(format("vault kv get -wrap-ttl=120s %s/%s", SECRET_PATH_V2, WRAPPING_TEST_PATH)));
@@ -500,16 +468,16 @@ public class VaultTestExtension {
         fail("vault failed to start");
     }
 
-    private void waitForVaultAPIToBeReady(VaultInternalSystemBackend vaultInternalSystemBackend) throws InterruptedException {
+    private void waitForVaultAPIToBeReady(VaultClient vaultClient) throws Exception {
         Instant started = Instant.now();
         while (Instant.now().isBefore(started.plusSeconds(20))) {
             try {
                 log.info("checking seal status");
-                VaultSealStatusResult sealStatus = vaultInternalSystemBackend.systemSealStatus(vaultClient).await()
-                        .indefinitely();
+                var sealStatus = vaultClient.sys().seal().status()
+                        .toCompletableFuture().get();
                 log.info(sealStatus);
                 return;
-            } catch (VaultIOException e) {
+            } catch (VaultException e) {
                 log.info("vault api not ready: " + e);
             }
             Thread.sleep(1000L);

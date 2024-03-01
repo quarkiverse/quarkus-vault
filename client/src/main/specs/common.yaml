@@ -1,0 +1,98 @@
+relativePackageName: common
+
+types:
+
+- name: WrapInfo
+  properties:
+  - name: token
+    type: String
+  - name: ttl
+    type: java.time.Duration
+  - name: creationTime
+    type: java.time.OffsetDateTime
+  - name: creationPath
+    type: String
+
+
+- name: LeasedResult<DATA, AUTH extends $AuthResult<?>>
+  implements:
+    - $$.common.VaultJSONResult
+  properties:
+    - name: requestId
+      type: String
+    - name: leaseId
+      type: String
+    - name: renewable
+      type: Boolean
+    - name: leaseDuration
+      type: java.time.Duration
+    - name: data
+      type: DATA
+    - name: wrapInfo
+      type: $WrapInfo
+    - name: warnings
+      type: java.util.List<String>
+    - name: auth
+      type: AUTH
+
+
+- name: AuthResult<METADATA>
+  properties:
+    - name: clientToken
+      type: String
+    - name: accessor
+      type: String
+    - name: policies
+      type: java.util.List<String>
+    - name: tokenPolicies
+      type: java.util.List<String>
+    - name: metadata
+      type: METADATA
+    - name: leaseDuration
+      type: java.time.Duration
+    - name: renewable
+      type: Boolean
+    - name: entityId
+      type: String
+    - name: tokenType
+      type: $TokenType
+    - name: orphan
+      type: Boolean
+    - name: mfaRequirement
+      type: String
+    - name: numUses
+      type: Integer
+
+
+enums:
+
+- name: Format
+  values:
+  - base64
+  - hex
+
+- name: HashAlgorithm
+  values:
+    - sha1
+    - sha2-256
+    - sha2-384
+    - sha2-512
+    - sha3-224
+    - sha3-256
+    - sha3-384
+    - sha3-512
+    - none
+
+- name: RandomSource
+  values:
+  - platform
+  - seal
+  - all
+
+- name: TokenType
+  values:
+  - service
+  - batch
+  - default
+  - default-service
+  - default-batch

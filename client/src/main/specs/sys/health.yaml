@@ -1,0 +1,98 @@
+name: Health
+category: sys
+mountable: false
+basePath: sys
+
+operations:
+
+- name: statusCode
+  method: HEAD
+  path: health
+  queryFrom: [standbyOk, perfStandbyOk]
+  authenticated: false
+  parameters:
+  - name: standbyOk
+    type: Boolean
+    includeNulls: false
+  - name: perfStandbyOk
+    type: Boolean
+    includeNulls: false
+
+
+- name: statusCode
+  method: HEAD
+  path: health
+  authenticated: false
+
+
+- name: info
+  method: GET
+  path: health
+  queryFrom: [standbyOk, perfStandbyOk]
+  authenticated: false
+  parameters:
+  - name: standbyOk
+    type: Boolean
+    includeNulls: false
+  - name: perfStandbyOk
+    type: Boolean
+    includeNulls: false
+  result:
+    kind: json
+    type: $InfoResult
+
+
+- name: info
+  method: GET
+  path: health
+  authenticated: false
+  result:
+    kind: json
+    type: $InfoResult
+
+
+types:
+- name: InfoResult
+  implements:
+  - $$.common.VaultJSONResult
+  properties:
+  - name: initialized
+    type: Boolean
+  - name: sealed
+    type: Boolean
+  - name: standby
+    type: Boolean
+  - name: performanceStandby
+    type: Boolean
+  - name: replicationPerformanceMode
+    type: String
+  - name: replicationDrMode
+    type: String
+  - name: serverTimeUtc
+    type: Long
+  - name: version
+    type: String
+  - name: clusterName
+    type: String
+  - name: clusterId
+    type: String
+
+
+methods:
+
+- name: status
+  returnType: java.util.concurrent.CompletionStage<$$.api.sys.health.VaultHealthStatus>
+  parameters:
+    standbyOk: Boolean
+    perfStandbyOk: Boolean
+  body: |
+    return statusCode(standbyOk, perfStandbyOk).thenApply($health:T::fromStatusCode);
+  bodyArguments:
+    health: <type>$$.api.sys.health.VaultHealthStatus
+
+- name: status
+  returnType: java.util.concurrent.CompletionStage<$$.api.sys.health.VaultHealthStatus>
+  body: |
+    return statusCode().thenApply($health:T::fromStatusCode);
+  bodyArguments:
+    health: <type>$$.api.sys.health.VaultHealthStatus

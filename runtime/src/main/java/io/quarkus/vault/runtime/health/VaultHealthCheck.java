@@ -8,15 +8,14 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 import org.eclipse.microprofile.health.Readiness;
 
-import io.quarkus.vault.VaultSystemBackendEngine;
-import io.quarkus.vault.sys.VaultHealth;
+import io.quarkus.vault.client.VaultClient;
 
 @Readiness
 @Singleton
 public class VaultHealthCheck implements HealthCheck {
 
     @Inject
-    VaultSystemBackendEngine vaultSystemBackendEngine;
+    VaultClient client;
 
     @Override
     public HealthCheckResponse call() {
@@ -24,30 +23,28 @@ public class VaultHealthCheck implements HealthCheck {
         final HealthCheckResponseBuilder builder = HealthCheckResponse.named("Vault connection health check");
 
         try {
-            final VaultHealth vaultHealth = this.vaultSystemBackendEngine.health();
+            var status = client.sys().health().status()
+                    .toCompletableFuture().get();
 
-            if (vaultHealth.isInitializedUnsealedActive()) {
-                builder.up();
-            }
-
-            if (vaultHealth.isUnsealedStandby()) {
-                builder.down().withData("reason", "Unsealed and Standby");
-            }
-
-            if (vaultHealth.isRecoveryReplicationSecondary()) {
-                builder.down().withData("reason", "Disaster recovery mode replication secondary and active");
-            }
-
-            if (vaultHealth.isPerformanceStandby()) {
-                builder.down().withData("reason", "Performance standby");
-            }
-
-            if (vaultHealth.isNotInitialized()) {
-                builder.down().withData("reason", "Not initialized");
-            }
-
-            if (vaultHealth.isSealed()) {
-                builder.down().withData("reason", "Sealed");
+            switch (status) {
+                case INITIALIZED_UNSEALED_ACTIVE:
+                    builder.up();
+                    break;
+                case UNSEALED_STANDBY:
+                    builder.down().withData("reason", "Unsealed and Standby");
+                    break;
+                case RECOVERY_REPLICATION_SECONDARY_ACTIVE:
+                    builder.down().withData("reason", "Disaster recovery mode replication secondary and active");
+                    break;
+                case PERFORMANCE_STANDBY:
+                    builder.down().withData("reason", "Performance standby");
+                    break;
+                case NOT_INITIALIZED:
+                    builder.down().withData("reason", "Not initialized");
+                    break;
+                case SEALED:
+                    builder.down().withData("reason", "Sealed");
+                    break;
             }
 
             return builder.build();

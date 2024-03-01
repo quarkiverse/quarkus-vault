@@ -1,0 +1,240 @@
+name: Mounts
+category: sys
+mountable: false
+basePath: sys
+
+operations:
+
+- name: list
+  method: GET
+  path: mounts
+  result:
+    kind: leased
+    unwrapData: true
+    dataType: java.util.Map<String, $MountInfo>
+
+
+- name: read
+  method: GET
+  path: mounts/:path
+  parameters:
+  - name: path
+    type: String
+  result:
+    kind: leased
+    unwrapData: true
+    dataType: $FullMountInfo
+
+
+- name: enable
+  method: POST
+  status: NO_CONTENT
+  path: mounts/:path
+  bodyFrom: [type, description, config, options]
+  parameters:
+  - name: path
+    type: String
+  - name: type
+    type: String
+  - name: description
+    type: String
+  - name: config
+    object:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: forceNoCache
+      type: Boolean
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: $ListingVisibility
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: pluginVersion
+      type: String
+    - name: allowedManagedKeys
+      type: java.util.List<String>
+  - name: options
+    type: java.util.Map<String, Object>
+
+
+- name: disable
+  method: DELETE
+  path: mounts/:path
+  parameters:
+  - name: path
+    type: String
+
+
+- name: readTune
+  method: GET
+  path: mounts/:path/tune
+  parameters:
+  - name: path
+    type: String
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: forceNoCache
+      type: Boolean
+    - name: description
+      type: String
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: $ListingVisibility
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: allowedManagedKeys
+      type: java.util.List<String>
+    - name: options
+      type: java.util.Map<String, Object>
+
+
+- name: tune
+  method: POST
+  status: NO_CONTENT
+  path: mounts/:path/tune
+  parameters:
+  - name: path
+    type: String
+  - name: params
+    body: true
+    object:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: description
+      type: String
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: $ListingVisibility
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: allowedManagedKeys
+      type: java.util.List<String>
+    - name: pluginVersion
+      type: String
+    - name: options
+      type: java.util.Map<String, Object>
+
+
+types:
+
+- name: MountInfo
+  nested:
+  - name: Config
+    properties:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: forceNoCache
+      type: Boolean
+  properties:
+  - name: accessor
+    type: String
+  - name: config
+    type: $MountInfo.Config
+  - name: deprecationStatus
+    type: String
+  - name: description
+    type: String
+  - name: externalEntropyAccess
+    type: Boolean
+  - name: local
+    type: Boolean
+  - name: options
+    type: java.util.Map<String, Object>
+  - name: pluginVersion
+    type: String
+  - name: runningPluginVersion
+    type: String
+  - name: runningSha256
+    type: String
+  - name: sealWrap
+    type: Boolean
+  - name: type
+    type: String
+  - name: uuid
+    type: String
+
+
+- name: FullMountInfo
+  nested:
+  - name: Config
+    properties:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: forceNoCache
+      type: Boolean
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: $ListingVisibility
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: allowedManagedKeys
+      type: java.util.List<String>
+  properties:
+  - name: accessor
+    type: String
+  - name: config
+    type: $FullMountInfo.Config
+  - name: deprecationStatus
+    type: String
+  - name: description
+    type: String
+  - name: externalEntropyAccess
+    type: Boolean
+  - name: local
+    type: Boolean
+  - name: options
+    type: java.util.Map<String, Object>
+  - name: pluginVersion
+    type: String
+  - name: runningPluginVersion
+    type: String
+  - name: runningSha256
+    type: String
+  - name: sealWrap
+    type: Boolean
+  - name: type
+    type: String
+  - name: uuid
+    type: String
+
+
+enums:
+
+- name: ListingVisibility
+  values:
+  - hidden
+  - unauth

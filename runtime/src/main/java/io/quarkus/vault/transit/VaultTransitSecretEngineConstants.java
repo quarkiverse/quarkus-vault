@@ -2,7 +2,7 @@ package io.quarkus.vault.transit;
 
 import java.util.List;
 
-import io.quarkus.vault.VaultException;
+import io.quarkus.vault.client.VaultException;
 
 public class VaultTransitSecretEngineConstants {
 

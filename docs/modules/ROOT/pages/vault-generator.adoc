@@ -1,0 +1,427 @@
+= Vault Generator
+
+== Overview
+
+The generator is designed specifically for easily generating Java POJOs, and API classes that target Vault system and plugin APIs. It uses YAML files, referred to as a "specs", that each describe an API in very Java-centric terms.
+
+Currently, the generator is used to generate the supported native Vault system apis and secret plugin apis. That being said, a long-term goal for the generator is that users with custom Vault plugins will be able to generate API objects for them as well.
+
+The generator can be called directly from the command line, or via Maven using the `exec-maven-plugin`; the Quarkus Vault client uses the latter approach (while using the `build-helper-maven-plugin` to only regenerate when the specs are out of date).
+
+== What is generated?
+
+The generator produces three main types for each API:
+
+API:: The main class for accessing an associated Vault API. Each method represents an endpoint of the associated API. All the methods are reactive and return a Smallrye Mutiny `Uni`. Internally, the API uses another generated class, a request factory, to build Vault API requests. The API either returns the unaltered response from Vault, or for certain endpoints, unwraps the useful data nested in the raw Vault response.
+Request Factory:: The API uses the request factory to build Vault API requests. It is also reactive and returns a Smallrye Mutiny `Uni`. The request factory is generated from the same spec as the API, and is designed to be used by the API. In general, it is not intended to be used directly by end users. Although, because Vault APIs are diverse and complex, it is possible that end users can use the request factory directly to build requests that can be modified in a way not directly supported by the API.
+DTOs:: The generator also produces DTO POJO classes that are used by the API to represent the data that is sent to and received from Vault. The DTO classes are generated from the same spec as the API and request factory, with many of them being implied by the request parameters or result types. Additionally, spec files can declare shared DTOs that can be used by multiple APIs. DTOs can also be enumerated types.
+
+== YAML Spec Format
+
+The generator uses a YAML file to describe the API. The spec file is designed to be very Java-centric, while intending to be a fairly direct representation of the Vault API. The spec file is designed to be easily understood by Java developers with knowledge of Vault APIs.
+
+All the Java types referenced in the spec support Java generics, including wildcards and type parameter bounds.
+
+The spec file is divided into the following sections:
+
+API:: The API section describes the API itself, including the name, the Vault API path, wether the API is mountable at different paths, and base OTel tracing titles.
+
+Operations:: The operations section describes the API endpoints. Each operation is described in terms of its HTTP method, nested path, method parameters and result type. The parameters can used in a the path, query parameters or request body. The result type is can take a few forms, be it a "leased" result (the standard Vault response format), a plain DTO, or a raw binary/string value. Parameters and results can define "simple" DTOs inline as needed, refer to shared DTOs defined in the types section, or even refer to types defined in other specs or the client itself.
+
+Types:: The types section describes the DTOs used by the API. DTOs are described in terms of their fields, which are either primitive types, or other DTOs. DTOs can also be enumerated types.
+
+Enums:: The enums section describes the enumerated types used by the API. Enumerated types are described in terms of their values.
+
+=== API Section
+
+The API sections consists of the following fields:
+
+[source,yaml]
+----
+name: # required
+category: # defaults to empty
+prefix: # defaults to "Vault"
+packageName: # defaults to "io.quarkus.vault.client.api"
+relativePackageName: # defaults to lowercase "<category>.<name>"
+traceNameTag: # defaults to lowecase "<name>"
+basePath: # defaults to empty
+mountable: # defaults to true
+namespaced: # defaults to true
+----
+
+name:: The name of the API. This is used to generate the API class name, and is also used to generate the request factory class name. The full name of each class is prefixed with the `prefix` field and the capitalized `category` field.
+
+category:: The category of the API. This is used when forming the API class name, request factory class name and the Java package name all the types will be generated in. While it defaults to empty, it should be specified as `secrets` for secret plugins and as `auth` for authentication plugins.
+
+prefix:: The prefix used when forming the API class name and request factory class name. It defaults to `Vault` and probably should not be changed/specified.
+
+packageName:: The base Java package name for all types, not just those generated by the spec. It defaults to `io.quarkus.vault.client.api` and probably should not be changed/specified.
+
+relativePackageName:: The relative Java package name for all types generated by the spec. It defaults to the lowercase `category` field, followed by a dot, followed by the lowercase `name` field. It is relative to the `packageName` field.
+
+traceNameTag:: The OpenTelemetry trace name tag for the API. It defaults to the lowercase `name` field. The full tag for each operation is of the form "Vault [<category> (<traceNameTag>)] <operationTitle>". The operation title is generated by converting the operation name from camel-case to title-case.
+
+basePath:: The base path for the API. It defaults to empty. The base path is used to form the full path for each operation. The full path for each operation is of the form "<basePath>/<operationPath>". The operation path is specified for each operation.
+
+mountable:: Whether the API is mountable at different paths. It defaults to true. If true, each operation's path will have a mount path injected in the approprate location. For all plugins this should be true. For system APIs (i.e., those under `/sys`) this should be false.
+
+namespaced:: Whether the API is namespaced. It defaults to true. If true, each operation's request will have a namespace injected into each request according to the configuration of the `VaultClient`.
+
+=== Operations Section
+
+The operations section is an array of operation definitions. Each operation definition consists of the following fields:
+
+[source,yaml]
+----
+name: # required
+method: # defaults to "GET" (one of "GET", "POST", "PUT", "PATCH", "DELETE", "LIST", "HEAD")
+path: # required if 'pathChoice` is not specified
+pathChoice: # required if 'path' is not specified
+trace: # defaults to title case of 'name'
+authenticated: # defaults to true
+namespaced: # defaults to true
+tokenFrom: # defaults to null
+wrapTTLFrom: # defaults to null
+bodyFrom: # defaults to null
+bodyType: # defaults to null
+queryFrom: # defaults to null
+headers: # defaults to an empty list
+typeParameters: # defaults to an empty list
+parameters: # defaults to an empty list
+result: # defaults to null
+recoverNotFound: # defaults to null
+----
+
+name:: The name of the operation. This is used to generate the method name in the API class. It is also converted to title case and used as the operation title for OpenTelemetry tracing.
+
+method:: The HTTP method for the operation. It defaults to `GET`. The method specifies the HTTP method used for the operation as required by Vault.
+
+path:: The path for the operation. This is used to generate the full path for the operation. The full path is of the form "<basePath>/<path>". The path can contain parameters (specified as ':paramName`) that are replaced with the appropriate value from the operation's parameters. The path will also contain a mount path is injected into the appropriate location if the API is mountable.
+
+pathChoice:: The patch choice field can be used in place of the `path` field to specify a choice of paths based on the value of a parameter. The path choice field is an array of path choice definitions. The path choice definition consists of the following fields:
++
+[source,yaml]
+----
+param: # name of the parameter to use the value to select the path
+choices: # array of path choice values
+  value: # the value of the parameter that selects this path
+  path: # the path to use if the parameter has the specified value
+----
++
+The path field in each choice can be complex and and contain parameter references just like the main `path` field.
+
+trace:: The OpenTelemetry trace name tag for the operation. It defaults to the title case of the `name` field. The full tag for each operation is of the form "Vault [<category> (<traceNameTag>)] <operationTitle>".
+
+authenticated:: Whether the operation requires authentication. It defaults to true. If true, the operation will have a token injected into each request according to the configuration of the `VaultClient`.
+
+namespaced:: Whether the operation requires a namespace. It defaults to true. If true, the operation will have a namespace injected into each request according to the configuration of the `VaultClient`.
+
+tokenFrom:: If an operation parameter needs to be used as the token for the operation, this field can be used to specify the name of the parameter. If specified, the parameter will be used as the token for the operation, overriding the token injected by the `VaultClient`.
+
+wrapTTLFrom:: If the operation response is to be wrapped according to Vault response wrapping rules, this field can be used to specify the name of the parameter that contains the TTL for the wrapping.
+
+bodyFrom:: If the operation has a request body built solely from one or more parameters, this field can be used to specify the name of the parameters that contains the body. It is specified as a list of parameter names.
+
+bodyType:: If the operation has a request body that is a DTO declared elsewhere, this field specifies the full java type name for that type.
+
+queryFrom:: If the operation requires query parameters in the request URL, this field is a list of parameter names that should be used as query parameters. Each query parameter will use the parameter name as the query parameter name, and the parameter value as the query parameter value.
+
+headers:: If the operation requires additional headers in the request, this field is a map of header names to values. Each header value can be literal or specify a parameter name to use as the header value (using the `:paramName` syntax).
+
+typeParameters:: If the operation is a generic method, this field is a list of type parameter names to use for the method (possibly with bounds information if needed).
+
+parameters:: The parameters for the operation. This is an array of parameter definitions. Each parameter definition consists of the following fields:
++
+[source,yaml]
+----
+name: # required (in camel case)
+serializedName: # defaults to the snake case of 'name'
+required: # defaults to false
+body: # defaults to false
+includeIn: # defaults to null can be "API" or "Factory"
+annotations: # defaults to an empty list
+type: # defaults to null, required if 'object' is not specified
+object: # defaults to null, required if 'type' is not specified
+----
++
+name::: The name of the parameter. This is used to generate the parameter name in the API method and in other instances.
++
+serializedName::: The serialized name of the parameter. This is used when the parameter is included in the request body (using `bodyFrom`) or as a query parameter. It defaults to the snake case of the `name` field.
++
+required::: Whether the parameter is required. It defaults to false. If true, the parameter will not be nullable in the API method.
++
+body::: Whether the parameter is to be used as the request body. It defaults to false. If true, the parameter will be used as the request body and should be a DTO type.
++
+includeIn::: Where the parameter should be included. It defaults to null. If null, the parameter will be included in the API method and in the request factory method. If `API`, the parameter will only be included in the API method. If `Factory`, the parameter will only be included in the request factory method. This is a specialized parameter and very rarely should be used.
++
+annotations::: A list of Java annotations to add to the parameter.
++
+type::: The Java type of the parameter. This is required if the `object` field is not specified. The type must be defined in the types section of the spec (or elsewhere).
++
+object::: An inline <<_pojo_definitions,POJO definition>> of the parameter type. This is required if the `type` field is not specified.
+
+result:: The result type for the operation. It defaults to null. The result  type comes in three different forms (specified in the `kind` field):
++
+leased::: The result is a leased result. This is the standard Vault response format that returns an optional `data` field and an optional `auth` field along with other result properties. The generated Java method will return a wrapping result type (derived from the predefined `VaultLeasedResult` class) that has the `data` and `auth` properties defined by the result specification. The leased result definition consists of the following fields:
++
+[source,yaml]
+----
+kind: leased
+data: # inline definition of data returned, required if `dataType` is not specified
+dataType: # name of the data type returned, required if `data` is not specified
+unwrapData: # defaults to false
+auth: # inline definition of auth returned, required if `authType` is not specified
+authType: # name of the auth type returned, required if `auth` is not specified
+unwrapAuth: # defaults to false
+unwrapUsing: # defaults to null
+unwrapUsingArguments: # defaults to an empty list
+unwrappedType: # defaults to null
+----
++
+The `data` and `auth` fields can be specified as inline <<_pojo_definitions,POJO definitions>> or as type names. If specified as type names, the type must be defined in the types section of the spec (or elsewhere). If either of these are not specified the type defaults to a `java.lang.Object`.
++
+Many of the Vault API leased responses do not provide much useful information. To allow defining the DTOs inline while not requiring users to "see" the wrapping type, results can specify "unwrapping". Specifying `unwrapData` to true will cause the API method to return the `data` or `dataType` value directly. Specifying `unwrapAuth` to true will cause the API method to return the `auth` or `authType` value directly. Finally, you can specify `unwrapUsing`, `unwrapUsingArguments` and `unwrappedType` to do custom unwrapping. Together `unwrapUsing` and `unwrapUsingArguments` specify a <<_java_code_blocks, Java Code Block>>, while the `unwrappedType` specifies the type returned by the code block.
++
+json::: The result is a standard JSON value. This is used for operations that return a simple JSON value, such as the `sys/health/info` endpoint.
++
+[source,yaml]
+----
+kind: json
+type: # required if `object` is not specified
+object: # inline definition of the object returned, required if `type` is not specified
+----
++
+Either the `type` or `object` field must be specified. If the `type` field is specified, the type must be defined in the types section of the spec (or elsewhere). If the `object` field is specified, it is an inline <<_pojo_definitions,POJO definition>>.
++
+raw::: The result is a raw binary or string value. This is used for operations that return a raw binary or string value.
++
+[source,yaml]
+----
+kind: raw
+type: # required
+----
++
+The `type` field must be specified and must be a Java type that is either `byte[]` or `java.lang.String`.
+
+recoverNotFound:: If the operation is expected to return a value instead of throwing a client error when a 404 is encountered, this field can be used to what, and how, that value is returned.The field is a map with the following fields:
++
+[source,yaml]
+----
+using: # required
+arguments: # defaults to an empty list
+----
++
+The `using` and `arguments` fields are used to specify a <<_java_code_blocks, Java Code Block>> that will be used to recover from the 404.
+
+
+[#_types_section]
+=== Types Section
+
+The types section is an array of <<_pojo_definitions,POJO definitions>>.
+
+
+=== Enums Section
+
+The enums section is an array of enumerated type definitions.Each enumerated type definition consists of the following fields:
+
+[source,yaml]
+----
+name: # required
+values: # required
+----
+
+=== Methods Section
+
+The methods section is an array of method definitions. Each method definition consists of the following fields:
+[source,yaml]
+----
+name: # required
+returnType: # required
+typeParameters: # defaults to an empty list
+parameters: # defaults to an empty list
+body: # defaults to null
+bodyArguments: # defaults to an empty list
+annotations: # defaults to an empty list
+----
+
+name:: The name of the method. This is used to generate the method name in the owning class.
+
+returnType:: The Java type of the method return value.
+
+typeParameters:: If the method is a generic method, this field is a list of type parameter names to use for the method (possibly with bounds information if needed).
+
+parameters:: The parameters for the method.This is a map of parameter names to Java types for each parameter.
++
+[source,yaml]
+----
+parameters:
+  someParameter: java.lang.String
+  anotherParameter: java.lang.Integer
+----
+
+
+[#_pojo_definitions]
+== POJO Definitions
+
+POJO definitions are specified in the <<_types_section>> or inline throughout different fields in the spec file. Inline POJO definitions are limited compared to those in the types section but still support a wide range of features, and they represent on the `properties` field of a full POJO definition.POJO definitions support of the following fields:
+
+[source,yaml]
+----
+name: # required
+extends: # defaults to null
+implements: # defaults to an empty list
+annotations: # defaults to an empty list
+nested: # defaults to an empty list
+properties: # defaults to an empty list
+methods: # defaults to an empty list
+----
+
+name:: The name of the POJO. This is used to generate the POJO class name.
+
+extends:: The name of class that this POJO extends; directly translates to the Java `extends` keyword.
+
+implements:: A list of interfaces that this POJO implements; directly translates to the Java `implements` keyword.
+
+annotations:: A list of <<_java_annotations>> to add to the POJO class.
+
+nested:: A list of nested POJO definitions. Nested POJOs are defined inline but still support all the properties of a full POJO definition.
+
+properties:: A list of properties definitions for the POJO.Each property definition consists of the following fields:
++
+[source,yaml]
+----
+name: # required
+serializedName: # defaults to the snake case of 'name'
+type: # defaults to null, required if 'object' is not specified
+object: # defaults to null, required if 'type' is not specified
+annotations: # defaults to an empty list
+required: # defaults to false
+----
+name::: The name of the property. This is used to generate the property name in the POJO class.
+
+serializedName::: The serialized name of the property.It defaults to the snake case of the `name` field.
+
+type::: The Java type of the property.This is required if the `object` field is not specified.The type must be defined in the types section of the spec (or elsewhere).
+
+object::: An inline <<_pojo_definitions,POJO definition>> of the property type.This is required if the `type` field is not specified.
+
+annotations::: A list of <<_java_annotations>> to add to the property.
+
+required::: Whether the property is required.It defaults to false.If true, the property will not be nullable in the POJO class.
+
+[#_java_annotations]
+== Java Annotations
+
+Java annotations can be specified for POJOs, POJO properties, and POJO methods.Annotations are specified with the following fields:
+
+[source,yaml]
+----
+type: # required
+members: # defaults to an empty list
+----
+
+type:: The Java type of the annotation.
+
+members:: A map of annotation property members. Each property value is specified as:
++
+[source,yaml]
+----
+format: # required
+arguments: # defaults to an empty list
+----
+Together the `format` and `arguments` fields are simplified <<_java_code_blocks, Java Code Block>> initializing the annotation member.
+
+=== Examples
+
+Here is a Jackson JsonSerialize annotation for a POJO property:
+[source,yaml]
+----
+type: com.fasterxml.jackson.databind.annotation.JsonSerialize
+members:
+- using: <type>com.example.SomeSerializer
+----
+
+which would produce a Java annotation similar to:
+[source,java]
+----
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.example.SomeSerializer;
+
+class SomeClass {
+    @JsonSerialize(using = SomeSerializer.class)
+    String someProperty;
+}
+----
+
+[#_java_code_blocks]
+== Java Code Blocks
+
+The generator uses JavaPoet to generate Java code.JavaPoet uses `CodeBlock` classes to generate Java code, as the project puts it, "beautifully".This requires specifying Java types as arguments to the code block to ensure they are imported correctly.The spec file supports specifying a limited set of the JavaPoet parameters for any code blocks in the spec files.
+
+The spec files supports code block using the following argument forms in the code block text:
+
+$<name>:T:: The value will be expected to be a Java type and will be replaced with the appropriate, imported, Java type name.
+$<name>:S:: The value will be treated as a string value, and will be replaced in the code block with a quoted and escaped version of the provided value.
+$<name>:L:: The value will be expected to be a literal value and will be replaced in the code block with the exact string.
+
+Each code block will have arguments map or list.That specifies the value to use for each argument.When using a map format, argument <name>s are allowed, when using the list format no names can be specified.In either case the argument values can be in one of two formats.
+
+<type>com.example.MyJavaType:: Any value that starts with `<type>` will be treated as a Java type name and should only be used with arguments that are specified using the `$<name>:T` format.
+String Value:: All other values will be considered strings and can be used with arguments that are specified using the `$<name>:S` or `$<name>:L` formats.
+
+=== Map vs List arguments
+For code blocks that are expected to be complex, (e.g., method bodies in POJO definitions) the code block arguments will be specified as a map. For code blocks that expected to be simple (e.g., method return types) the code block arguments will be specified as a list.
+
+=== Examples
+==== Mapped Arguments
+The following example is an excerpt from a POJO method definition that uses the map argument format:
+[source,yaml]
+----
+# code block with map arguments (names must be specified)
+name: test
+returnType: java.io.StringReader
+body: |
+  $wrapped:T $name:L = new $wrapped:T($value:S);
+  return $name:L;
+bodyArguments:
+  wrapped: <type>java.io.StringReader
+  name: value
+  value: "hello world"
+----
+
+which generates the Java code similar to the following:
+[source,java]
+----
+import java.io.StringReader;
+
+class SomeClass {
+    StringReader test() {
+        StringReader value = "hello world";
+        return value;
+    }
+}
+----
+
+==== List Arguments
+The following example is an excerpt from an unwrapping code block that uses the list argument format:
+
+[source,yaml]
+----
+# code block with list arguments (no names can be specified)
+unwrapUsing: return new $T(r.getData());
+unwrapUsingArguments:
+- <type>java.io.StringReader
+----
+
+which generates Java code similar to the following:
+[source,java]
+----
+import java.io.StringReader;
+
+class SomeAPI {
+    Uni<StringReader> test() {
+        var request = buildRequest();
+        return request.map(r -> new StringReader(r.getData()));
+    }
+}
+----

@@ -1,0 +1,257 @@
+name: Auth
+category: sys
+mountable: false
+basePath: sys
+
+operations:
+
+- name: list
+  method: GET
+  path: auth
+  result:
+    kind: leased
+    unwrapData: true
+    dataType: java.util.Map<String, $MethodInfo>
+
+
+- name: read
+  method: GET
+  path: auth/:path
+  parameters:
+    - name: path
+      type: String
+  result:
+    kind: leased
+    unwrapData: true
+    dataType: $FullMethodInfo
+
+
+- name: enable
+  method: POST
+  status: NO_CONTENT
+  path: auth/:path
+  bodyFrom: [type, description, config]
+  parameters:
+  - name: path
+    type: String
+  - name: type
+    type: String
+  - name: description
+    type: String
+  - name: config
+    object:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: $ListingVisibility
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: pluginVersion
+      type: String
+    - name: local
+      type: Boolean
+    - name: sealWrap
+      type: Boolean
+
+
+- name: disable
+  method: DELETE
+  path: auth/:path
+  parameters:
+  - name: path
+    type: String
+
+
+- name: readTune
+  method: GET
+  path: auth/:path/tune
+  parameters:
+  - name: path
+    type: String
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: forceNoCache
+      type: Boolean
+    - name: description
+      type: String
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: $ListingVisibility
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+
+
+- name: tune
+  method: POST
+  status: NO_CONTENT
+  path: auth/:path/tune
+  parameters:
+  - name: path
+    type: String
+  - name: options
+    body: true
+    object:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: description
+      type: String
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: $ListingVisibility
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+    - name: pluginVersion
+      type: String
+    - name: userLockoutConfig
+      type: $UserLockoutConfig
+
+
+types:
+
+- name: MethodInfo
+  nested:
+  - name: Config
+    properties:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: forceNoCache
+      type: Boolean
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+  properties:
+  - name: accessor
+    type: String
+  - name: config
+    type: $MethodInfo.Config
+  - name: deprecationStatus
+    type: String
+  - name: description
+    type: String
+  - name: externalEntropyAccess
+    type: Boolean
+  - name: local
+    type: Boolean
+  - name: pluginVersion
+    type: String
+  - name: runningPluginVersion
+    type: String
+  - name: runningSha256
+    type: String
+  - name: sealWrap
+    type: Boolean
+  - name: type
+    type: String
+  - name: uuid
+    type: String
+
+- name: FullMethodInfo
+  nested:
+  - name: Config
+    properties:
+    - name: defaultLeaseTtl
+      type: java.time.Duration
+    - name: maxLeaseTtl
+      type: java.time.Duration
+    - name: forceNoCache
+      type: Boolean
+    - name: auditNonHmacRequestKeys
+      type: java.util.List<String>
+    - name: auditNonHmacResponseKeys
+      type: java.util.List<String>
+    - name: listingVisibility
+      type: $ListingVisibility
+    - name: passthroughRequestHeaders
+      type: java.util.List<String>
+    - name: allowedResponseHeaders
+      type: java.util.List<String>
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+  properties:
+  - name: accessor
+    type: String
+  - name: config
+    type: $FullMethodInfo.Config
+  - name: deprecationStatus
+    type: String
+  - name: description
+    type: String
+  - name: externalEntropyAccess
+    type: Boolean
+  - name: local
+    type: Boolean
+  - name: pluginVersion
+    type: String
+  - name: runningPluginVersion
+    type: String
+  - name: runningSha256
+    type: String
+  - name: sealWrap
+    type: Boolean
+  - name: type
+    type: String
+  - name: uuid
+    type: String
+
+- name: UserLockoutConfig
+  properties:
+  - name: lockoutThreshold
+    type: Integer
+    annotations:
+    - type: com.fasterxml.jackson.databind.annotation.JsonSerialize
+      members:
+        using:
+          format: $serializer:T.class
+          arguments:
+            serializer: <type>io.quarkus.vault.client.json.NumberToStringSerializer
+    - type: com.fasterxml.jackson.databind.annotation.JsonDeserialize
+      members:
+        using:
+          format: $deserializer:T.class
+          arguments:
+            deserializer: <type>io.quarkus.vault.client.json.StringToNumberDeserializer
+  - name: lockoutDuration
+    type: String
+  - name: lockoutCounterReset
+    type: String
+  - name: lockoutDisable
+    type: Boolean
+
+
+enums:
+
+- name: ListingVisibility
+  values:
+  - hidden
+  - unauth

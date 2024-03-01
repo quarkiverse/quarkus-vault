@@ -1,8 +1,6 @@
 package io.quarkus.vault;
 
-import static io.quarkus.vault.runtime.LogConfidentialityLevel.HIGH;
-import static io.quarkus.vault.runtime.LogConfidentialityLevel.LOW;
-import static io.quarkus.vault.runtime.LogConfidentialityLevel.MEDIUM;
+import static io.quarkus.vault.client.logging.LogConfidentialityLevel.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;

@@ -16,7 +16,9 @@ public class VaultConfigSourceFactory implements ConfigurableConfigSourceFactory
     public Iterable<ConfigSource> getConfigSources(final ConfigSourceContext context, final VaultRuntimeConfig config) {
         if (config.url().isPresent()) {
             ArcContainer container = Arc.container();
-            container.instance(VaultConfigHolder.class).get().setVaultRuntimeConfig(config);
+            if (container != null) {
+                container.instance(VaultConfigHolder.class).get().setVaultRuntimeConfig(config);
+            }
             return List.of(new VaultConfigSource(config));
         } else {
             return Collections.emptyList();

@@ -11,8 +11,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import io.quarkus.credentials.CredentialsProvider;
-import io.quarkus.vault.VaultException;
 import io.quarkus.vault.VaultKVSecretEngine;
+import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.runtime.config.CredentialsProviderConfig;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 

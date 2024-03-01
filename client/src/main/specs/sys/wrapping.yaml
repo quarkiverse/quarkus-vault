@@ -1,0 +1,104 @@
+name: Wrapping
+category: sys
+mountable: false
+basePath: sys
+
+operations:
+
+- name: lookup
+  method: POST
+  path: wrapping/lookup
+  bodyFrom: [token]
+  parameters:
+  - name: token
+    type: String
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: creationPath
+      type: String
+    - name: creationTime
+      type: java.time.OffsetDateTime
+    - name: creationTtl
+      type: java.time.Duration
+
+
+- name: rewrap
+  method: POST
+  path: wrapping/rewrap
+  bodyFrom: [token]
+  parameters:
+  - name: token
+    type: String
+  result:
+    kind: leased
+    unwrapUsing: r.getWrapInfo()
+    unwrappedType: $$.api.common.VaultWrapInfo
+    dataType: Void
+    authType: Void
+
+
+- name: unwrap
+  method: POST
+  path: wrapping/unwrap
+  result:
+    kind: leased
+    dataType: java.util.Map<String, Object>
+
+
+- name: unwrap
+  method: POST
+  path: wrapping/unwrap
+  tokenFrom: token
+  parameters:
+  - name: token
+    type: String
+  result:
+    kind: leased
+    dataType: java.util.Map<String, Object>
+
+
+- name: wrap
+  method: POST
+  path: wrapping/wrap
+  bodyFrom: [data]
+  wrapTTLFrom: wrapTtl
+  parameters:
+  - name: data
+    type: java.util.Map<String, Object>
+  - name: wrapTtl
+    type: java.time.Duration
+  result:
+    kind: leased
+    unwrapUsing: r.getWrapInfo()
+    unwrappedType: $$.api.common.VaultWrapInfo
+    dataType: Void
+    authType: Void
+
+
+methods:
+- name: unwrapAs
+  typeParameters: [T]
+  returnType: java.util.concurrent.CompletionStage<T>
+  parameters:
+    token: String
+    type: Class<T>
+  body: |
+    return unwrap(token).thenApply(r -> {
+      var val = r.getAuth() != null ? r.getAuth() : r.getData(); 
+      return $mapping:T.convert(val, type);
+    });
+  bodyArguments:
+    mapping: <type>io.quarkus.vault.client.json.JsonMapping
+
+- name: wrap
+  returnType: java.util.concurrent.CompletionStage<$$.api.common.VaultWrapInfo>
+  parameters:
+    data: Object
+    wrapTtl: java.time.Duration
+  body: |
+    return wrap($mapping:T.convert(data, new $typeRef:T<>() {}), wrapTtl);
+  bodyArguments:
+    mapping: <type>io.quarkus.vault.client.json.JsonMapping
+    typeRef: <type>com.fasterxml.jackson.core.type.TypeReference

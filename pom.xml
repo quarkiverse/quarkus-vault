@@ -12,8 +12,10 @@
   <packaging>pom</packaging>
   <name>Quarkus - Vault - Parent</name>
   <modules>
+    <module>generator</module>
+    <module>client</module>
+    <module>client-vertx</module>
     <module>deployment</module>
-    <module>model</module>
     <module>runtime</module>
     <module>docs</module>
     <module>test-framework</module>
@@ -27,8 +29,6 @@
   </scm>
   <properties>
     <maven.compiler.parameters>true</maven.compiler.parameters>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.version>3.8.1</quarkus.version>
@@ -65,11 +65,6 @@
       <dependency>
         <groupId>io.quarkiverse.vault</groupId>
         <artifactId>quarkus-vault-deployment</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.quarkiverse.vault</groupId>
-        <artifactId>quarkus-vault-model</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -126,7 +121,6 @@
                   </properties>
                   <modules>
                     <includes>
-                      <include>*:quarkus-vault-model</include>
                       <include>*:quarkus-vault</include>
                       <include>*:quarkus-vault-deployment</include>
                     </includes>
