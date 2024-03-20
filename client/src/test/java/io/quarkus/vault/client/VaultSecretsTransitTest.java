@@ -51,7 +51,7 @@ public class VaultSecretsTransitTest {
                 .toCompletableFuture().get();
 
         assertThat(key)
-                .isPresent().get()
+                .isNotNull()
                 .returns(false, VaultSecretsTransitKeyInfo::isAllowPlaintextBackup)
                 .returns(Duration.ZERO, VaultSecretsTransitKeyInfo::getAutoRotatePeriod)
                 .returns(false, VaultSecretsTransitKeyInfo::isDeletionAllowed)
@@ -68,10 +68,10 @@ public class VaultSecretsTransitTest {
                 .returns(true, VaultSecretsTransitKeyInfo::isSupportsSigning)
                 .returns(ECDSA_P256, VaultSecretsTransitKeyInfo::getType);
 
-        assertThat(key.get().getKeys())
+        assertThat(key.getKeys())
                 .containsKeys("1");
 
-        var keyVersion = key.get().getKeys().get("1");
+        var keyVersion = key.getKeys().get("1");
 
         assertThat(keyVersion.getName())
                 .isEqualTo("P-256");
