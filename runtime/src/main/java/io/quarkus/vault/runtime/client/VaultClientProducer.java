@@ -52,6 +52,7 @@ public class VaultClientProducer {
         var vaultClientBuilder = VaultClient.builder()
                 .baseUrl(config.url().orElseThrow(() -> new VaultException("no vault url provided")))
                 .executor(vaultHttpClient)
+                .requestTimeout(config.readTimeout())
                 .logConfidentialityLevel(config.logConfidentialityLevel());
 
         configureAuthentication(vaultClientBuilder, config);
