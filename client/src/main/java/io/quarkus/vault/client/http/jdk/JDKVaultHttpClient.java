@@ -1,15 +1,14 @@
 package io.quarkus.vault.client.http.jdk;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
+import java.net.http.*;
 import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeoutException;
 
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultResponse;
@@ -28,6 +27,7 @@ public class JDKVaultHttpClient extends VaultHttpClient {
         return CompletableFuture.completedStage(request)
                 .thenApply(this::buildHTTPRequest)
                 .thenCompose((httpRequest) -> httpClient.sendAsync(httpRequest, BodyHandlers.ofByteArray()))
+                .exceptionallyCompose(JDKVaultHttpClient::mapError)
                 .thenCompose(res -> buildResponse(request, res.statusCode(), headers(res), res.body()));
     }
 
@@ -46,6 +46,15 @@ public class JDKVaultHttpClient extends VaultHttpClient {
         return requestBuilder
                 .method(request.getMethod().name(), body)
                 .build();
+    }
+
+    private static <T> CompletionStage<HttpResponse<T>> mapError(Throwable x) {
+        if (x instanceof HttpConnectTimeoutException) {
+            return CompletableFuture.failedStage(new TimeoutException("HTTP connect time out: " + x.getMessage()));
+        } else if (x instanceof HttpTimeoutException) {
+            return CompletableFuture.failedStage(new TimeoutException("HTTP request time out: " + x.getMessage()));
+        }
+        return CompletableFuture.failedStage(x);
     }
 
     private static List<Map.Entry<String, String>> headers(HttpResponse<?> response) {
