@@ -368,6 +368,8 @@ public class VaultRequest<T> {
         var builder = new Builder<T>(operation, method);
         builder.baseUrl = baseUrl;
         builder.apiVersion = apiVersion;
+        builder.operation = operation;
+        builder.method = method;
         builder.path = path;
         builder.token = token;
         builder.namespace = namespace;
@@ -376,6 +378,7 @@ public class VaultRequest<T> {
         builder.headers = headers;
         builder.body = body;
         builder.expectedStatusCodes = expectedStatusCodes;
+        builder.timeout = timeout;
         builder.resultExtractor = resultExtractor;
         builder.logConfidentialityLevel = logConfidentialityLevel;
         return builder;
