@@ -4,7 +4,6 @@ import static io.quarkus.vault.runtime.config.VaultCacheEntry.tryReturnLastKnown
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 
-import java.net.http.HttpTimeoutException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +109,7 @@ public class VaultConfigSource implements ConfigSource {
                 log.debug("attempt " + (i + 1) + " to fetch secrets from vault failed with: " + e);
                 last = e;
             } catch (CompletionException e) {
-                if (e.getCause() instanceof TimeoutException || e.getCause() instanceof HttpTimeoutException) {
+                if (e.getCause() instanceof TimeoutException) {
                     log.debug("attempt " + (i + 1) + " to fetch secrets from vault failed with: " + e);
                     last = new VaultException(e);
                 } else {
