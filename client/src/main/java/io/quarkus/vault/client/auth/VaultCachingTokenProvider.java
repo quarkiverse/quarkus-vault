@@ -35,11 +35,13 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
 
         var cachedToken = Optional.ofNullable(this.cachedToken.get())
                 .map(token -> {
+                    var logLevel = authRequest.getRequest().getLogConfidentialityLevel();
                     if (token.isExpired()) {
-                        log.fine("cached token " + token.getClientToken() + " has expired");
+                        log.fine("cached token " + token.getConfidentialInfo(logLevel) + " has expired");
                         return null;
                     }
-                    log.fine("using cached token " + token.getClientToken() + " (expires at " + token.getExpiresAt() + ")");
+                    log.fine("using cached token " + token.getConfidentialInfo(logLevel) + " (expires at "
+                            + token.getExpiresAt() + ")");
                     return token;
                 });
 
