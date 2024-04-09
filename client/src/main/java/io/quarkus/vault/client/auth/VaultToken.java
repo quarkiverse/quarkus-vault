@@ -40,7 +40,7 @@ public class VaultToken extends VaultTimeLimited {
     }
 
     public VaultToken cached() {
-        return new VaultToken(clientToken, renewable, leaseDuration, created, true, instantSource);
+        return new VaultToken(clientToken, isRenewable(), getLeaseDuration(), getCreated(), true, getInstantSource());
     }
 
     public String getClientToken() {
