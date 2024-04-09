@@ -9,16 +9,36 @@ public abstract class VaultTimeLimited {
 
     private static final Logger log = Logger.getLogger(VaultTimeLimited.class.getName());
 
-    InstantSource instantSource;
-    Instant created;
-    public boolean renewable;
-    public Duration leaseDuration;
+    private final InstantSource instantSource;
+    private final Instant created;
+    private final boolean renewable;
+    private final Duration leaseDuration;
 
     public VaultTimeLimited(boolean renewable, Duration leaseDuration, InstantSource instantSource) {
+        this(renewable, leaseDuration, instantSource.instant(), instantSource);
+    }
+
+    public VaultTimeLimited(boolean renewable, Duration leaseDuration, Instant created, InstantSource instantSource) {
         this.instantSource = instantSource;
-        this.created = instantSource.instant();
+        this.created = created;
         this.renewable = renewable;
         this.leaseDuration = leaseDuration;
+    }
+
+    public InstantSource getInstantSource() {
+        return instantSource;
+    }
+
+    public Instant getCreated() {
+        return created;
+    }
+
+    public boolean isRenewable() {
+        return renewable;
+    }
+
+    public Duration getLeaseDuration() {
+        return leaseDuration;
     }
 
     public boolean isExpired() {

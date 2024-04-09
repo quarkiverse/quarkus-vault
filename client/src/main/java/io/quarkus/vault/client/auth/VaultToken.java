@@ -3,6 +3,7 @@ package io.quarkus.vault.client.auth;
 import static io.quarkus.vault.client.logging.LogConfidentialityLevel.LOW;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.InstantSource;
 
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
@@ -31,8 +32,15 @@ public class VaultToken extends VaultTimeLimited {
         this.fromCache = fromCache;
     }
 
+    public VaultToken(String clientToken, boolean renewable, Duration leaseDuration, Instant created, boolean fromCache,
+            InstantSource instantSource) {
+        super(renewable, leaseDuration, created, instantSource);
+        this.clientToken = clientToken;
+        this.fromCache = fromCache;
+    }
+
     public VaultToken cached() {
-        return new VaultToken(clientToken, renewable, leaseDuration, true, instantSource);
+        return new VaultToken(clientToken, isRenewable(), getLeaseDuration(), getCreated(), true, getInstantSource());
     }
 
     public String getClientToken() {
