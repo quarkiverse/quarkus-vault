@@ -11,6 +11,7 @@ import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.vault.client.api.auth.token.VaultAuthTokenCreateTokenParams;
+import io.quarkus.vault.client.api.common.VaultAuthResult;
 import io.quarkus.vault.client.auth.VaultAuthRequest;
 import io.quarkus.vault.client.auth.VaultCachingTokenProvider;
 import io.quarkus.vault.client.auth.VaultToken;
@@ -26,12 +27,13 @@ public class VaultCachingTokenProviderTest {
     @Test
     public void testExpiredTokensAreRequestedAgain(VaultClient client) throws Exception {
 
-        var token = client.auth().token().create(null)
-                .thenApply(a -> VaultToken.from(a.getClientToken(), true, Duration.ofMinutes(1), tickableInstanceSource))
+        var clientToken = client.auth().token().create(null)
+                .thenApply(VaultAuthResult::getClientToken)
                 .toCompletableFuture().get();
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
             public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                var token = VaultToken.from(clientToken, true, Duration.ofMinutes(1), tickableInstanceSource);
                 return CompletableFuture.completedStage(token);
             }
         });
@@ -134,15 +136,15 @@ public class VaultCachingTokenProviderTest {
     @Test
     public void testExpiredNonRenewableTokensAreRequestedAgain(VaultClient client) throws Exception {
 
-        var token = client.auth().token().create(new VaultAuthTokenCreateTokenParams()
+        var clientToken = client.auth().token().create(new VaultAuthTokenCreateTokenParams()
                 .setTtl(Duration.ofMinutes(5))
                 .setRenewable(false))
-                .thenApply(a -> VaultToken.from(a.getClientToken(), a.isRenewable(), Duration.ofMinutes(1),
-                        tickableInstanceSource))
+                .thenApply(VaultAuthResult::getClientToken)
                 .toCompletableFuture().get();
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
             public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                var token = VaultToken.from(clientToken, false, Duration.ofMinutes(1), tickableInstanceSource);
                 return CompletableFuture.completedStage(token);
             }
         });

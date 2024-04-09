@@ -15,8 +15,12 @@ public abstract class VaultTimeLimited {
     public Duration leaseDuration;
 
     public VaultTimeLimited(boolean renewable, Duration leaseDuration, InstantSource instantSource) {
+        this(renewable, leaseDuration, instantSource.instant(), instantSource);
+    }
+
+    public VaultTimeLimited(boolean renewable, Duration leaseDuration, Instant created, InstantSource instantSource) {
         this.instantSource = instantSource;
-        this.created = instantSource.instant();
+        this.created = created;
         this.renewable = renewable;
         this.leaseDuration = leaseDuration;
     }
