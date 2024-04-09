@@ -1,5 +1,6 @@
 package io.quarkus.vault.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -16,6 +17,7 @@ import io.quarkus.vault.client.auth.VaultAuthRequest;
 import io.quarkus.vault.client.auth.VaultCachingTokenProvider;
 import io.quarkus.vault.client.auth.VaultToken;
 import io.quarkus.vault.client.auth.VaultTokenProvider;
+import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.test.TickableInstanceSource;
 import io.quarkus.vault.client.test.VaultClientTest;
 
@@ -23,6 +25,70 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultCachingTokenProviderTest {
 
     private static final TickableInstanceSource tickableInstanceSource = new TickableInstanceSource(Instant.now());
+
+    @Test
+    public void testCachedTokensAreNotChanged(VaultClient client) throws Exception {
+
+        var clientToken = client.auth().token().create(null)
+                .thenApply(VaultAuthResult::getClientToken)
+                .toCompletableFuture().get();
+        var tokenProvider = spy(new VaultTokenProvider() {
+            @Override
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                var token = VaultToken.from(clientToken, true, Duration.ofMinutes(1), tickableInstanceSource);
+                return CompletableFuture.completedStage(token);
+            }
+        });
+        var cachingTokenProvider = new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30));
+
+        var authRequest = new VaultAuthRequest(client.getExecutor(), VaultRequest.get("test").build(), tickableInstanceSource);
+
+        var originalToken = cachingTokenProvider.apply(authRequest)
+                .toCompletableFuture().get();
+        var cachedToken1 = cachingTokenProvider.apply(authRequest)
+                .toCompletableFuture().get();
+        var cachedToken2 = cachingTokenProvider.apply(authRequest)
+                .toCompletableFuture().get();
+        var cachedToken3 = cachingTokenProvider.apply(authRequest)
+                .toCompletableFuture().get();
+
+        assertThat(originalToken.isFromCache())
+                .isFalse();
+        assertThat(cachedToken1.isFromCache())
+                .isTrue();
+        assertThat(cachedToken2.isFromCache())
+                .isTrue();
+        assertThat(cachedToken3.isFromCache())
+                .isTrue();
+
+        assertThat(cachedToken1.getClientToken())
+                .isEqualTo(originalToken.getClientToken());
+        assertThat(cachedToken2.getClientToken())
+                .isEqualTo(originalToken.getClientToken());
+        assertThat(cachedToken3.getClientToken())
+                .isEqualTo(originalToken.getClientToken());
+
+        assertThat(cachedToken1.getCreated())
+                .isEqualTo(originalToken.getCreated());
+        assertThat(cachedToken2.getCreated())
+                .isEqualTo(originalToken.getCreated());
+        assertThat(cachedToken3.getCreated())
+                .isEqualTo(originalToken.getCreated());
+
+        assertThat(cachedToken1.getLeaseDuration())
+                .isEqualTo(originalToken.getLeaseDuration());
+        assertThat(cachedToken2.getLeaseDuration())
+                .isEqualTo(originalToken.getLeaseDuration());
+        assertThat(cachedToken3.getLeaseDuration())
+                .isEqualTo(originalToken.getLeaseDuration());
+
+        assertThat(cachedToken1.isRenewable())
+                .isEqualTo(originalToken.isRenewable());
+        assertThat(cachedToken2.isRenewable())
+                .isEqualTo(originalToken.isRenewable());
+        assertThat(cachedToken3.isRenewable())
+                .isEqualTo(originalToken.isRenewable());
+    }
 
     @Test
     public void testExpiredTokensAreRequestedAgain(VaultClient client) throws Exception {
