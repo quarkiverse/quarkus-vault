@@ -113,6 +113,7 @@ public class VaultClientProducer {
                     var userPassConfig = authConfig.userpass();
 
                     var userPassOptions = VaultUserPassAuthOptions.builder()
+                            .mountPath(userPassConfig.authMountPath())
                             .username(userPassConfig.username().orElseThrow());
                     if (userPassConfig.passwordWrappingToken().isPresent()) {
                         userPassOptions.unwrappingPassword(userPassConfig.passwordWrappingToken().orElseThrow(),

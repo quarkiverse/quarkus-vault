@@ -41,6 +41,7 @@ public interface VaultRuntimeConfig {
     String DEFAULT_TLS_USE_KUBERNETES_CACERT = "true";
     String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "kubernetes";
     String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "approle";
+    String DEFAULT_USERPASS_AUTH_MOUNT_PATH = "userpass";
 
     /**
      * Microprofile Config ordinal.
