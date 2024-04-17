@@ -83,10 +83,13 @@ public class VaultClientProducer {
             switch (config.getAuthenticationType()) {
 
                 case KUBERNETES:
+                    var k8sConfig = authConfig.kubernetes();
+
                     builder.kubernetes(
                             VaultKubernetesAuthOptions.builder()
-                                    .role(authConfig.kubernetes().role().orElseThrow())
-                                    .jwtTokenPath(Path.of(authConfig.kubernetes().jwtTokenPath()))
+                                    .mountPath(k8sConfig.authMountPath())
+                                    .role(k8sConfig.role().orElseThrow())
+                                    .jwtTokenPath(Path.of(k8sConfig.jwtTokenPath()))
                                     .caching(config.renewGracePeriod())
                                     .build());
                     break;
@@ -95,6 +98,7 @@ public class VaultClientProducer {
                     var appRoleConfig = authConfig.appRole();
 
                     var appRoleOptions = VaultAppRoleAuthOptions.builder()
+                            .mountPath(appRoleConfig.authMountPath())
                             .roleId(appRoleConfig.roleId().orElseThrow());
                     if (appRoleConfig.secretIdWrappingToken().isPresent()) {
                         appRoleOptions.unwrappingSecretId(appRoleConfig.secretIdWrappingToken().orElseThrow());
