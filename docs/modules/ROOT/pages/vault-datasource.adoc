@@ -297,7 +297,7 @@ quarkus.datasource.jdbc.max-lifetime=30m
 
 [NOTE]
 ====
-When using a reactive datasource you will need to use the `quarkus.datasource.reactive.idle-timeout` option instead.
+When using a reactive datasource you will need to use the `quarkus.datasource.reactive.max-lifetime` option instead.
 ====
 
 
