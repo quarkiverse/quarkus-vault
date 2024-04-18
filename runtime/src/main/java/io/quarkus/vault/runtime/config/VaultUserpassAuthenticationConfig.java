@@ -3,6 +3,9 @@ package io.quarkus.vault.runtime.config;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
+import io.smallrye.config.WithDefault;
+
+import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.DEFAULT_USERPASS_AUTH_MOUNT_PATH;
 
 @ConfigGroup
 public interface VaultUserpassAuthenticationConfig {
@@ -29,4 +32,10 @@ public interface VaultUserpassAuthenticationConfig {
      * password and password-wrapping-token are exclusive
      */
     Optional<String> passwordWrappingToken();
+
+    /**
+     * Allows configure userpass authentication mount path.
+     */
+    @WithDefault(DEFAULT_USERPASS_AUTH_MOUNT_PATH)
+    String authMountPath();
 }
