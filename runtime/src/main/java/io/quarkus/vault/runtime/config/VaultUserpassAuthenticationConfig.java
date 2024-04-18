@@ -1,11 +1,11 @@
 package io.quarkus.vault.runtime.config;
 
+import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.DEFAULT_USERPASS_AUTH_MOUNT_PATH;
+
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
-
-import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.DEFAULT_USERPASS_AUTH_MOUNT_PATH;
 
 @ConfigGroup
 public interface VaultUserpassAuthenticationConfig {
