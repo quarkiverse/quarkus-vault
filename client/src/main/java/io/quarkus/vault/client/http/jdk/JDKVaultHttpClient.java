@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeoutException;
 
@@ -53,6 +54,13 @@ public class JDKVaultHttpClient extends VaultHttpClient {
             return CompletableFuture.failedStage(new TimeoutException("HTTP connect time out: " + x.getMessage()));
         } else if (x instanceof HttpTimeoutException) {
             return CompletableFuture.failedStage(new TimeoutException("HTTP request time out: " + x.getMessage()));
+        } else if (x instanceof CompletionException) {
+            Throwable cause = x.getCause();
+            if (cause instanceof HttpConnectTimeoutException) {
+                return CompletableFuture.failedStage(new TimeoutException("HTTP connect time out: " + cause.getMessage()));
+            } else if (cause instanceof HttpTimeoutException) {
+                return CompletableFuture.failedStage(new TimeoutException("HTTP request time out: " + cause.getMessage()));
+            }
         }
         return CompletableFuture.failedStage(x);
     }
