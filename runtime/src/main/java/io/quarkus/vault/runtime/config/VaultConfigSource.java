@@ -78,20 +78,23 @@ public class VaultConfigSource implements ConfigSource {
 
         Map<String, String> properties = new HashMap<>();
 
-        if (firstTime) {
-            log.debug("fetch secrets first time with attempts = " + vaultRuntimeConfig.mpConfigInitialAttempts());
-            fetchSecretsFirstTime(properties);
-            firstTime = false;
-        } else {
-            try {
-                fetchSecrets(properties);
-                log.debug("refreshed " + properties.size() + " properties from vault");
-            } catch (RuntimeException e) {
-                return tryReturnLastKnownValue(e, cacheEntry);
+        try {
+            if (firstTime) {
+                log.debug("fetch secrets first time with attempts = " + vaultRuntimeConfig.mpConfigInitialAttempts());
+                firstTime = false;
+                fetchSecretsFirstTime(properties);
+            } else {
+                try {
+                    fetchSecrets(properties);
+                    log.debug("refreshed " + properties.size() + " properties from vault");
+                } catch (RuntimeException e) {
+                    return tryReturnLastKnownValue(e, cacheEntry);
+                }
             }
+        } finally {
+            cache.set(new VaultCacheEntry<>(properties));
         }
 
-        cache.set(new VaultCacheEntry<>(properties));
         return properties;
     }
 
