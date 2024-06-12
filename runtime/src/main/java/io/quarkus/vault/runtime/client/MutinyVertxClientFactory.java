@@ -5,7 +5,6 @@ import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.KUBERNETES_CACE
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.PemTrustOptions;
@@ -17,7 +16,7 @@ public class MutinyVertxClientFactory {
 
     private static final Logger log = Logger.getLogger(MutinyVertxClientFactory.class.getName());
 
-    public static WebClient createHttpClient(Vertx vertx, VaultRuntimeConfig vaultRuntimeConfig, TlsConfig tlsConfig) {
+    public static WebClient createHttpClient(Vertx vertx, VaultRuntimeConfig vaultRuntimeConfig, boolean globalTrustAll) {
 
         WebClientOptions options = new WebClientOptions()
                 .setConnectTimeout((int) vaultRuntimeConfig.connectTimeout().toMillis())
@@ -34,7 +33,7 @@ public class MutinyVertxClientFactory {
             options.setNonProxyHosts(vaultRuntimeConfig.nonProxyHosts().get());
         }
 
-        boolean trustAll = vaultRuntimeConfig.tls().skipVerify().orElseGet(() -> tlsConfig.trustAll);
+        boolean trustAll = vaultRuntimeConfig.tls().skipVerify().orElseGet(() -> globalTrustAll);
         if (trustAll) {
             skipVerify(options);
         } else if (vaultRuntimeConfig.tls().caCert().isPresent()) {

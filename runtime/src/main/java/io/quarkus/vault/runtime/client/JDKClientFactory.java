@@ -16,14 +16,13 @@ import java.util.List;
 
 import javax.net.ssl.*;
 
-import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.pki.X509Parsing;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 
 public class JDKClientFactory {
 
-    public static HttpClient createHttpClient(VaultRuntimeConfig vaultRuntimeConfig, TlsConfig tlsConfig) {
+    public static HttpClient createHttpClient(VaultRuntimeConfig vaultRuntimeConfig, boolean globalTrustAll) {
 
         HttpClient.Builder builder = HttpClient.newBuilder()
                 .connectTimeout(vaultRuntimeConfig.connectTimeout())
@@ -35,7 +34,7 @@ public class JDKClientFactory {
             builder = builder.proxy(new NonProxyHostsSupportingProxySelector(proxyAddress, nonProxyHosts));
         }
 
-        SSLContext sslContext = createSSLContext(vaultRuntimeConfig, tlsConfig);
+        SSLContext sslContext = createSSLContext(vaultRuntimeConfig, globalTrustAll);
         if (sslContext != null) {
             builder.sslContext(sslContext);
         }
@@ -43,9 +42,9 @@ public class JDKClientFactory {
         return builder.build();
     }
 
-    private static SSLContext createSSLContext(VaultRuntimeConfig config, TlsConfig globalTlsConfig) {
+    private static SSLContext createSSLContext(VaultRuntimeConfig config, boolean globalTrustAll) {
         var tlsConfig = config.tls();
-        boolean trustAll = tlsConfig.skipVerify().orElseGet(() -> globalTlsConfig.trustAll);
+        boolean trustAll = tlsConfig.skipVerify().orElseGet(() -> globalTrustAll);
         if (trustAll) {
             return skipVerify();
         } else if (tlsConfig.caCert().isPresent()) {
