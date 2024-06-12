@@ -5,7 +5,8 @@ import java.nio.file.Path;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
-import io.quarkus.runtime.TlsConfig;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import io.quarkus.vault.client.VaultClient;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.auth.VaultAppRoleAuthOptions;
@@ -25,11 +26,12 @@ public class VaultClientProducer {
     @Produces
     @Singleton
     @Private
-    public VaultClient privateVaultClient(VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
+    public VaultClient privateVaultClient(VaultConfigHolder vaultConfigHolder,
+            @ConfigProperty(name = "quarkus.tls.trust-all") boolean globalTrustAll) {
 
         var config = vaultConfigHolder.getVaultRuntimeConfig();
 
-        var httpClient = JDKClientFactory.createHttpClient(config, tlsConfig);
+        var httpClient = JDKClientFactory.createHttpClient(config, globalTrustAll);
         var vaultHttpClient = new JDKVaultHttpClient(httpClient);
 
         return createVaultClient(vaultHttpClient, config);
@@ -37,11 +39,12 @@ public class VaultClientProducer {
 
     @Produces
     @Singleton
-    public VaultClient sharedVaultClient(Vertx vertx, VaultConfigHolder vaultConfigHolder, TlsConfig tlsConfig) {
+    public VaultClient sharedVaultClient(Vertx vertx, VaultConfigHolder vaultConfigHolder,
+            @ConfigProperty(name = "quarkus.tls.trust-all") boolean globalTrustAll) {
 
         var config = vaultConfigHolder.getVaultRuntimeConfig();
 
-        var webClient = MutinyVertxClientFactory.createHttpClient(vertx, config, tlsConfig);
+        var webClient = MutinyVertxClientFactory.createHttpClient(vertx, config, globalTrustAll);
         var vaultHttpClient = new VertxVaultHttpClient(webClient);
 
         return createVaultClient(vaultHttpClient, config);
