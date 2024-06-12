@@ -14,16 +14,21 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
-import javax.net.ssl.*;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedTrustManager;
 
-import io.quarkus.runtime.TlsConfig;
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.pki.X509Parsing;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 
 public class JDKClientFactory {
 
-    public static HttpClient createHttpClient(VaultRuntimeConfig vaultRuntimeConfig, TlsConfig tlsConfig) {
+    public static HttpClient createHttpClient(VaultRuntimeConfig vaultRuntimeConfig) {
 
         HttpClient.Builder builder = HttpClient.newBuilder()
                 .connectTimeout(vaultRuntimeConfig.connectTimeout())
@@ -35,7 +40,7 @@ public class JDKClientFactory {
             builder = builder.proxy(new NonProxyHostsSupportingProxySelector(proxyAddress, nonProxyHosts));
         }
 
-        SSLContext sslContext = createSSLContext(vaultRuntimeConfig, tlsConfig);
+        SSLContext sslContext = createSSLContext(vaultRuntimeConfig);
         if (sslContext != null) {
             builder.sslContext(sslContext);
         }
@@ -43,9 +48,11 @@ public class JDKClientFactory {
         return builder.build();
     }
 
-    private static SSLContext createSSLContext(VaultRuntimeConfig config, TlsConfig globalTlsConfig) {
+    private static SSLContext createSSLContext(VaultRuntimeConfig config) {
+        boolean globalTrustAll = ConfigProvider.getConfig().getOptionalValue("quarkus.tls.trust-all", Boolean.class)
+                .orElse(false);
         var tlsConfig = config.tls();
-        boolean trustAll = tlsConfig.skipVerify().orElseGet(() -> globalTlsConfig.trustAll);
+        boolean trustAll = tlsConfig.skipVerify().orElse(globalTrustAll);
         if (trustAll) {
             return skipVerify();
         } else if (tlsConfig.caCert().isPresent()) {

@@ -3,9 +3,9 @@ package io.quarkus.vault.runtime.client;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultRuntimeConfig.KUBERNETES_CACERT;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.TlsConfig;
 import io.quarkus.vault.runtime.config.VaultRuntimeConfig;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.PemTrustOptions;
@@ -17,7 +17,7 @@ public class MutinyVertxClientFactory {
 
     private static final Logger log = Logger.getLogger(MutinyVertxClientFactory.class.getName());
 
-    public static WebClient createHttpClient(Vertx vertx, VaultRuntimeConfig vaultRuntimeConfig, TlsConfig tlsConfig) {
+    public static WebClient createHttpClient(Vertx vertx, VaultRuntimeConfig vaultRuntimeConfig) {
 
         WebClientOptions options = new WebClientOptions()
                 .setConnectTimeout((int) vaultRuntimeConfig.connectTimeout().toMillis())
@@ -34,7 +34,9 @@ public class MutinyVertxClientFactory {
             options.setNonProxyHosts(vaultRuntimeConfig.nonProxyHosts().get());
         }
 
-        boolean trustAll = vaultRuntimeConfig.tls().skipVerify().orElseGet(() -> tlsConfig.trustAll);
+        boolean globalTrustAll = ConfigProvider.getConfig().getOptionalValue("quarkus.tls.trust-all", Boolean.class)
+                .orElse(false);
+        boolean trustAll = vaultRuntimeConfig.tls().skipVerify().orElse(globalTrustAll);
         if (trustAll) {
             skipVerify(options);
         } else if (vaultRuntimeConfig.tls().caCert().isPresent()) {
