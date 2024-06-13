@@ -27,7 +27,7 @@ public class VaultClientProducer {
     @Singleton
     @Private
     public VaultClient privateVaultClient(VaultConfigHolder vaultConfigHolder,
-            @ConfigProperty(name = "quarkus.tls.trust-all") boolean globalTrustAll) {
+            @ConfigProperty(name = "quarkus.tls.trust-all", defaultValue = "false") boolean globalTrustAll) {
 
         var config = vaultConfigHolder.getVaultRuntimeConfig();
 
@@ -40,7 +40,7 @@ public class VaultClientProducer {
     @Produces
     @Singleton
     public VaultClient sharedVaultClient(Vertx vertx, VaultConfigHolder vaultConfigHolder,
-            @ConfigProperty(name = "quarkus.tls.trust-all") boolean globalTrustAll) {
+            @ConfigProperty(name = "quarkus.tls.trust-all", defaultValue = "false") boolean globalTrustAll) {
 
         var config = vaultConfigHolder.getVaultRuntimeConfig();
 
