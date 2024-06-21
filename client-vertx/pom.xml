@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.vault</groupId>
         <artifactId>quarkus-vault-parent</artifactId>
-        <version>4.1.0-SNAPSHOT</version>
+        <version>4.1.0</version>
     </parent>
     <artifactId>quarkus-vault-client-vertx</artifactId>
     <name>Quarkus - Vault - Client Vert.x</name>
