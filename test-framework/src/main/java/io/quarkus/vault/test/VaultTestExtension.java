@@ -33,6 +33,9 @@ import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
@@ -40,6 +43,7 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.utility.DockerImageName;
 
 import io.quarkus.vault.VaultKVSecretEngine;
 import io.quarkus.vault.client.VaultClient;
@@ -98,6 +102,13 @@ public class VaultTestExtension {
     public static final String OUT_FILE = "/out";
     public static final String WRAPPING_TEST_PATH = "wrapping-test";
 
+    public static final String TEST_POSTGRES_CONFIG = "vault-test.postgres.version";
+    public static final String TEST_RABBITMQ_CONFIG = "vault-test.rabbitmq.version";
+    public static final String TEST_RABBITMQ_4_CONFIG = "vault-test.test-rabbitmq-4";
+    public static final String TEST_POSTGRES_VERSION = PostgreSQLContainer.DEFAULT_TAG;
+    public static final String TEST_RABBITMQ_VERSION_3 = "3.13.7-management-alpine";
+    public static final String TEST_RABBITMQ_VERSION_4 = "4.0.2-management-alpine";
+
     private static final String CRUD_PATH = "crud";
 
     public GenericContainer vaultContainer;
@@ -114,6 +125,8 @@ public class VaultTestExtension {
 
     private String db_default_ttl = "1m";
     private String db_max_ttl = "10m";
+
+    private Config config = ConfigProvider.getConfig();
 
     public static void testDataSource(DataSource ds) throws SQLException {
         try (Connection c = ds.getConnection()) {
@@ -189,7 +202,8 @@ public class VaultTestExtension {
 
         Network network = Network.newNetwork();
 
-        postgresContainer = new PostgreSQLContainer<>()
+        postgresContainer = new PostgreSQLContainer<>(DockerImageName.parse(PostgreSQLContainer.IMAGE).withTag(
+                config.getOptionalValue(TEST_POSTGRES_CONFIG, String.class).orElse(TEST_POSTGRES_VERSION)))
                 .withDatabaseName(DB_NAME)
                 .withUsername(DB_USERNAME)
                 .withPassword(DB_PASSWORD)
@@ -201,7 +215,12 @@ public class VaultTestExtension {
 
         postgresContainer.setPortBindings(Arrays.asList(MAPPED_POSTGRESQL_PORT + ":" + POSTGRESQL_PORT));
 
-        rabbitMQContainer = new RabbitMQContainer()
+        rabbitMQContainer = new RabbitMQContainer(
+                ((DockerImageName) FieldUtils.readStaticField(RabbitMQContainer.class, "DEFAULT_IMAGE_NAME", true)).withTag(
+                        config.getOptionalValue(TEST_RABBITMQ_CONFIG, String.class)
+                                .orElse(config.getOptionalValue(TEST_RABBITMQ_4_CONFIG, Boolean.class).orElse(Boolean.FALSE)
+                                        ? TEST_RABBITMQ_VERSION_4
+                                        : TEST_RABBITMQ_VERSION_3)))
                 .withAdminPassword(RMQ_PASSWORD)
                 .withNetwork(network)
                 .withNetworkAliases(RABBITMQ_HOST);
