@@ -17,9 +17,7 @@
     <module>client-vertx</module>
     <module>deployment</module>
     <module>runtime</module>
-    <module>docs</module>
     <module>test-framework</module>
-    <module>integration-tests</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-vault.git</connection>
@@ -133,4 +131,30 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>docs</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <modules>
+        <module>docs</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>it</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <modules>
+        <module>integration-tests</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>
