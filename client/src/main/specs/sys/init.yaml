@@ -36,7 +36,7 @@ types:
   properties:
   - name: pgpKeys
     type: java.util.List<String>
-  - name: rootTokenPGPKey
+  - name: rootTokenPgpKey
     type: String
   - name: secretShares
     type: Integer
@@ -48,7 +48,7 @@ types:
     type: Integer
   - name: recoveryThreshold
     type: Integer
-  - name: recoveryPGPKeys
+  - name: recoveryPgpKeys
     type: java.util.List<String>
 
 - name: Result
@@ -61,4 +61,3 @@ types:
     type: java.util.List<String>
   - name: rootToken
     type: String
-
