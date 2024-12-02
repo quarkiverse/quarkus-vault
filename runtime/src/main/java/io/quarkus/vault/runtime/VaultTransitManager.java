@@ -47,6 +47,9 @@ import io.quarkus.vault.transit.VaultRewrappingBatchException;
 import io.quarkus.vault.transit.VaultSigningBatchException;
 import io.quarkus.vault.transit.VaultTransitAsymmetricKeyDetail;
 import io.quarkus.vault.transit.VaultTransitAsymmetricKeyVersion;
+import io.quarkus.vault.transit.VaultTransitDataKey;
+import io.quarkus.vault.transit.VaultTransitDataKeyRequestDetail;
+import io.quarkus.vault.transit.VaultTransitDataKeyType;
 import io.quarkus.vault.transit.VaultTransitExportKeyType;
 import io.quarkus.vault.transit.VaultTransitKeyDetail;
 import io.quarkus.vault.transit.VaultTransitKeyExportDetail;
@@ -470,6 +473,12 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
     }
 
     @Override
+    public Uni<Void> rotateKey(String keyName) {
+        var params = new VaultSecretsTransitRotateKeyParams();
+        return Uni.createFrom().completionStage(transit.rotateKey(keyName, params)).map(r -> null);
+    }
+
+    @Override
     public Uni<Void> deleteKey(String keyName) {
         return Uni.createFrom().completionStage(transit.deleteKey(keyName));
     }
@@ -495,6 +504,22 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
     @Override
     public Uni<List<String>> listKeys() {
         return Uni.createFrom().completionStage(transit.listKeys());
+    }
+
+    @Override
+    public Uni<VaultTransitDataKey> generateDataKey(VaultTransitDataKeyType type, String keyName,
+            VaultTransitDataKeyRequestDetail detail) {
+
+        var keyType = VaultSecretsTransitDataKeyType.from(type.name());
+
+        var params = detail == null ? null
+                : new VaultSecretsTransitGenerateDataKeyParams()
+                        .setBits(detail.getBits())
+                        .setNonce(detail.getNonce())
+                        .setContext(detail.getContext());
+
+        return Uni.createFrom().completionStage(transit.generateDataKey(keyType, keyName, params))
+                .map(r -> new VaultTransitDataKey().setCiphertext(r.getCiphertext()).setPlaintext(r.getPlaintext()));
     }
 
     protected VaultTransitKeyDetail<?> map(VaultSecretsTransitKeyInfo info) {
