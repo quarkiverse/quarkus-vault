@@ -6,6 +6,8 @@ import static io.quarkus.vault.test.VaultTestExtension.ENCRYPTION_KEY_NAME;
 import static io.quarkus.vault.test.VaultTestExtension.SIGN_DERIVATION_KEY_NAME;
 import static io.quarkus.vault.test.VaultTestExtension.SIGN_KEY2_NAME;
 import static io.quarkus.vault.test.VaultTestExtension.SIGN_KEY_NAME;
+import static io.quarkus.vault.transit.VaultTransitDataKeyType.plaintext;
+import static io.quarkus.vault.transit.VaultTransitDataKeyType.wrapped;
 import static io.quarkus.vault.transit.VaultTransitExportKeyType.encryption;
 import static io.quarkus.vault.transit.VaultTransitSecretEngineConstants.INVALID_SIGNATURE;
 import static java.util.Collections.singletonList;
@@ -25,6 +27,7 @@ import java.util.stream.IntStream;
 import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -47,6 +50,7 @@ import io.quarkus.vault.transit.SigningRequest;
 import io.quarkus.vault.transit.TransitContext;
 import io.quarkus.vault.transit.VaultTransitAsymmetricKeyDetail;
 import io.quarkus.vault.transit.VaultTransitAsymmetricKeyVersion;
+import io.quarkus.vault.transit.VaultTransitDataKeyRequestDetail;
 import io.quarkus.vault.transit.VaultTransitKeyDetail;
 import io.quarkus.vault.transit.VaultTransitKeyExportDetail;
 import io.quarkus.vault.transit.VaultTransitSymmetricKeyDetail;
@@ -494,6 +498,28 @@ public class VaultTransitITCase {
 
         transitSecretEngine.deleteKey(KEY_NAME);
         assertTrue(transitSecretEngine.readKey(KEY_NAME).isEmpty());
+    }
+
+    @Test
+    public void generateDataKey() {
+        var dataKey = transitSecretEngine.generateDataKey(plaintext, ENCRYPTION_KEY_NAME, null);
+        Assertions.assertTrue(dataKey.getCiphertext().matches("vault:v\\d:.*"));
+        Assertions.assertNotNull(dataKey.getPlaintext());
+
+        var dataKey2 = transitSecretEngine.generateDataKey(wrapped, ENCRYPTION_KEY_NAME,
+                new VaultTransitDataKeyRequestDetail().setBits(512));
+        Assertions.assertTrue(dataKey.getCiphertext().matches("vault:v\\d:.*"));
+        Assertions.assertNull(dataKey2.getPlaintext());
+    }
+
+    @Test
+    public void rotateKey() {
+        var key = transitSecretEngine.readKey(ENCRYPTION_KEY_NAME).orElseThrow();
+        int version = key.getLatestVersion();
+        transitSecretEngine.rotateKey(ENCRYPTION_KEY_NAME);
+        var keyNext = transitSecretEngine.readKey(ENCRYPTION_KEY_NAME).orElseThrow();
+        int versionNext = keyNext.getLatestVersion();
+        Assertions.assertEquals(version + 1, versionNext);
     }
 
 }
