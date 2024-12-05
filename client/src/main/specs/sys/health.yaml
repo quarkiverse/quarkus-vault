@@ -8,13 +8,13 @@ operations:
 - name: statusCode
   method: HEAD
   path: health
-  queryFrom: [standbyOk, perfStandbyOk]
+  queryFrom: [standbyok, perfstandbyok]
   authenticated: false
   parameters:
-  - name: standbyOk
+  - name: standbyok
     type: Boolean
     includeNulls: false
-  - name: perfStandbyOk
+  - name: perfstandbyok
     type: Boolean
     includeNulls: false
 
@@ -28,13 +28,13 @@ operations:
 - name: info
   method: GET
   path: health
-  queryFrom: [standbyOk, perfStandbyOk]
+  queryFrom: [standbyok, perfstandbyok]
   authenticated: false
   parameters:
-  - name: standbyOk
+  - name: standbyok
     type: Boolean
     includeNulls: false
-  - name: perfStandbyOk
+  - name: perfstandbyok
     type: Boolean
     includeNulls: false
   result:
@@ -83,10 +83,10 @@ methods:
 - name: status
   returnType: java.util.concurrent.CompletionStage<$$.api.sys.health.VaultHealthStatus>
   parameters:
-    standbyOk: Boolean
-    perfStandbyOk: Boolean
+    standbyok: Boolean
+    perfstandbyok: Boolean
   body: |
-    return statusCode(standbyOk, perfStandbyOk).thenApply($health:T::fromStatusCode);
+    return statusCode(standbyok, perfstandbyok).thenApply($health:T::fromStatusCode);
   bodyArguments:
     health: <type>$$.api.sys.health.VaultHealthStatus
 
