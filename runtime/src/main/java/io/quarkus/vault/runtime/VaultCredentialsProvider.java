@@ -56,7 +56,12 @@ public class VaultCredentialsProvider implements CredentialsProvider {
         }
 
         if (config.kvPath().isPresent()) {
-            String password = vaultKVSecretEngine.readSecret(config.kvPath().get()).get(config.kvKey());
+            var val = vaultKVSecretEngine.readSecretJson(config.kvPath().get());
+            if (val == null) {
+                throw new VaultException(
+                        "unable to retrieve credential " + config.kvKey() + " from path " + config.kvPath().get());
+            }
+            String password = String.valueOf(val.get(config.kvKey()));
             Map<String, String> result = new HashMap<>();
             result.put(PASSWORD_PROPERTY_NAME, password);
             return result;
