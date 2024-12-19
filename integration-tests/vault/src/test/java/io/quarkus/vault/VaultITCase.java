@@ -91,7 +91,7 @@ public class VaultITCase {
     String someSecretThroughIndirection;
 
     @Test
-    public void credentialsProvider() throws Exception {
+    public void credentialsProvider() {
         Map<String, String> staticCredentials = credentialsProvider.getCredentials("static");
         assertEquals("{" + PASSWORD_PROPERTY_NAME + "=" + DB_PASSWORD + "}", staticCredentials.toString());
 
