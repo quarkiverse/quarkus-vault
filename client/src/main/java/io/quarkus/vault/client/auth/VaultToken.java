@@ -5,7 +5,7 @@ import static io.quarkus.vault.client.logging.LogConfidentialityLevel.LOW;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
@@ -14,7 +14,7 @@ public class VaultToken extends VaultTimeLimited {
 
     private final String clientToken;
     private final boolean fromCache;
-    private final AtomicReference<Integer> allowedUsesRemaining;
+    private final AtomicInteger allowedUsesRemaining;
 
     public static VaultToken from(String clientToken, boolean renewable, Duration leaseDuration, Integer allowedUsesRemaining,
             InstantSource instantSource) {
@@ -36,12 +36,12 @@ public class VaultToken extends VaultTimeLimited {
         super(renewable, leaseDuration, instantSource);
         this.clientToken = clientToken;
         this.fromCache = fromCache;
-        this.allowedUsesRemaining = new AtomicReference<>(
+        this.allowedUsesRemaining = new AtomicInteger(
                 allowedUsesRemaining != null && allowedUsesRemaining > 0 ? allowedUsesRemaining : Integer.MAX_VALUE);
     }
 
     public VaultToken(String clientToken, boolean renewable, Duration leaseDuration, Instant created, boolean fromCache,
-            AtomicReference<Integer> allowedUsesRemaining, InstantSource instantSource) {
+            AtomicInteger allowedUsesRemaining, InstantSource instantSource) {
         super(renewable, leaseDuration, created, instantSource);
         this.clientToken = clientToken;
         this.fromCache = fromCache;
