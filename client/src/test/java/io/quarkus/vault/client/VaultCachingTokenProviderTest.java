@@ -1,15 +1,23 @@
 package io.quarkus.vault.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.as;
+import static org.assertj.core.api.InstanceOfAssertFactories.BOOLEAN;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.logging.Logger;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.quarkus.vault.client.api.auth.token.VaultAuthTokenCreateTokenParams;
 import io.quarkus.vault.client.api.common.VaultAuthResult;
@@ -18,13 +26,21 @@ import io.quarkus.vault.client.auth.VaultCachingTokenProvider;
 import io.quarkus.vault.client.auth.VaultToken;
 import io.quarkus.vault.client.auth.VaultTokenProvider;
 import io.quarkus.vault.client.common.VaultRequest;
-import io.quarkus.vault.client.test.TickableInstanceSource;
+import io.quarkus.vault.client.test.TickableInstantSource;
 import io.quarkus.vault.client.test.VaultClientTest;
 
-@VaultClientTest
+@VaultClientTest(secrets = {
+        @VaultClientTest.Mount(type = "kv", path = "empty", options = { "-version=2" }),
+})
 public class VaultCachingTokenProviderTest {
 
-    private static final TickableInstanceSource tickableInstanceSource = new TickableInstanceSource(Instant.now());
+    private static final TickableInstantSource tickableInstantSource = new TickableInstantSource(Instant.now());
+
+    @BeforeAll
+    public static void beforeAll(VaultClient vaultClient) {
+        vaultClient.secrets().kv2().updateSecret("test", null, Map.of("a", "1", "b", "2"))
+                .toCompletableFuture().join();
+    }
 
     @Test
     public void testCachedTokensAreNotChanged(VaultClient client) throws Exception {
@@ -32,16 +48,17 @@ public class VaultCachingTokenProviderTest {
         var clientToken = client.auth().token().create(null)
                 .thenApply(VaultAuthResult::getClientToken)
                 .toCompletableFuture().get();
-        var tokenProvider = spy(new VaultTokenProvider() {
+        //noinspection Convert2Lambda
+        var tokenProvider = spy((VaultTokenProvider) new VaultTokenProvider() {
             @Override
             public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
-                var token = VaultToken.from(clientToken, true, Duration.ofMinutes(1), tickableInstanceSource);
+                var token = VaultToken.from(clientToken, true, Duration.ofMinutes(1), null, tickableInstantSource);
                 return CompletableFuture.completedStage(token);
             }
         });
         var cachingTokenProvider = new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30));
 
-        var authRequest = new VaultAuthRequest(client.getExecutor(), VaultRequest.get("test").build(), tickableInstanceSource);
+        var authRequest = new VaultAuthRequest(client.getExecutor(), VaultRequest.get("test").build(), tickableInstantSource);
 
         var originalToken = cachingTokenProvider.apply(authRequest)
                 .toCompletableFuture().get();
@@ -52,54 +69,38 @@ public class VaultCachingTokenProviderTest {
         var cachedToken3 = cachingTokenProvider.apply(authRequest)
                 .toCompletableFuture().get();
 
-        assertThat(originalToken.isFromCache())
-                .isFalse();
-        assertThat(cachedToken1.isFromCache())
-                .isTrue();
-        assertThat(cachedToken2.isFromCache())
-                .isTrue();
-        assertThat(cachedToken3.isFromCache())
-                .isTrue();
-
-        assertThat(cachedToken1.getClientToken())
-                .isEqualTo(originalToken.getClientToken());
-        assertThat(cachedToken2.getClientToken())
-                .isEqualTo(originalToken.getClientToken());
-        assertThat(cachedToken3.getClientToken())
-                .isEqualTo(originalToken.getClientToken());
-
-        assertThat(cachedToken1.getCreated())
-                .isEqualTo(originalToken.getCreated());
-        assertThat(cachedToken2.getCreated())
-                .isEqualTo(originalToken.getCreated());
-        assertThat(cachedToken3.getCreated())
-                .isEqualTo(originalToken.getCreated());
-
-        assertThat(cachedToken1.getLeaseDuration())
-                .isEqualTo(originalToken.getLeaseDuration());
-        assertThat(cachedToken2.getLeaseDuration())
-                .isEqualTo(originalToken.getLeaseDuration());
-        assertThat(cachedToken3.getLeaseDuration())
-                .isEqualTo(originalToken.getLeaseDuration());
-
-        assertThat(cachedToken1.isRenewable())
-                .isEqualTo(originalToken.isRenewable());
-        assertThat(cachedToken2.isRenewable())
-                .isEqualTo(originalToken.isRenewable());
-        assertThat(cachedToken3.isRenewable())
-                .isEqualTo(originalToken.isRenewable());
+        assertThat(List.of(cachedToken1, cachedToken2, cachedToken3))
+                .allSatisfy(s -> {
+                    assertThat(s)
+                            .extracting(VaultToken::isFromCache, as(BOOLEAN))
+                            .isTrue();
+                    assertThat(s)
+                            .extracting(VaultToken::getClientToken)
+                            .isEqualTo(originalToken.getClientToken());
+                    assertThat(s)
+                            .extracting(VaultToken::getCreated)
+                            .isEqualTo(originalToken.getCreated());
+                    assertThat(s)
+                            .extracting(VaultToken::getLeaseDuration)
+                            .isEqualTo(originalToken.getLeaseDuration());
+                    assertThat(s)
+                            .extracting(VaultToken::isRenewable)
+                            .isEqualTo(originalToken.isRenewable());
+                });
     }
 
-    @Test
-    public void testExpiredTokensAreRequestedAgain(VaultClient client) throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = { "secret", "empty" })
+    public void testExpiredTokensAreRequestedAgain(String mount, VaultClient client) throws Exception {
 
         var clientToken = client.auth().token().create(null)
                 .thenApply(VaultAuthResult::getClientToken)
                 .toCompletableFuture().get();
-        var tokenProvider = spy(new VaultTokenProvider() {
+        //noinspection Convert2Lambda
+        var tokenProvider = spy((VaultTokenProvider) new VaultTokenProvider() {
             @Override
             public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
-                var token = VaultToken.from(clientToken, true, Duration.ofMinutes(1), tickableInstanceSource);
+                var token = VaultToken.from(clientToken, true, Duration.ofMinutes(1), null, tickableInstantSource);
                 return CompletableFuture.completedStage(token);
             }
         });
@@ -107,13 +108,13 @@ public class VaultCachingTokenProviderTest {
         var executor = spy(client.getExecutor());
 
         var testClient = client.configure()
-                .instantSource(tickableInstanceSource)
+                .instantSource(tickableInstantSource)
                 .executor(executor)
                 .tokenProvider(cachingTokenProvider)
                 .build();
 
         for (int i = 0; i < 10; i++) {
-            testClient.secrets().kv2().listSecrets("/")
+            testClient.secrets().kv2(mount).listSecrets("/")
                     .toCompletableFuture().get();
         }
 
@@ -126,10 +127,10 @@ public class VaultCachingTokenProviderTest {
         verify(cachingTokenProvider, times(0))
                 .extend(any(), any());
 
-        tickableInstanceSource.tick(Duration.ofSeconds(90));
+        tickableInstantSource.tick(Duration.ofSeconds(90));
 
         for (int i = 0; i < 10; i++) {
-            testClient.secrets().kv2().listSecrets("/")
+            testClient.secrets().kv2(mount).listSecrets("/")
                     .toCompletableFuture().get();
         }
 
@@ -143,17 +144,19 @@ public class VaultCachingTokenProviderTest {
                 .extend(any(), any());
     }
 
-    @Test
-    public void testExpiringTokensRenew(VaultClient client) throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = { "secret", "empty" })
+    public void testExpiringTokensRenew(String mount, VaultClient client) throws Exception {
 
         var token = client.auth().token().create(new VaultAuthTokenCreateTokenParams()
                 .setTtl(Duration.ofMinutes(1))
                 .setRenewable(true))
                 .thenApply(
-                        a -> VaultToken.from(a.getClientToken(), a.isRenewable(), a.getLeaseDuration(), tickableInstanceSource))
+                        a -> VaultToken.from(a.getClientToken(), a.isRenewable(), a.getLeaseDuration(), a.getNumUses(),
+                                tickableInstantSource))
                 .toCompletableFuture().get();
         //noinspection Convert2Lambda
-        var tokenProvider = spy(new VaultTokenProvider() {
+        var tokenProvider = spy((VaultTokenProvider) new VaultTokenProvider() {
             @Override
             public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
                 return CompletableFuture.completedStage(token);
@@ -163,13 +166,13 @@ public class VaultCachingTokenProviderTest {
         var executor = spy(client.getExecutor());
 
         var testClient = client.configure()
-                .instantSource(tickableInstanceSource)
+                .instantSource(tickableInstantSource)
                 .executor(executor)
                 .tokenProvider(cachingTokenProvider)
                 .build();
 
         for (int i = 0; i < 10; i++) {
-            testClient.secrets().kv2().listSecrets("/")
+            testClient.secrets().kv2(mount).listSecrets("/")
                     .toCompletableFuture().get();
         }
 
@@ -182,10 +185,10 @@ public class VaultCachingTokenProviderTest {
         verify(cachingTokenProvider, times(0))
                 .extend(any(), any());
 
-        tickableInstanceSource.tick(Duration.ofSeconds(45));
+        tickableInstantSource.tick(Duration.ofSeconds(45));
 
         for (int i = 0; i < 10; i++) {
-            testClient.secrets().kv2().listSecrets("/")
+            testClient.secrets().kv2(mount).listSecrets("/")
                     .toCompletableFuture().get();
         }
 
@@ -199,18 +202,20 @@ public class VaultCachingTokenProviderTest {
                 .extend(any(), any());
     }
 
-    @Test
-    public void testExpiredNonRenewableTokensAreRequestedAgain(VaultClient client) throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = { "secret", "empty" })
+    public void testExpiredNonRenewableTokensAreRequestedAgain(String mount, VaultClient client) throws Exception {
 
         var clientToken = client.auth().token().create(new VaultAuthTokenCreateTokenParams()
                 .setTtl(Duration.ofMinutes(5))
                 .setRenewable(false))
                 .thenApply(VaultAuthResult::getClientToken)
                 .toCompletableFuture().get();
+        //noinspection Convert2Lambda
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
             public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
-                var token = VaultToken.from(clientToken, false, Duration.ofMinutes(1), tickableInstanceSource);
+                var token = VaultToken.from(clientToken, false, Duration.ofMinutes(1), null, tickableInstantSource);
                 return CompletableFuture.completedStage(token);
             }
         });
@@ -218,13 +223,13 @@ public class VaultCachingTokenProviderTest {
         var executor = spy(client.getExecutor());
 
         var testClient = client.configure()
-                .instantSource(tickableInstanceSource)
+                .instantSource(tickableInstantSource)
                 .executor(executor)
                 .tokenProvider(cachingTokenProvider)
                 .build();
 
         for (int i = 0; i < 10; i++) {
-            testClient.secrets().kv2().listSecrets("/")
+            testClient.secrets().kv2(mount).listSecrets("/")
                     .toCompletableFuture().get();
         }
 
@@ -237,10 +242,10 @@ public class VaultCachingTokenProviderTest {
         verify(cachingTokenProvider, times(0))
                 .extend(any(), any());
 
-        tickableInstanceSource.tick(Duration.ofSeconds(90));
+        tickableInstantSource.tick(Duration.ofSeconds(90));
 
         for (int i = 0; i < 10; i++) {
-            testClient.secrets().kv2().listSecrets("/")
+            testClient.secrets().kv2(mount).listSecrets("/")
                     .toCompletableFuture().get();
         }
 
@@ -254,8 +259,9 @@ public class VaultCachingTokenProviderTest {
                 .extend(any(), any());
     }
 
-    @Test
-    public void testExpiringTokensFailingToRenewAreRequestedAgain(VaultClient client) throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = { "secret", "empty" })
+    public void testExpiringTokensFailingToRenewAreRequestedAgain(String mount, VaultClient client) throws Exception {
 
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
@@ -264,20 +270,21 @@ public class VaultCachingTokenProviderTest {
                         .setTtl(Duration.ofSeconds(30))
                         .setRenewable(false))
                         .thenApply(
-                                a -> VaultToken.from(a.getClientToken(), true, Duration.ofMinutes(1), tickableInstanceSource));
+                                a -> VaultToken.from(a.getClientToken(), true, Duration.ofMinutes(1), a.getNumUses(),
+                                        tickableInstantSource));
             }
         });
         var cachingTokenProvider = spy(new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30)));
         var executor = spy(client.getExecutor());
 
         var testClient = client.configure()
-                .instantSource(tickableInstanceSource)
+                .instantSource(tickableInstantSource)
                 .executor(executor)
                 .tokenProvider(cachingTokenProvider)
                 .build();
 
         for (int i = 0; i < 10; i++) {
-            testClient.secrets().kv2().listSecrets("/")
+            testClient.secrets().kv2(mount).listSecrets("/")
                     .toCompletableFuture().get();
         }
 
@@ -290,10 +297,10 @@ public class VaultCachingTokenProviderTest {
         verify(cachingTokenProvider, times(0))
                 .extend(any(), any());
 
-        tickableInstanceSource.tick(Duration.ofSeconds(45));
+        tickableInstantSource.tick(Duration.ofSeconds(45));
 
         for (int i = 0; i < 10; i++) {
-            testClient.secrets().kv2().listSecrets("/")
+            testClient.secrets().kv2(mount).listSecrets("/")
                     .toCompletableFuture().get();
         }
 
@@ -304,6 +311,117 @@ public class VaultCachingTokenProviderTest {
         verify(cachingTokenProvider, times(2))
                 .request(any());
         verify(cachingTokenProvider, times(1))
+                .extend(any(), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "secret", "empty" })
+    public void testLimitedUseTokensAreRequestedAgain(String mount, VaultClient client) throws Exception {
+
+        var tokenProvider = spy(new VaultTokenProvider() {
+            @Override
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                return client.auth().token().create(new VaultAuthTokenCreateTokenParams()
+                        .setTtl(Duration.ofMinutes(5))
+                        .setRenewable(false)
+                        .setNumUses(2))
+                        .thenApply(
+                                a -> VaultToken.from(a.getClientToken(), a.isRenewable(), a.getLeaseDuration(), a.getNumUses(),
+                                        tickableInstantSource));
+            }
+        });
+        var cachingTokenProvider = spy(new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30)));
+        var executor = spy(client.getExecutor());
+
+        var testClient = client.configure()
+                .instantSource(tickableInstantSource)
+                .executor(executor)
+                .tokenProvider(cachingTokenProvider)
+                .build();
+
+        for (int i = 0; i < 10; i++) {
+            testClient.secrets().kv2(mount).listSecrets("/")
+                    .toCompletableFuture().get();
+        }
+
+        verify(executor, times(10))
+                .execute(any());
+        verify(tokenProvider, times(5))
+                .apply(any());
+        verify(cachingTokenProvider, times(5))
+                .request(any());
+        verify(cachingTokenProvider, times(0))
+                .extend(any(), any());
+
+        tickableInstantSource.tick(Duration.ofSeconds(90));
+
+        for (int i = 0; i < 10; i++) {
+            testClient.secrets().kv2(mount).listSecrets("/")
+                    .toCompletableFuture().get();
+        }
+
+        verify(executor, times(20))
+                .execute(any());
+        verify(tokenProvider, times(10))
+                .apply(any());
+        verify(cachingTokenProvider, times(10))
+                .request(any());
+        verify(cachingTokenProvider, times(0))
+                .extend(any(), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "secret", "empty" })
+    public void testLimitedUseTokenExhaustion(String mount, VaultClient client) throws Exception {
+
+        var tokenProvider = spy(new VaultTokenProvider() {
+            @Override
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                return client.auth().token().create(new VaultAuthTokenCreateTokenParams()
+                        .setTtl(Duration.ofMinutes(5))
+                        .setRenewable(false)
+                        .setNumUses(2))
+                        .thenApply(
+                                a -> VaultToken.from(a.getClientToken(), a.isRenewable(), a.getLeaseDuration(), a.getNumUses(),
+                                        tickableInstantSource));
+            }
+        });
+        var cachingTokenProvider = spy(new VaultCachingTokenProvider(tokenProvider, Duration.ofSeconds(30)));
+        var executor = spy(client.getExecutor());
+
+        var useStealingTokenProvider = new VaultTokenProvider() {
+            @Override
+            public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
+                return cachingTokenProvider.apply(authRequest)
+                        .thenApply(t -> {
+                            if (t.getAllowedUsesRemaining() == 1) {
+                                Logger.getLogger(VaultCachingTokenProviderTest.class.getName())
+                                        .fine("### Stealing last token usage ###");
+                                t.getClientTokenForUsage();
+                            }
+                            return t;
+                        });
+            }
+        };
+
+        var testClient = client.configure()
+                .instantSource(tickableInstantSource)
+                .executor(executor)
+                .tokenProvider(useStealingTokenProvider)
+                .build();
+
+        for (int i = 0; i < 10; i++) {
+            testClient.secrets().kv2(mount).listSecrets("/")
+                    .toCompletableFuture().get();
+        }
+
+        verify(executor, times(10))
+                .execute(any());
+        verify(tokenProvider, times(10))
+                .apply(any());
+        verify(cachingTokenProvider, times(10))
+                .request(any());
+        verify(cachingTokenProvider, times(0))
                 .extend(any(), any());
     }
 }
