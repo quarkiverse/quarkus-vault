@@ -44,7 +44,7 @@ public class VaultKubernetesTokenProvider implements VaultTokenProvider {
                     .thenApply(res -> {
                         var auth = res.getAuth();
                         return VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration(),
-                                authRequest.getInstantSource());
+                                auth.getNumUses(), authRequest.getInstantSource());
                     });
         });
     }

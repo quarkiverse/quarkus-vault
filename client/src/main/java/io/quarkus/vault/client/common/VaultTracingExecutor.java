@@ -19,16 +19,16 @@ public class VaultTracingExecutor implements VaultRequestExecutor {
 
     @Override
     public <T> CompletionStage<VaultResponse<T>> execute(VaultRequest<T> request) {
-        log.info("Executing: " + request.getOperation() + lineSeparator() + getCurlFormattedRequest(request));
+        log.info("REQUEST: " + request.getOperation() + lineSeparator() + getCurlFormattedRequest(request));
         return delegate.execute(request)
                 .thenApply((response) -> {
-                    var message = "Response: " + request.getOperation() + lineSeparator() + getHTTPFormattedResponse(response)
+                    var message = "RESPONSE: " + request.getOperation() + lineSeparator() + getHTTPFormattedResponse(response)
                             + lineSeparator();
                     log.log(response.isSuccessful() ? Level.INFO : Level.WARNING, message);
                     return response;
                 })
                 .exceptionallyCompose(error -> {
-                    log.log(Level.SEVERE, "Request failed: " + error);
+                    log.log(Level.SEVERE, "EXCEPTION: " + error);
                     return CompletableFuture.failedStage(error);
                 });
     }

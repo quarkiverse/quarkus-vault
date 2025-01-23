@@ -41,6 +41,19 @@ public abstract class VaultTimeLimited {
         return leaseDuration;
     }
 
+    /**
+     * Check if the token is valid, in the sense that using it for authentication
+     * *should* be successful.
+     * <p>
+     * This base class implementation checks if the token is expired, but subclasses
+     * may override this method to provide additional checks.
+     *
+     * @return true if the token is valid, false otherwise
+     */
+    public boolean isValid() {
+        return !isExpired();
+    }
+
     public boolean isExpired() {
         return instantSource.instant().isAfter(getExpiresAt());
     }
