@@ -30,12 +30,20 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
         this.renewGracePeriod = renewGracePeriod;
     }
 
+    public Optional<VaultToken> getCachedToken() {
+        return Optional.ofNullable(cachedToken.get());
+    }
+
     @Override
     public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
 
-        var cachedToken = Optional.ofNullable(this.cachedToken.get())
+        var cachedToken = getCachedToken()
                 .map(token -> {
                     var logLevel = authRequest.getRequest().getLogConfidentialityLevel();
+                    if (!token.hasAllowedUsesRemaining()) {
+                        log.fine("cached token " + token.getConfidentialInfo(logLevel) + " has exhausted its allowed usages");
+                        return null;
+                    }
                     if (token.isExpired()) {
                         log.fine("cached token " + token.getConfidentialInfo(logLevel) + " has expired");
                         return null;
@@ -94,7 +102,7 @@ public class VaultCachingTokenProvider implements VaultTokenProvider {
                 .thenApply(res -> {
                     var auth = res.getAuth();
                     var vaultToken = VaultToken.from(auth.getClientToken(), auth.isRenewable(), auth.getLeaseDuration(),
-                            authRequest.getInstantSource());
+                            auth.getNumUses(), authRequest.getInstantSource());
                     sanityCheck(vaultToken);
                     log.fine("extended login token: " + vaultToken.getConfidentialInfo(logLevel));
                     return vaultToken;

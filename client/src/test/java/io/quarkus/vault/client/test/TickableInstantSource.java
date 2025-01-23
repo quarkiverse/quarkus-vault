@@ -4,11 +4,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
 
-public class TickableInstanceSource implements InstantSource {
+public class TickableInstantSource implements InstantSource {
 
     private Instant instant;
 
-    public TickableInstanceSource(Instant instant) {
+    public TickableInstantSource(Instant instant) {
         this.instant = instant;
     }
 
