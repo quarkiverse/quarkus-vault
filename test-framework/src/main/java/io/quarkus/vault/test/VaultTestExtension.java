@@ -1,6 +1,5 @@
 package io.quarkus.vault.test;
 
-import static io.quarkus.credentials.CredentialsProvider.PASSWORD_PROPERTY_NAME;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.regex.Pattern.MULTILINE;
@@ -245,6 +244,7 @@ public class VaultTestExtension {
                 .withClasspathResourceMapping("vault-postgres-creation.sql", TMP_VAULT_POSTGRES_CREATION_SQL_FILE, READ_ONLY)
                 .withClasspathResourceMapping("secret.json", "/tmp/secret.json", READ_ONLY)
                 .withClasspathResourceMapping("config.json", "/tmp/config.json", READ_ONLY)
+                .withClasspathResourceMapping("cred-provider.json", "/tmp/cred-provider.json", READ_ONLY)
                 .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY)
                 .withCommand("server", "-log-level=debug", "-config=" + TMP_VAULT_CONFIG_JSON_FILE);
 
@@ -331,7 +331,7 @@ public class VaultTestExtension {
         execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V1, APP_SECRET_PATH, SECRET_KEY, SECRET_VALUE));
         execVault(
                 format("vault kv put %s/%s %s=%s", SECRET_PATH_V1, LIST_PATH + "/" + LIST_SUB_PATH, SECRET_KEY, SECRET_VALUE));
-        execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V1, APP_CONFIG_PATH, PASSWORD_PROPERTY_NAME, DB_PASSWORD));
+        execVault(format("vault kv put %s/%s @/tmp/cred-provider.json", SECRET_PATH_V1, APP_CONFIG_PATH));
         execVault(format("vault kv put %s/foo-json @/tmp/secret.json", SECRET_PATH_V1));
         execVault(format("vault kv put %s/config-json @/tmp/config.json", SECRET_PATH_V1));
 
@@ -340,7 +340,7 @@ public class VaultTestExtension {
         execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V2, APP_SECRET_PATH, SECRET_KEY, SECRET_VALUE));
         execVault(
                 format("vault kv put %s/%s %s=%s", SECRET_PATH_V2, LIST_PATH + "/" + LIST_SUB_PATH, SECRET_KEY, SECRET_VALUE));
-        execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V2, APP_CONFIG_PATH, PASSWORD_PROPERTY_NAME, DB_PASSWORD));
+        execVault(format("vault kv put %s/%s @/tmp/cred-provider.json", SECRET_PATH_V2, APP_CONFIG_PATH));
         execVault(format("vault kv put %s/foo-json @/tmp/secret.json", SECRET_PATH_V2));
         execVault(format("vault kv put %s/config-json @/tmp/config.json", SECRET_PATH_V2));
 
