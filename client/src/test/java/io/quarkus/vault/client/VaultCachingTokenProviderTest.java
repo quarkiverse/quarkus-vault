@@ -147,7 +147,7 @@ public class VaultCachingTokenProviderTest {
     public void testExpiringTokensRenew(VaultClient client) throws Exception {
 
         var token = client.auth().token().create(new VaultAuthTokenCreateTokenParams()
-                .setTtl(Duration.ofMinutes(1))
+                .setTtl(Duration.ofHours(1))
                 .setRenewable(true))
                 .thenApply(
                         a -> VaultToken.from(a.getClientToken(), a.isRenewable(), a.getLeaseDuration(), tickableInstanceSource))
@@ -182,14 +182,46 @@ public class VaultCachingTokenProviderTest {
         verify(cachingTokenProvider, times(0))
                 .extend(any(), any());
 
-        tickableInstanceSource.tick(Duration.ofSeconds(45));
+        tickableInstanceSource.tick(Duration.ofMinutes(45));
 
         for (int i = 0; i < 10; i++) {
             testClient.secrets().kv2().listSecrets("/")
                     .toCompletableFuture().get();
         }
 
-        verify(executor, times(21))
+        verify(executor, times(20))
+                .execute(any());
+        verify(tokenProvider, times(1))
+                .apply(any());
+        verify(cachingTokenProvider, times(1))
+                .request(any());
+        verify(cachingTokenProvider, times(0))
+                .extend(any(), any());
+
+        tickableInstanceSource.tick(Duration.ofMinutes(14).plus(Duration.ofSeconds(20)));
+
+        for (int i = 0; i < 10; i++) {
+            testClient.secrets().kv2().listSecrets("/")
+                    .toCompletableFuture().get();
+        }
+
+        verify(executor, times(30))
+                .execute(any());
+        verify(tokenProvider, times(1))
+                .apply(any());
+        verify(cachingTokenProvider, times(1))
+                .request(any());
+        verify(cachingTokenProvider, times(0))
+                .extend(any(), any());
+
+        tickableInstanceSource.tick(Duration.ofSeconds(15));
+
+        for (int i = 0; i < 10; i++) {
+            testClient.secrets().kv2().listSecrets("/")
+                    .toCompletableFuture().get();
+        }
+
+        verify(executor, times(41))
                 .execute(any());
         verify(tokenProvider, times(1))
                 .apply(any());
