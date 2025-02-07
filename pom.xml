@@ -30,7 +30,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.version>3.18.1</quarkus.version>
-    <jandex.version>3.2.4</jandex.version>
+    <jandex.version>3.2.5</jandex.version>
     <assertj.version>3.27.3</assertj.version>
     <wiremock.version>3.0.1</wiremock.version>
     <wiremock-maven-plugin.version>7.3.0</wiremock-maven-plugin.version>
