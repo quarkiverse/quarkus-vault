@@ -27,13 +27,10 @@ public class VaultHealthCheck implements HealthCheck {
         final HealthCheckResponseBuilder builder = HealthCheckResponse.named("Vault connection health check");
 
         try {
-            Boolean standbyok = null;
-            Boolean perfstandbyok = null;
-            if (buildTimeConfig.health() != null) {
-                standbyok = buildTimeConfig.health().standByOk();
-                perfstandbyok = buildTimeConfig.health().performanceStandByOk();
-            }
-            var status = client.sys().health().status(standbyok, perfstandbyok)
+            boolean isStandByOk = this.buildTimeConfig.health().standByOk();
+            boolean isPerfStandByOk = this.buildTimeConfig.health().performanceStandByOk();
+
+            var status = client.sys().health().status(isStandByOk, isPerfStandByOk)
                     .toCompletableFuture().get();
 
             switch (status) {
