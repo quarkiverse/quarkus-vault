@@ -18,6 +18,7 @@
     <module>deployment</module>
     <module>runtime</module>
     <module>test-framework</module>
+    <module>integration-tests</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-vault.git</connection>
@@ -142,18 +143,6 @@
       </activation>
       <modules>
         <module>docs</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>it</id>
-      <activation>
-        <property>
-          <name>performRelease</name>
-          <value>!true</value>
-        </property>
-      </activation>
-      <modules>
-        <module>integration-tests</module>
       </modules>
     </profile>
   </profiles>
