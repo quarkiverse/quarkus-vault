@@ -36,7 +36,7 @@ public class VaultClientTest {
         var tokenProvider = spy(new VaultTokenProvider() {
             @Override
             public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
-                var token = VaultToken.from("test", true, Duration.ofMinutes(1), authRequest.getInstantSource())
+                var token = VaultToken.from("test", true, Duration.ofMinutes(1), null, authRequest.getInstantSource())
                         .cached();
                 return CompletableFuture.completedStage(token);
             }
