@@ -258,7 +258,7 @@ public class VaultClient implements VaultRequestExecutor {
             if (token == null) {
                 requestBuilder.noToken();
             } else {
-                requestBuilder.token(token.getClientToken());
+                requestBuilder.token(token.getClientTokenForUsage());
             }
 
             return executor.execute(requestBuilder.rebuild());
