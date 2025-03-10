@@ -35,7 +35,7 @@
     <assertj.version>3.27.3</assertj.version>
     <wiremock.version>3.0.1</wiremock.version>
     <wiremock-maven-plugin.version>7.3.0</wiremock-maven-plugin.version>
-    <sundrio-maven-plugin.version>0.200.0</sundrio-maven-plugin.version>
+    <sundrio-maven-plugin.version>0.200.3</sundrio-maven-plugin.version>
   </properties>
   <dependencyManagement>
     <dependencies>
