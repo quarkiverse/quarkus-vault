@@ -176,13 +176,16 @@ public interface VaultRuntimeConfig {
     int kvSecretEngineVersion();
 
     /**
-     * KV secret engine path.
+     * KV secret engine path for un-prefixed access and as a fallback for non-specified prefixed access.
      * <p>
      * This value is used when building the url path in the KV secret engine programmatic access
-     * (i.e. `VaultKVSecretEngine`) and the vault config source (i.e. fetching configuration properties from Vault).
+     * (i.e. `VaultKVSecretEngine`) for methods that don't take property prefix as 1st parameter
+     * and the vault config source (i.e. fetching configuration properties from Vault) for {@code quarkus.vault.secret-config-kv-path}
+     * configured paths (without prefix) or as a fallback for {@code quarkus.vault.secret-config-kv-path."prefix"} configured paths
+     * (with prefix) but for which the prefix is not configured with {@code quarkus.vault.kv-secret-engine-mount-path."prefix"}.
      * <p>
      * For a v2 KV secret engine (default - see `kv-secret-engine-version property`)
-     * the full url is built from the expression `<url>/v1/</kv-secret-engine-mount-path>/data/...`.
+     * the full url is built from the expression `<url>/v1/<kv-secret-engine-mount-path>/data/...`.
      * <p>
      * With property `quarkus.vault.url=https://localhost:8200`, the following call
      * `vaultKVSecretEngine.readSecret("foo/bar")` would lead eventually to a `GET` on Vault with the following
@@ -201,6 +204,22 @@ public interface VaultRuntimeConfig {
      */
     @WithDefault(DEFAULT_KV_SECRET_ENGINE_MOUNT_PATH)
     String kvSecretEngineMountPath();
+
+    /**
+     * KV secret engine paths for prefixed access.
+     *
+     * <p>
+     * These values are used when building the url path in the KV secret engine programmatic access
+     * (i.e. `VaultKVSecretEngine`) for methods that take property prefix as 1st parameter
+     * and the vault config source (i.e. fetching configuration properties from Vault) for
+     * {@code quarkus.vault.secret-config-kv-path."prefix"} configured paths (with matching prefix).
+     * <p>
+     *
+     * @see #kvSecretEngineMountPath()
+     */
+    @WithName("kv-secret-engine-mount-path")
+    @ConfigDocMapKey("prefix")
+    Map<String, String> kvSecretEngineMountPathPrefix();
 
     /**
      * Transit secret engine mount path.
@@ -324,6 +343,7 @@ public interface VaultRuntimeConfig {
                 ", logConfidentialityLevel=" + logConfidentialityLevel() +
                 ", kvSecretEngineVersion=" + kvSecretEngineVersion() +
                 ", kvSecretEngineMountPath='" + kvSecretEngineMountPath() + '\'' +
+                ", kvSecretEngineMountPathPrefix='" + kvSecretEngineMountPathPrefix() + '\'' +
                 ", tlsSkipVerify=" + tls().skipVerify() +
                 ", tlsCaCert=" + tls().caCert() +
                 ", connectTimeout=" + connectTimeout() +
