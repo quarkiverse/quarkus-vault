@@ -306,9 +306,12 @@ class Retry<T> implements Function<Integer, CompletionStage<T>> {
         if (failure instanceof CompletionException || failure instanceof ExecutionException) {
             failure = failure.getCause();
         }
+        if (failure instanceof VaultException && appliedToken.get().isNotUsable()) {
+            return true;
+        }
         if (failure instanceof VaultClientException ve) {
             var token = appliedToken.get();
-            return ve.isPermissionDenied() && token != null && token.isFromCache();
+            return ve.isPermissionDenied() && token != null && (token.isNotUsable() || token.isFromCache());
         }
         return false;
     }
