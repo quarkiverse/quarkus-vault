@@ -3,10 +3,13 @@ package io.quarkus.vault.client.test;
 import static org.testcontainers.containers.BindMode.READ_ONLY;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.security.MessageDigest;
 import java.util.HexFormat;
+import java.util.Optional;
+import java.util.logging.LogManager;
 
 import org.junit.jupiter.api.extension.*;
 import org.testcontainers.containers.Network;
@@ -62,6 +65,18 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
+
+        Optional.ofNullable(System.getenv("TRACE_ENABLED"))
+                .ifPresent(logLevel -> {
+                    try {
+                        try (InputStream traceLogPropStream = Thread.currentThread().getContextClassLoader()
+                                .getResourceAsStream("trace-log.properties")) {
+                            LogManager.getLogManager().readConfiguration(traceLogPropStream);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to load trace-log.properties", e);
+                    }
+                });
 
         var annotation = extensionContext.getRequiredTestClass().getAnnotation(VaultClientTest.class);
 

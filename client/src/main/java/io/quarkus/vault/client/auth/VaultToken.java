@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.time.InstantSource;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
 
 public class VaultToken extends VaultTimeLimited {
@@ -57,30 +56,43 @@ public class VaultToken extends VaultTimeLimited {
         return clientToken;
     }
 
+    public int getAllowedUsesRemaining() {
+        return allowedUsesRemaining.get();
+    }
+
+    public boolean hasAllowedUsesRemaining() {
+        return allowedUsesRemaining.get() > 0;
+    }
+
     public boolean isFromCache() {
         return fromCache;
     }
 
+    /**
+     * Returns the client token for usage, decrementing the allowed uses remaining.
+     * <p>
+     * During normal operation, this method should always return the client token, as the remaining
+     * use count should be checked before calling this method. However, if the token is requested for use
+     * multiple times in parallel, it is possible that the use count will be exhausted between the check and the
+     * call to this method. In that case, the method will throw a {@link VaultTokenException}. The
+     * {@link io.quarkus.vault.client.VaultClient} implementation should handle this exception and retry the
+     * request, after obtaining a new token (if possible).
+     *
+     * @apiNote This ignores the token's expiration; it is the caller's responsibility to ensure the token has not expired.
+     * @return the client token
+     * @throws VaultTokenException if the token has no allowed uses remaining
+     */
     public String getClientTokenForUsage() {
-        if (isNotUsable()) {
-            throw new VaultException("Token has exhausted its allowed uses of " + allowedUsesRemaining.get());
+        if (!hasAllowedUsesRemaining()) {
+            throw new VaultTokenException(VaultTokenException.Reason.TOKEN_USES_EXHAUSTED);
         }
         allowedUsesRemaining.updateAndGet(remaining -> remaining > 0 ? remaining - 1 : 0);
         return clientToken;
     }
 
-    public boolean isNotUsable() {
-        return allowedUsesRemaining.get() <= 0;
-    }
-
     @Override
-    public boolean isExpired() {
-        return isNotUsable() || super.isExpired();
-    }
-
-    @Override
-    public boolean isExpiringWithin(Duration gracePeriod) {
-        return isNotUsable() || super.isExpiringWithin(gracePeriod);
+    public boolean isValid() {
+        return super.isValid() && hasAllowedUsesRemaining();
     }
 
     public String getConfidentialInfo(LogConfidentialityLevel level) {
