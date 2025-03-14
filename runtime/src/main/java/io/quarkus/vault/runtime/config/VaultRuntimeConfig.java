@@ -176,22 +176,28 @@ public interface VaultRuntimeConfig {
     int kvSecretEngineVersion();
 
     /**
-     * KV secret engine path for un-prefixed access and as a fallback for non-specified prefixed access.
+     * KV secret engine mount path for un-prefixed access and as a fallback for unmatched prefixed access.
      * <p>
      * This value is used when building the url path in the KV secret engine programmatic access
      * (i.e. `VaultKVSecretEngine`) for methods that don't take property prefix as 1st parameter
-     * and the vault config source (i.e. fetching configuration properties from Vault) for {@code quarkus.vault.secret-config-kv-path}
-     * configured paths (without prefix) or as a fallback for {@code quarkus.vault.secret-config-kv-path."prefix"} configured paths
-     * (with prefix) but for which the prefix is not configured with {@code quarkus.vault.kv-secret-engine-mount-path."prefix"}.
+     * and the vault config source (i.e. fetching configuration properties from Vault) for
+     * {@code quarkus.vault.secret-config-kv-path}
+     * configured paths (without prefix) or as a fallback for {@code quarkus.vault.secret-config-kv-path."prefix"} configured
+     * paths
+     * for which the prefix is not matched with any prefix specified by
+     * {@code quarkus.vault.kv-secret-engine-mount-path."prefix"}
+     * properties. The matching of prefixes is performed so that the longest prefix from
+     * {@code quarkus.vault.kv-secret-engine-mount-path."prefix"}
+     * which is a prefix of the prefix from {@code quarkus.vault.secret-config-kv-path."prefix"} is used (if any).
      * <p>
      * For a v2 KV secret engine (default - see `kv-secret-engine-version property`)
-     * the full url is built from the expression `<url>/v1/<kv-secret-engine-mount-path>/data/...`.
+     * the full url is built from the expression `<url>/v1/&lt;kv-secret-engine-mount-path&gt;/data/...`.
      * <p>
      * With property `quarkus.vault.url=https://localhost:8200`, the following call
      * `vaultKVSecretEngine.readSecret("foo/bar")` would lead eventually to a `GET` on Vault with the following
      * url: `https://localhost:8200/v1/secret/data/foo/bar`.
      * <p>
-     * With a KV secret engine v1, the url changes to: `<url>/v1/</kv-secret-engine-mount-path>/...`.
+     * With a KV secret engine v1, the url changes to: `<url>/v1/&lt;kv-secret-engine-mount-path&gt;/...`.
      * <p>
      * The same logic is applied to the Vault config source. With `quarkus.vault.secret-config-kv-path=config/myapp`
      * The secret properties would be fetched from Vault using a `GET` on
@@ -206,7 +212,7 @@ public interface VaultRuntimeConfig {
     String kvSecretEngineMountPath();
 
     /**
-     * KV secret engine paths for prefixed access.
+     * KV secret engine mount paths for prefixed access.
      *
      * <p>
      * These values are used when building the url path in the KV secret engine programmatic access

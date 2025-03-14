@@ -34,17 +34,17 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
         this.kv1 = vaultClient.secrets().kv1(vaultConfigHolder.getVaultRuntimeConfig().kvSecretEngineMountPath());
         this.kv2 = vaultClient.secrets().kv2(vaultConfigHolder.getVaultRuntimeConfig().kvSecretEngineMountPath());
         this.kv1Prefix = vaultConfigHolder
-            .getVaultRuntimeConfig()
-            .kvSecretEngineMountPathPrefix()
-            .entrySet()
-            .stream()
-            .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> vaultClient.secrets().kv1(e.getValue())));
+                .getVaultRuntimeConfig()
+                .kvSecretEngineMountPathPrefix()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> vaultClient.secrets().kv1(e.getValue())));
         this.kv2Prefix = vaultConfigHolder
-            .getVaultRuntimeConfig()
-            .kvSecretEngineMountPathPrefix()
-            .entrySet()
-            .stream()
-            .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> vaultClient.secrets().kv2(e.getValue())));
+                .getVaultRuntimeConfig()
+                .kvSecretEngineMountPathPrefix()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> vaultClient.secrets().kv2(e.getValue())));
         this.isV1 = vaultConfigHolder.getVaultRuntimeConfig().kvSecretEngineVersion() == 1;
     }
 
@@ -55,7 +55,8 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     private VaultSecretsKV1 kv1(String prefix) {
         var kv1 = prefix == null ? this.kv1 : kv1Prefix.get(prefix);
         if (kv1 == null) {
-            throw new IllegalStateException("Invalid prefix \"" + prefix + "\" or missing config property quarkus.vault.kv-secret-engine-mount-path.\"" + prefix + "\"");
+            throw new IllegalStateException("Invalid prefix \"" + prefix
+                    + "\" or missing config property quarkus.vault.kv-secret-engine-mount-path.\"" + prefix + "\"");
         }
         return kv1;
     }
@@ -63,7 +64,8 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     private VaultSecretsKV2 kv2(String prefix) {
         var kv2 = prefix == null ? this.kv2 : kv2Prefix.get(prefix);
         if (kv2 == null) {
-            throw new IllegalStateException("Invalid prefix \"" + prefix + "\" or missing config property quarkus.vault.kv-secret-engine-mount-path.\"" + prefix + "\"");
+            throw new IllegalStateException("Invalid prefix \"" + prefix
+                    + "\" or missing config property quarkus.vault.kv-secret-engine-mount-path.\"" + prefix + "\"");
         }
         return kv2;
     }
