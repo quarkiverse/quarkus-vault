@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.net.URL;
 import java.time.Duration;
+import java.time.InstantSource;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -21,10 +22,10 @@ import io.quarkus.vault.client.common.VaultRequestExecutor;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.logging.LogConfidentialityLevel;
 
-public class VaultClientTest {
+public class VaultClientRetryTest {
 
     @Test
-    public void testPermissionDeniedInvalidatesCacheAndRetriesOnce() {
+    public void testPermissionDeniedInvalidatesCacheAndRetriesOnce() throws Exception {
 
         var executor = spy(new VaultRequestExecutor() {
             @Override
@@ -34,11 +35,18 @@ public class VaultClientTest {
             }
         });
         var tokenProvider = spy(new VaultTokenProvider() {
+            VaultToken token = VaultToken.from("baaaaad", true, Duration.ofMinutes(1), null, InstantSource.system()).cached();
+
             @Override
             public CompletionStage<VaultToken> apply(VaultAuthRequest authRequest) {
-                var token = VaultToken.from("test", true, Duration.ofMinutes(1), authRequest.getInstantSource())
-                        .cached();
                 return CompletableFuture.completedStage(token);
+            }
+
+            @Override
+            public void invalidateCache() {
+                // simulate token refresh
+                token = VaultToken.from(token.getClientToken(), token.isRenewable(), token.getLeaseDuration(),
+                        token.getAllowedUsesRemaining(), token.getInstantSource());
             }
         });
 
@@ -53,7 +61,7 @@ public class VaultClientTest {
                 .isInstanceOf(VaultClientException.class)
                 .hasMessageContaining("permission denied");
 
-        verify(tokenProvider, times(1))
+        verify(tokenProvider, times(2))
                 .apply(any());
         verify(executor, times(2))
                 .execute(any());

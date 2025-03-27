@@ -6,14 +6,14 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.InstantSource;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import io.quarkus.vault.client.api.VaultAuthAccessor;
 import io.quarkus.vault.client.api.VaultSecretsAccessor;
@@ -37,6 +37,7 @@ public class VaultClient implements VaultRequestExecutor {
         private Duration requestTimeout;
         private LogConfidentialityLevel logConfidentialityLevel;
         private InstantSource instantSource = InstantSource.system();
+        private int maxRetries = 2;
 
         public Builder baseUrl(URL baseUrl) {
             this.baseUrl = requireNonNull(baseUrl, "baseUrl is required");
@@ -118,6 +119,23 @@ public class VaultClient implements VaultRequestExecutor {
             return this;
         }
 
+        /**
+         * Sets the maximum number of retries for requests that fail due to token expiration.
+         * <p>
+         * The default is 2 retries, for a total of 3 attempts.
+         * <p>
+         *
+         * @param maxRetries the maximum number of retries, excluding the initial request, must be greater than or equal to 0
+         * @return this builder
+         */
+        public Builder maxRetries(int maxRetries) {
+            if (maxRetries < 0) {
+                throw new IllegalArgumentException("maxRetries must be greater than or equal to 0");
+            }
+            this.maxRetries = maxRetries;
+            return this;
+        }
+
         public Builder logConfidentialityLevel(LogConfidentialityLevel logConfidentialityLevel) {
             this.logConfidentialityLevel = logConfidentialityLevel != null ? logConfidentialityLevel
                     : LogConfidentialityLevel.HIGH;
@@ -155,6 +173,8 @@ public class VaultClient implements VaultRequestExecutor {
         return new Builder();
     }
 
+    private static final Logger log = Logger.getLogger(VaultClient.class.getName());
+
     private final AtomicReference<VaultSecretsAccessor> secrets = new AtomicReference<>();
     private final AtomicReference<VaultAuthAccessor> auth = new AtomicReference<>();
     private final URL baseUrl;
@@ -165,6 +185,7 @@ public class VaultClient implements VaultRequestExecutor {
     private final VaultTokenProvider tokenProvider;
     private final String namespace;
     private final InstantSource instantSource;
+    private final int maxAttempts;
 
     private VaultClient(Builder builder) {
         this.baseUrl = requireNonNull(builder.baseUrl, "baseUrl is required");
@@ -175,6 +196,7 @@ public class VaultClient implements VaultRequestExecutor {
         this.tokenProvider = builder.tokenProvider;
         this.namespace = builder.namespace;
         this.instantSource = builder.instantSource;
+        this.maxAttempts = builder.maxRetries + 1;
     }
 
     public VaultSecretsAccessor secrets() {
@@ -244,27 +266,76 @@ public class VaultClient implements VaultRequestExecutor {
         }
 
         if (request.hasToken() || tokenProvider == null) {
+            log.finer(() -> "Executing authorized request " + request.getOperation());
             return executor.execute(requestBuilder.rebuild());
         }
 
+        log.finer(() -> "Executing unauthorized request " + request.getOperation());
+
+        Supplier<CompletionStage<VaultToken>> providedToken = () -> {
+            log.finer(() -> "Requesting token for request " + request.getOperation());
+            return tokenProvider.apply(VaultAuthRequest.of(this, request, instantSource));
+        };
+
         var appliedToken = new AtomicReference<VaultToken>(null);
 
-        var providedToken = tokenProvider.apply(VaultAuthRequest.of(this, request, instantSource));
-
-        Supplier<CompletionStage<VaultResponse<T>>> responseSupplier = () -> providedToken.thenCompose(token -> {
+        Supplier<CompletionStage<VaultResponse<T>>> responseSupplier = () -> providedToken.get().thenCompose(token -> {
 
             appliedToken.set(token);
 
             if (token == null) {
                 requestBuilder.noToken();
             } else {
-                requestBuilder.token(token.getClientToken());
+                requestBuilder.token(token.getClientTokenForUsage());
             }
 
             return executor.execute(requestBuilder.rebuild());
         });
 
-        return CompletableFuture.completedStage(0).thenCompose(new Retry<>(responseSupplier, 1, appliedToken));
+        var execution = attempt(0, responseSupplier, request, appliedToken);
+
+        if (log.isLoggable(Level.FINER)) {
+            return execution.whenComplete((response, error) -> {
+                if (error != null) {
+                    log.finer(() -> "Failed request " + request.getOperation() + " with error " + error);
+                } else {
+                    log.finer(() -> "Successful request " + request.getOperation());
+                }
+            });
+        } else {
+            return execution;
+        }
+    }
+
+    public <T> CompletionStage<VaultResponse<T>> attempt(Integer attempt,
+            Supplier<CompletionStage<VaultResponse<T>>> responseSupplier, VaultRequest<T> request,
+            AtomicReference<VaultToken> appliedToken) {
+        log.finer(() -> "Attempt %d of %d for request %s".formatted(attempt + 1, maxAttempts, request.getOperation()));
+
+        return responseSupplier.get().exceptionallyCompose(failure -> {
+
+            if (attempt < maxAttempts && shouldRetry(failure, appliedToken.get())) {
+                log.finer(() -> "Retrying request %s due to %s".formatted(request.getOperation(), failure));
+
+                return attempt(attempt + 1, responseSupplier, request, appliedToken);
+            }
+            return CompletableFuture.failedFuture(failure);
+        });
+    }
+
+    private boolean shouldRetry(Throwable failure, VaultToken appliedToken) {
+        failure = unwrapException(failure);
+        if (failure instanceof VaultTokenException) {
+            return true;
+        }
+        if (failure instanceof VaultClientException ve) {
+            var cachedPermissionFailure = ve.isPermissionDenied() && appliedToken != null && appliedToken.isFromCache();
+            if (cachedPermissionFailure) {
+                tokenProvider.invalidateCache();
+            }
+            return cachedPermissionFailure;
+        }
+        return false;
     }
 
     public VaultClient.Builder configure() {
@@ -278,38 +349,11 @@ public class VaultClient implements VaultRequestExecutor {
         builder.logConfidentialityLevel = logConfidentialityLevel;
         return builder;
     }
-}
 
-class Retry<T> implements Function<Integer, CompletionStage<T>> {
-    private final Supplier<CompletionStage<T>> upstreamSupplier;
-    private final long maxRetries;
-    private final AtomicReference<VaultToken> appliedToken;
-
-    public Retry(Supplier<CompletionStage<T>> upstreamSupplier, long maxRetries, AtomicReference<VaultToken> appliedToken) {
-        assert maxRetries > 0;
-        this.upstreamSupplier = Objects.requireNonNull(upstreamSupplier, "upstreamSupplier");
-        this.maxRetries = maxRetries;
-        this.appliedToken = appliedToken;
-    }
-
-    @Override
-    public CompletionStage<T> apply(Integer attempt) {
-        return upstreamSupplier.get().exceptionallyCompose(failure -> {
-            if (attempt < maxRetries && shouldRetry(failure)) {
-                return apply(attempt + 1);
-            }
-            return CompletableFuture.failedFuture(failure);
-        });
-    }
-
-    private boolean shouldRetry(Throwable failure) {
-        if (failure instanceof CompletionException || failure instanceof ExecutionException) {
-            failure = failure.getCause();
+    private static Throwable unwrapException(Throwable e) {
+        if (e instanceof CompletionException || e instanceof ExecutionException) {
+            return e.getCause();
         }
-        if (failure instanceof VaultClientException ve) {
-            var token = appliedToken.get();
-            return ve.isPermissionDenied() && token != null && token.isFromCache();
-        }
-        return false;
+        return e;
     }
 }
