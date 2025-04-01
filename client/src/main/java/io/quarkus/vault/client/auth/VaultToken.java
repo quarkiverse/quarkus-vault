@@ -1,6 +1,7 @@
 package io.quarkus.vault.client.auth;
 
 import static io.quarkus.vault.client.logging.LogConfidentialityLevel.LOW;
+import static java.lang.Math.max;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -83,10 +84,10 @@ public class VaultToken extends VaultTimeLimited {
      * @throws VaultTokenException if the token has no allowed uses remaining
      */
     public String getClientTokenForUsage() {
-        if (!hasAllowedUsesRemaining()) {
+        var remainingUses = allowedUsesRemaining.updateAndGet(remaining -> max(remaining - 1, -1));
+        if (remainingUses == -1) {
             throw new VaultTokenException(VaultTokenException.Reason.TOKEN_USES_EXHAUSTED);
         }
-        allowedUsesRemaining.updateAndGet(remaining -> remaining > 0 ? remaining - 1 : 0);
         return clientToken;
     }
 
