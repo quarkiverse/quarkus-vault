@@ -11,7 +11,7 @@
     <description>Standalone Java client for HashiCorp Vault</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jacoco.version>0.8.12</jacoco.version>
+        <jacoco.version>0.8.13</jacoco.version>
     </properties>
 
     <dependencies>
