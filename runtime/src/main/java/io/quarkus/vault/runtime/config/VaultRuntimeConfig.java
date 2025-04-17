@@ -203,7 +203,7 @@ public interface VaultRuntimeConfig {
     String kvSecretEngineMountPath();
 
     /**
-     * KV secret engine mount path.
+     * Transit secret engine mount path.
      */
     @WithDefault(DEFAULT_TRANSIT_SECRET_ENGINE_MOUNT_PATH)
     String transitSecretEngineMountPath();
