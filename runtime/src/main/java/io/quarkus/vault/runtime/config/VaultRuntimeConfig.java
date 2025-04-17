@@ -32,6 +32,7 @@ public interface VaultRuntimeConfig {
     String DEFAULT_CONFIG_ORDINAL = "270";
     String DEFAULT_KUBERNETES_JWT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
     String DEFAULT_KV_SECRET_ENGINE_MOUNT_PATH = "secret";
+    String DEFAULT_TRANSIT_SECRET_ENGINE_MOUNT_PATH = "transit";
     String KV_SECRET_ENGINE_VERSION_V2 = "2";
     String DEFAULT_RENEW_GRACE_PERIOD = "1H";
     String DEFAULT_SECRET_CONFIG_CACHE_PERIOD = "10M";
@@ -200,6 +201,12 @@ public interface VaultRuntimeConfig {
      */
     @WithDefault(DEFAULT_KV_SECRET_ENGINE_MOUNT_PATH)
     String kvSecretEngineMountPath();
+
+    /**
+     * KV secret engine mount path.
+     */
+    @WithDefault(DEFAULT_TRANSIT_SECRET_ENGINE_MOUNT_PATH)
+    String transitSecretEngineMountPath();
 
     /**
      * TLS

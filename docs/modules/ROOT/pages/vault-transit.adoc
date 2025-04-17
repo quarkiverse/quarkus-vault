@@ -159,6 +159,12 @@ quarkus.vault.authentication.userpass.username=bob
 quarkus.vault.authentication.userpass.password=sinclair
 ----
 
+[NOTE]
+====
+By default Quarkus assumes that a _transit secret engine_ is mounted at path `transit/`.
+If that is not the case, please use properties `quarkus.vault.transit-secret-engine-mount-path` accordingly.
+====
+
 Note that you did not need to specify the existence of a particular encryption key in the configuration. You only
 do so in special cases such as specifying the key type for upsert, or changing the signature algorithm, ... Check the complete configuration for more
 information.
