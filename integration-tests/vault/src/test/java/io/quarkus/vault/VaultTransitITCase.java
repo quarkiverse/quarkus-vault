@@ -26,6 +26,7 @@ import java.util.stream.IntStream;
 
 import jakarta.inject.Inject;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -81,6 +82,9 @@ public class VaultTransitITCase {
     VaultClient client;
     @Inject
     VaultTransitSecretEngine transitSecretEngine;
+
+    @ConfigProperty(name = "quarkus.vault.transit-secret-engine-mount-path", defaultValue = "transit")
+    String transitMountPath;
 
     @Test
     public void encryptionString() {
@@ -249,7 +253,7 @@ public class VaultTransitITCase {
     }
 
     private void rotate(String keyName) throws Exception {
-        client.secrets().transit().rotateKey(keyName, null)
+        client.secrets().transit(transitMountPath).rotateKey(keyName, null)
                 .toCompletableFuture().get();
     }
 

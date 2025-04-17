@@ -90,6 +90,9 @@ public class VaultITCase {
     @ConfigProperty(name = MY_PASSWORD)
     String someSecretThroughIndirection;
 
+    @ConfigProperty(name = "quarkus.vault.transit-secret-engine-mount-path", defaultValue = "transit")
+    String transitMountPath;
+
     @Test
     public void credentialsProvider() {
         Map<String, String> staticCredentials = credentialsProvider.getCredentials("static");
@@ -227,7 +230,7 @@ public class VaultITCase {
         assertTransitSign(vaultClient, SIGN_KEY_NAME, null);
         assertTransitSign(vaultClient, SIGN_KEY_NAME, context);
 
-        vaultClient.secrets().transit().rotateKey(ENCRYPTION_KEY_NAME, null)
+        vaultClient.secrets().transit(transitMountPath).rotateKey(ENCRYPTION_KEY_NAME, null)
                 .toCompletableFuture().get();
 
         assertHash(vaultClient);
@@ -235,7 +238,7 @@ public class VaultITCase {
 
     private void assertHash(VaultClient vaultClient) throws Exception {
         var data = "coucou".getBytes(StandardCharsets.UTF_8);
-        var hash = vaultClient.secrets().transit().hash(VaultHashAlgorithm.SHA2_512, data, VaultFormat.BASE64)
+        var hash = vaultClient.secrets().transit(transitMountPath).hash(VaultHashAlgorithm.SHA2_512, data, VaultFormat.BASE64)
                 .toCompletableFuture().get();
         String expected = "4FrxOZ9PS+t5NMnxK6WpyI9+4ejvP+ehZ75Ll5xRXSQQKtkNOgdU1I/Fkw9jaaMIfmhulzLvNGDmQ5qVCJtIAA==";
         assertEquals(expected, hash);
@@ -249,7 +252,7 @@ public class VaultITCase {
                 .setInput(data.getBytes(StandardCharsets.UTF_8))
                 .setContext(context);
 
-        var sign = vaultClient.secrets().transit().sign(keyName, signParams)
+        var sign = vaultClient.secrets().transit(transitMountPath).sign(keyName, signParams)
                 .toCompletableFuture().get();
 
         var verifyParams = new VaultSecretsTransitVerifyParams()
@@ -257,7 +260,7 @@ public class VaultITCase {
                 .setContext(context)
                 .setSignature(sign.getSignature());
 
-        var verify = vaultClient.secrets().transit().verify(keyName, verifyParams)
+        var verify = vaultClient.secrets().transit(transitMountPath).verify(keyName, verifyParams)
                 .toCompletableFuture().get();
         assertTrue(verify);
     }
@@ -269,7 +272,7 @@ public class VaultITCase {
         var encryptParams = new VaultSecretsTransitEncryptParams()
                 .setPlaintext(data.getBytes(StandardCharsets.UTF_8))
                 .setContext(context);
-        var encryptBatchResult = vaultClient.secrets().transit().encrypt(keyName, encryptParams)
+        var encryptBatchResult = vaultClient.secrets().transit(transitMountPath).encrypt(keyName, encryptParams)
                 .toCompletableFuture().get();
         String ciphertext = encryptBatchResult.getCiphertext();
 
@@ -279,7 +282,7 @@ public class VaultITCase {
         var rewrapParams = new VaultSecretsTransitRewrapParams()
                 .setCiphertext(ciphertext)
                 .setContext(context);
-        var rewrap = vaultClient.secrets().transit().rewrap(keyName, rewrapParams)
+        var rewrap = vaultClient.secrets().transit(transitMountPath).rewrap(keyName, rewrapParams)
                 .toCompletableFuture().get();
         String rewrappedCiphertext = rewrap.getCiphertext();
 
@@ -291,7 +294,7 @@ public class VaultITCase {
         var params = new VaultSecretsTransitDecryptParams()
                 .setCiphertext(ciphertext)
                 .setContext(context);
-        var decryptBatchResult = vaultClient.secrets().transit().decrypt(keyName, params)
+        var decryptBatchResult = vaultClient.secrets().transit(transitMountPath).decrypt(keyName, params)
                 .toCompletableFuture().get();
         return new String(decryptBatchResult, StandardCharsets.UTF_8);
     }
