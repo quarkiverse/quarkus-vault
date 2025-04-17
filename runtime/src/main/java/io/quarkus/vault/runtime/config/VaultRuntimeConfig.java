@@ -204,6 +204,10 @@ public interface VaultRuntimeConfig {
 
     /**
      * Transit secret engine mount path.
+     * <p>
+     * see https://www.vaultproject.io/docs/secrets/transit/index.html
+     *
+     * @asciidoclet
      */
     @WithDefault(DEFAULT_TRANSIT_SECRET_ENGINE_MOUNT_PATH)
     String transitSecretEngineMountPath();
