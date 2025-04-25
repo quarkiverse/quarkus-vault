@@ -53,7 +53,7 @@ path "rabbitmq/creds/myrabbitmqrole" {
 }
 
 # transit
-path "transit/*" {
+path "transit-test/*" {
   capabilities = [ "create", "read", "update", "delete", "list" ]
 }
 #path "transit/encrypt/my-key" {
