@@ -69,7 +69,7 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
 
     @Inject
     public VaultTransitManager(VaultClient client, VaultConfigHolder configHolder) {
-        this.transit = client.secrets().transit();
+        this.transit = client.secrets().transit(configHolder.getVaultRuntimeConfig().transitSecretEngineMountPath());
         this.vaultConfigHolder = configHolder;
     }
 
