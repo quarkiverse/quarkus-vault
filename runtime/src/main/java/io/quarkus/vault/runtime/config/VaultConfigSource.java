@@ -141,7 +141,8 @@ public class VaultConfigSource implements ConfigSource {
 
     private Map<String, String> fetchSecrets(String path, String prefix) {
 
-        Map<String, Object> secretJson = getVaultKVSecretEngine().readSecretJson(path).await().indefinitely();
+        String mountPrefix = getLongestMatchingMountPathPrefix(prefix);
+        Map<String, Object> secretJson = getVaultKVSecretEngine().readSecretJson(mountPrefix, path).await().indefinitely();
 
         // ignore list and map, honor null, get as string scalar types
         Map<String, String> secret = secretJson.entrySet().stream()
@@ -150,6 +151,19 @@ public class VaultConfigSource implements ConfigSource {
                 .collect(HashMap::new, (m, v) -> m.put(v.getKey(), toString(v.getValue())), HashMap::putAll);
 
         return prefixMap(secret, prefix);
+    }
+
+    private String getLongestMatchingMountPathPrefix(String prefix) {
+        return prefix == null
+                ? null
+                : vaultRuntimeConfig
+                        .kvSecretEngineMountPathPrefix()
+                        .keySet()
+                        .stream()
+                        .filter(
+                                mountPrefix -> prefix.startsWith(mountPrefix) &&
+                                        (prefix.length() == mountPrefix.length() || prefix.charAt(mountPrefix.length()) == '.'))
+                        .reduce(null, (mp1, mp2) -> mp1 == null || mp1.length() < mp2.length() ? mp2 : mp1);
     }
 
     private VaultKVSecretReactiveEngine getVaultKVSecretEngine() {
