@@ -20,7 +20,6 @@ import io.quarkus.deployment.builditem.DevServicesConfigResultBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
-import io.quarkus.deployment.dev.devservices.GlobalDevServicesConfig;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.devservices.common.ContainerLocator;
 import io.quarkus.runtime.configuration.ConfigUtils;
@@ -44,13 +43,13 @@ public class DevServicesVaultProcessor {
     private static volatile boolean first = true;
     private final IsDockerWorking isDockerWorking = new IsDockerWorking(true);
 
-    @BuildStep(onlyIfNot = IsNormal.class, onlyIf = GlobalDevServicesConfig.Enabled.class)
+    @BuildStep(onlyIfNot = IsNormal.class, onlyIf = io.quarkus.deployment.dev.devservices.DevServicesConfig.Enabled.class)
     public void startVaultContainers(BuildProducer<DevServicesConfigResultBuildItem> devConfig, VaultBuildTimeConfig config,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             LaunchModeBuildItem launchMode,
             CuratedApplicationShutdownBuildItem closeBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
-            GlobalDevServicesConfig devServicesConfig) {
+            io.quarkus.deployment.dev.devservices.DevServicesConfig devServicesConfig) {
 
         DevServicesConfig currentDevServicesConfiguration = config.devServices();
 
@@ -77,7 +76,7 @@ public class DevServicesVaultProcessor {
                 loggingSetupBuildItem);
         try {
             VaultInstance vaultInstance = startContainer(currentDevServicesConfiguration, launchMode,
-                    devServicesConfig.timeout);
+                    devServicesConfig.timeout());
             if (vaultInstance != null) {
                 closeable = vaultInstance.getCloseable();
 
