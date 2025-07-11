@@ -20,6 +20,15 @@ path "secret/data/multi/*" {
   capabilities = ["read"]
 }
 
+# vault config source kv engine v2 with mount paths
+path "shared-secret/data/*" {
+  capabilities = ["read"]
+}
+
+path "app-secret/app1/data/*" {
+  capabilities = ["read"]
+}
+
 path "secret/metadata/hello/*" {
   capabilities = ["list"]
 }
