@@ -345,6 +345,11 @@ This value can be changed using property `quarkus.vault.config-ordinal`.
 Only scalar types are supported for secrets value from Vault.
 ====
 
+[NOTE]
+====
+It is possible to create named KV secret engines, as a way to fetch secrets from different mount paths.
+====
+
 == Programmatic access to the KV secret engine
 
 Sometimes secrets are retrieved from an arbitrary path that is known only at runtime through an application

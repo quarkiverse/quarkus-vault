@@ -44,6 +44,10 @@ public interface VaultRuntimeConfig {
     String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "approle";
     String DEFAULT_USERPASS_AUTH_MOUNT_PATH = "userpass";
 
+    @WithName("kv-secret-engine")
+    @ConfigDocMapKey("alias")
+    Map<String, KvSecretEngineConfig> kvSecretEngineAlias();
+
     /**
      * Microprofile Config ordinal.
      * <p>
@@ -324,6 +328,7 @@ public interface VaultRuntimeConfig {
                 ", logConfidentialityLevel=" + logConfidentialityLevel() +
                 ", kvSecretEngineVersion=" + kvSecretEngineVersion() +
                 ", kvSecretEngineMountPath='" + kvSecretEngineMountPath() + '\'' +
+                ", additional named engines='" + kvSecretEngineAlias().size() + '\'' +
                 ", tlsSkipVerify=" + tls().skipVerify() +
                 ", tlsCaCert=" + tls().caCert() +
                 ", connectTimeout=" + connectTimeout() +
@@ -357,5 +362,33 @@ public interface VaultRuntimeConfig {
 
         @Override
         String toString();
+    }
+
+    @ConfigGroup
+    interface KvSecretEngineConfig {
+
+        /**
+         * mount path for the named kv secret engine.
+         */
+        @WithDefault(DEFAULT_KV_SECRET_ENGINE_MOUNT_PATH)
+        String mountPath();
+
+        /**
+         * paths to mount as MP config properties.
+         */
+        Optional<List<String>> secretConfigKvPath();
+
+        /**
+         * paths to mount as MP config properties. all properties will be prefixed with the key.
+         */
+        @WithName("secret-config-kv-path")
+        @ConfigDocMapKey("prefix")
+        Map<String, KvPathConfig> secretConfigKvPathPrefix();
+
+        /**
+         * version for the named kv secret engine.
+         */
+        @WithDefault(KV_SECRET_ENGINE_VERSION_V2)
+        int version();
     }
 }
