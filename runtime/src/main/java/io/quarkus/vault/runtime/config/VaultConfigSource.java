@@ -4,11 +4,7 @@ import static io.quarkus.vault.runtime.config.VaultCacheEntry.tryReturnLastKnown
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,6 +15,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.arc.Arc;
 import io.quarkus.vault.VaultKVSecretReactiveEngine;
 import io.quarkus.vault.client.VaultException;
+import io.quarkus.vault.runtime.VaultKvManager;
 import io.quarkus.vault.runtime.client.Private;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
@@ -128,20 +125,31 @@ public class VaultConfigSource implements ConfigSource {
     }
 
     private void fetchSecrets(Map<String, String> properties) {
+
         // default kv paths
-        vaultRuntimeConfig.secretConfigKvPath().ifPresent(strings -> fetchSecrets(strings, null, properties));
-
+        vaultRuntimeConfig.secretConfigKvPath()
+                .ifPresent(strings -> fetchSecrets(VaultKvManager.DEFAULT, strings, null, properties));
         // prefixed kv paths
-        vaultRuntimeConfig.secretConfigKvPathPrefix().forEach((key, value) -> fetchSecrets(value.paths(), key, properties));
+        vaultRuntimeConfig.secretConfigKvPathPrefix()
+                .forEach((key, value) -> fetchSecrets(VaultKvManager.DEFAULT, value.paths(), key, properties));
+
+        for (var entry : new TreeMap<>(vaultRuntimeConfig.kvSecretEngineAlias()).entrySet()) {
+            String alias = entry.getKey();
+            // default kv paths
+            entry.getValue().secretConfigKvPath().ifPresent(strings -> fetchSecrets(alias, strings, null, properties));
+            // prefixed kv paths
+            entry.getValue().secretConfigKvPathPrefix()
+                    .forEach((key, value) -> fetchSecrets(alias, value.paths(), key, properties));
+        }
     }
 
-    private void fetchSecrets(List<String> paths, String prefix, Map<String, String> properties) {
-        paths.forEach(path -> properties.putAll(fetchSecrets(path, prefix)));
+    private void fetchSecrets(String alias, List<String> paths, String prefix, Map<String, String> properties) {
+        paths.forEach(path -> properties.putAll(fetchSecrets(alias, path, prefix)));
     }
 
-    private Map<String, String> fetchSecrets(String path, String prefix) {
+    private Map<String, String> fetchSecrets(String alias, String path, String prefix) {
 
-        Map<String, Object> secretJson = getVaultKVSecretEngine().readSecretJson(path).await().indefinitely();
+        Map<String, Object> secretJson = getVaultKVSecretEngine().readSecretJson(alias, path).await().indefinitely();
 
         // ignore list and map, honor null, get as string scalar types
         Map<String, String> secret = secretJson.entrySet().stream()
