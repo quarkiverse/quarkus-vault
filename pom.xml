@@ -32,7 +32,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.version>3.25.0</quarkus.version>
     <jandex.version>3.4.0</jandex.version>
-    <assertj.version>3.27.3</assertj.version>
+    <assertj.version>3.27.4</assertj.version>
     <wiremock.version>3.0.1</wiremock.version>
     <wiremock-maven-plugin.version>7.3.0</wiremock-maven-plugin.version>
     <sundrio-maven-plugin.version>0.200.4</sundrio-maven-plugin.version>
