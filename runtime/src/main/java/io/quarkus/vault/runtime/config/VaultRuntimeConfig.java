@@ -390,5 +390,11 @@ public interface VaultRuntimeConfig {
          */
         @WithDefault(KV_SECRET_ENGINE_VERSION_V2)
         int version();
+
+        /**
+         * coucou
+         */
+        @WithDefault("hello")
+        String coucou();
     }
 }
