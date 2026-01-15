@@ -30,10 +30,10 @@
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <quarkus.version>3.30.0</quarkus.version>
+    <quarkus.version>3.31.0.CR1</quarkus.version>
     <jandex.version>3.5.3</jandex.version>
     <assertj.version>3.27.6</assertj.version>
-    <wiremock.version>3.0.1</wiremock.version>
+    <wiremock.version>3.13.2</wiremock.version>
     <wiremock-maven-plugin.version>7.3.0</wiremock-maven-plugin.version>
     <sundrio-maven-plugin.version>0.230.2</sundrio-maven-plugin.version>
   </properties>
@@ -52,7 +52,7 @@
         <version>${assertj.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.github.tomakehurst</groupId>
+        <groupId>org.wiremock</groupId>
         <artifactId>wiremock-standalone</artifactId>
         <version>${wiremock.version}</version>
       </dependency>
@@ -80,6 +80,7 @@
           <groupId>io.quarkus</groupId>
           <artifactId>quarkus-maven-plugin</artifactId>
           <version>${quarkus.version}</version>
+          <extensions>true</extensions>
         </plugin>
         <plugin>
           <groupId>uk.co.automatictester</groupId>
@@ -89,7 +90,7 @@
             <!-- plugin defines "wiremock" artifactId (in provided scope), not the preferred "wiremock-jre8"
                              which cannot be forced here, see https://issues.apache.org/jira/browse/MNG-6222 -->
             <dependency>
-              <groupId>com.github.tomakehurst</groupId>
+              <groupId>org.wiremock</groupId>
               <artifactId>wiremock-standalone</artifactId>
               <version>${wiremock.version}</version>
             </dependency>
