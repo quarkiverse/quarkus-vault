@@ -2,6 +2,7 @@ package io.quarkus.vault.deployment;
 
 import java.io.Closeable;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
@@ -16,7 +17,7 @@ import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
-import io.quarkus.deployment.builditem.DevServicesConfigResultBuildItem;
+import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
@@ -44,7 +45,7 @@ public class DevServicesVaultProcessor {
     private final IsDockerWorking isDockerWorking = new IsDockerWorking(true);
 
     @BuildStep(onlyIfNot = IsNormal.class, onlyIf = io.quarkus.deployment.dev.devservices.DevServicesConfig.Enabled.class)
-    public void startVaultContainers(BuildProducer<DevServicesConfigResultBuildItem> devConfig, VaultBuildTimeConfig config,
+    public void startVaultContainers(BuildProducer<DevServicesResultBuildItem> devConfig, VaultBuildTimeConfig config,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             LaunchModeBuildItem launchMode,
             CuratedApplicationShutdownBuildItem closeBuildItem,
@@ -80,8 +81,12 @@ public class DevServicesVaultProcessor {
             if (vaultInstance != null) {
                 closeable = vaultInstance.getCloseable();
 
-                devConfig.produce(new DevServicesConfigResultBuildItem(URL_CONFIG_KEY, vaultInstance.url));
-                devConfig.produce(new DevServicesConfigResultBuildItem(CLIENT_TOKEN_CONFIG_KEY, vaultInstance.clientToken));
+                String serviceName = currentDevServicesConfiguration.serviceName();
+                Map<String, String> connectionInfo = Map.of(
+                        URL_CONFIG_KEY, vaultInstance.url,
+                        CLIENT_TOKEN_CONFIG_KEY, vaultInstance.clientToken);
+                log.info("started vault dev service " + serviceName + " with config=" + connectionInfo);
+                devConfig.produce(new DevServicesResultBuildItem(serviceName, vaultInstance.getContainerId(), connectionInfo));
 
                 if (vaultInstance.isOwner()) {
                     log.info("Dev Services for Vault started.");
@@ -160,8 +165,10 @@ public class DevServicesVaultProcessor {
             // Starting Vault
             timeout.ifPresent(vaultContainer::withStartupTimeout);
             vaultContainer.start();
+            String containerId = vaultContainer.getContainerId();
 
             return new VaultInstance(
+                    containerId,
                     vaultContainer.getHost(),
                     vaultContainer.getPort(),
                     DEV_SERVICE_TOKEN,
@@ -170,21 +177,24 @@ public class DevServicesVaultProcessor {
 
         return vaultContainerLocator
                 .locateContainer(devServicesConfig.serviceName(), devServicesConfig.shared(), launchMode.getLaunchMode())
-                .map(containerAddress -> new VaultInstance(containerAddress.getHost(), containerAddress.getPort(),
+                .map(containerAddress -> new VaultInstance(containerAddress.getId(), containerAddress.getHost(),
+                        containerAddress.getPort(),
                         DEV_SERVICE_TOKEN, null))
                 .orElseGet(defaultVaultInstanceSupplier);
     }
 
     private static class VaultInstance {
+        private final String containerId;
         private final String url;
         private final String clientToken;
         private final Closeable closeable;
 
-        public VaultInstance(String host, int port, String clientToken, Closeable closeable) {
-            this("http://" + host + ":" + port, clientToken, closeable);
+        public VaultInstance(String containerId, String host, int port, String clientToken, Closeable closeable) {
+            this(containerId, "http://" + host + ":" + port, clientToken, closeable);
         }
 
-        public VaultInstance(String url, String clientToken, Closeable closeable) {
+        public VaultInstance(String containerId, String url, String clientToken, Closeable closeable) {
+            this.containerId = containerId;
             this.url = url;
             this.clientToken = clientToken;
             this.closeable = closeable;
@@ -196,6 +206,10 @@ public class DevServicesVaultProcessor {
 
         public Closeable getCloseable() {
             return closeable;
+        }
+
+        public String getContainerId() {
+            return containerId;
         }
     }
 
