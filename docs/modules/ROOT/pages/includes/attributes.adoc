@@ -1,4 +1,4 @@
-:quarkus-version: 3.31.0
+:quarkus-version: 3.32.0
 :quarkus-vault-version: 4.5.0
 :maven-version: 3.8.1+
 
