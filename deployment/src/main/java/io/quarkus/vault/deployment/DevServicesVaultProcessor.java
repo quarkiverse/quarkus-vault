@@ -1,33 +1,38 @@
 package io.quarkus.vault.deployment;
 
-import java.io.Closeable;
+import static io.quarkus.devservices.common.ConfigureUtil.configureSharedServiceLabel;
+import static io.quarkus.devservices.common.ContainerLocator.locateContainerWithLabels;
+
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
-import org.testcontainers.containers.Network;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.vault.VaultContainer;
 
-import io.quarkus.deployment.IsDockerWorking;
-import io.quarkus.deployment.IsNormal;
+import io.quarkus.deployment.IsDevServicesSupportedByLaunchMode;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
+import io.quarkus.deployment.annotations.BuildSteps;
+import io.quarkus.deployment.builditem.DevServicesComposeProjectBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
+import io.quarkus.deployment.builditem.DevServicesSharedNetworkBuildItem;
+import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
-import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
-import io.quarkus.deployment.console.StartupLogCompressor;
-import io.quarkus.deployment.logging.LoggingSetupBuildItem;
+import io.quarkus.deployment.builditem.Startable;
+import io.quarkus.deployment.dev.devservices.DevServicesConfig;
+import io.quarkus.devservices.common.ComposeLocator;
+import io.quarkus.devservices.common.ConfigureUtil;
 import io.quarkus.devservices.common.ContainerLocator;
+import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.vault.runtime.VaultVersions;
-import io.quarkus.vault.runtime.config.DevServicesConfig;
 import io.quarkus.vault.runtime.config.VaultBuildTimeConfig;
 
+@BuildSteps(onlyIf = { IsDevServicesSupportedByLaunchMode.class, DevServicesConfig.Enabled.class })
 public class DevServicesVaultProcessor {
     private static final Logger log = Logger.getLogger(DevServicesVaultProcessor.class);
     private static final String VAULT_IMAGE = "hashicorp/vault:" + VaultVersions.VAULT_TEST_VERSION;
@@ -38,196 +43,109 @@ public class DevServicesVaultProcessor {
     private static final String URL_CONFIG_KEY = CONFIG_PREFIX + "url";
     private static final String AUTH_CONFIG_PREFIX = CONFIG_PREFIX + "authentication.";
     private static final String CLIENT_TOKEN_CONFIG_KEY = AUTH_CONFIG_PREFIX + "client-token";
-    private static final ContainerLocator vaultContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, VAULT_EXPOSED_PORT);
-    private static volatile Closeable closeable;
-    private static volatile DevServicesConfig capturedDevServicesConfiguration;
-    private static volatile boolean first = true;
-    private final IsDockerWorking isDockerWorking = new IsDockerWorking(true);
+    private static final ContainerLocator vaultContainerLocator = locateContainerWithLabels(VAULT_EXPOSED_PORT,
+            DEV_SERVICE_LABEL);
 
-    @BuildStep(onlyIfNot = IsNormal.class, onlyIf = io.quarkus.deployment.dev.devservices.DevServicesConfig.Enabled.class)
-    public void startVaultContainers(BuildProducer<DevServicesResultBuildItem> devConfig, VaultBuildTimeConfig config,
-            Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
+    @BuildStep
+    public void startVaultContainers(
             LaunchModeBuildItem launchMode,
-            CuratedApplicationShutdownBuildItem closeBuildItem,
-            LoggingSetupBuildItem loggingSetupBuildItem,
-            io.quarkus.deployment.dev.devservices.DevServicesConfig devServicesConfig) {
+            DockerStatusBuildItem dockerStatusBuildItem,
+            DevServicesComposeProjectBuildItem composeProjectBuildItem,
+            List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
+            VaultBuildTimeConfig config,
+            DevServicesConfig devServicesConfig,
+            BuildProducer<DevServicesResultBuildItem> devServices) {
 
-        DevServicesConfig currentDevServicesConfiguration = config.devServices();
+        io.quarkus.vault.runtime.config.DevServicesConfig vaultDevServicesConfig = config.devServices();
 
-        // figure out if we need to shut down and restart any existing Vault container
-        // if not and the Vault container have already started we just return
-        if (closeable != null) {
-            boolean restartRequired = !currentDevServicesConfiguration.equals(capturedDevServicesConfiguration);
-            if (!restartRequired) {
-                return;
-            }
-            try {
-                closeable.close();
-            } catch (Throwable e) {
-                log.error("Failed to stop Vault container", e);
-            }
-            closeable = null;
-            capturedDevServicesConfiguration = null;
-        }
-
-        capturedDevServicesConfiguration = currentDevServicesConfiguration;
-
-        StartupLogCompressor compressor = new StartupLogCompressor(
-                (launchMode.isTest() ? "(test) " : "") + "Vault Dev Services Starting:", consoleInstalledBuildItem,
-                loggingSetupBuildItem);
-        try {
-            VaultInstance vaultInstance = startContainer(currentDevServicesConfiguration, launchMode,
-                    devServicesConfig.timeout());
-            if (vaultInstance != null) {
-                closeable = vaultInstance.getCloseable();
-
-                String serviceName = currentDevServicesConfiguration.serviceName();
-                Map<String, String> connectionInfo = Map.of(
-                        URL_CONFIG_KEY, vaultInstance.url,
-                        CLIENT_TOKEN_CONFIG_KEY, vaultInstance.clientToken);
-                log.info("started vault dev service " + serviceName + " with config=" + connectionInfo);
-                devConfig.produce(new DevServicesResultBuildItem(serviceName, vaultInstance.getContainerId(), connectionInfo));
-
-                if (vaultInstance.isOwner()) {
-                    log.info("Dev Services for Vault started.");
-                    log.infof("Other Quarkus applications in dev mode will find the "
-                            + "instance automatically. For Quarkus applications in production mode, you can connect to"
-                            + " this by starting your application with -D%s=%s -D%s=%s",
-                            URL_CONFIG_KEY, vaultInstance.url, CLIENT_TOKEN_CONFIG_KEY, vaultInstance.clientToken);
-                }
-            }
-            compressor.close();
-        } catch (Throwable t) {
-            compressor.closeAndDumpCaptured();
-            throw new RuntimeException(t);
-        }
-
-        if (first) {
-            first = false;
-            Runnable closeTask = new Runnable() {
-                @Override
-                public void run() {
-                    if (closeable != null) {
-                        try {
-                            closeable.close();
-                        } catch (Throwable t) {
-                            log.error("Failed to stop Vault container", t);
-                        }
-                        closeable = null;
-                        log.info("Dev Services for Vault shut down.");
-                    }
-                    first = true;
-                    capturedDevServicesConfiguration = null;
-                }
-            };
-            closeBuildItem.addCloseTask(closeTask, true);
-        }
-    }
-
-    private VaultInstance startContainer(DevServicesConfig devServicesConfig, LaunchModeBuildItem launchMode,
-            Optional<Duration> timeout) {
-        if (!devServicesConfig.enabled()) {
-            // explicitly disabled
+        if (!vaultDevServicesConfig.enabled()) {
             log.debug("Not starting devservices for Vault as it has been disabled in the config");
-            return null;
+            return;
         }
 
-        boolean needToStart = !ConfigUtils.isPropertyPresent(URL_CONFIG_KEY);
-        if (!needToStart) {
+        if (ConfigUtils.isPropertyPresent(URL_CONFIG_KEY)) {
             log.debug("Not starting devservices for default Vault client as url has been provided");
-            return null;
+            return;
         }
 
-        if (!isDockerWorking.getAsBoolean()) {
+        if (!dockerStatusBuildItem.isContainerRuntimeAvailable()) {
             log.warn("Please configure Vault URL or get a working docker instance");
-            return null;
+            return;
         }
 
-        DockerImageName dockerImageName = DockerImageName.parse(devServicesConfig.imageName().orElse(VAULT_IMAGE))
+        boolean useSharedNetwork = DevServicesSharedNetworkBuildItem.isSharedNetworkRequired(devServicesConfig,
+                devServicesSharedNetworkBuildItem);
+
+        Optional<DevServicesResultBuildItem> discovered = vaultContainerLocator
+                .locateContainer(vaultDevServicesConfig.serviceName(), vaultDevServicesConfig.shared(),
+                        launchMode.getLaunchMode())
+                .or(() -> ComposeLocator.locateContainer(composeProjectBuildItem,
+                        List.of(vaultDevServicesConfig.imageName().orElse(VAULT_IMAGE)),
+                        VAULT_EXPOSED_PORT, launchMode.getLaunchMode(), useSharedNetwork))
+                .map(containerAddress -> DevServicesResultBuildItem.discovered()
+                        .feature("vault")
+                        .containerId(containerAddress.getId())
+                        .config(Map.of(
+                                URL_CONFIG_KEY, "http://" + containerAddress.getHost() + ":" + containerAddress.getPort(),
+                                CLIENT_TOKEN_CONFIG_KEY, DEV_SERVICE_TOKEN))
+                        .build());
+
+        if (discovered.isPresent()) {
+            devServices.produce(discovered.get());
+            return;
+        }
+
+        DockerImageName dockerImageName = DockerImageName.parse(vaultDevServicesConfig.imageName().orElse(VAULT_IMAGE))
                 .asCompatibleSubstituteFor(VAULT_IMAGE);
-        ConfiguredVaultContainer vaultContainer = new ConfiguredVaultContainer(dockerImageName, devServicesConfig.port(),
-                devServicesConfig.serviceName())
-                .withVaultToken(DEV_SERVICE_TOKEN);
-
-        vaultContainer.withNetwork(Network.SHARED);
-
-        if (devServicesConfig.transitEnabled()) {
-            vaultContainer.withInitCommand("secrets enable transit");
-        }
-
-        if (devServicesConfig.pkiEnabled()) {
-            vaultContainer.withInitCommand("secrets enable pki");
-        }
-
-        devServicesConfig.initCommands().ifPresent(initCommands -> initCommands.forEach(vaultContainer::withInitCommand));
-
-        final Supplier<VaultInstance> defaultVaultInstanceSupplier = () -> {
-            // Starting Vault
-            timeout.ifPresent(vaultContainer::withStartupTimeout);
-            vaultContainer.start();
-            String containerId = vaultContainer.getContainerId();
-
-            return new VaultInstance(
-                    containerId,
-                    vaultContainer.getHost(),
-                    vaultContainer.getPort(),
-                    DEV_SERVICE_TOKEN,
-                    vaultContainer::close);
-        };
-
-        return vaultContainerLocator
-                .locateContainer(devServicesConfig.serviceName(), devServicesConfig.shared(), launchMode.getLaunchMode())
-                .map(containerAddress -> new VaultInstance(containerAddress.getId(), containerAddress.getHost(),
-                        containerAddress.getPort(),
-                        DEV_SERVICE_TOKEN, null))
-                .orElseGet(defaultVaultInstanceSupplier);
+        devServices.produce(DevServicesResultBuildItem.<ConfiguredVaultContainer> owned()
+                .feature("vault")
+                .serviceName(vaultDevServicesConfig.serviceName())
+                .serviceConfig(vaultDevServicesConfig.toString())
+                .startable(() -> new ConfiguredVaultContainer(dockerImageName, vaultDevServicesConfig,
+                        composeProjectBuildItem.getDefaultNetworkId(), useSharedNetwork, devServicesConfig.timeout())
+                        .withSharedServiceLabel(launchMode.getLaunchMode(), vaultDevServicesConfig.serviceName()))
+                .configProvider(Map.of(
+                        URL_CONFIG_KEY, s -> "http://" + s.getHost() + ":" + s.getPort(),
+                        CLIENT_TOKEN_CONFIG_KEY, s -> DEV_SERVICE_TOKEN))
+                .build());
     }
 
-    private static class VaultInstance {
-        private final String containerId;
-        private final String url;
-        private final String clientToken;
-        private final Closeable closeable;
+    private static class ConfiguredVaultContainer extends VaultContainer<ConfiguredVaultContainer> implements Startable {
+        private final OptionalInt fixedExposedPort;
+        private final boolean useSharedNetwork;
+        private final Optional<Duration> startupTimeout;
+        private final String hostName;
 
-        public VaultInstance(String containerId, String host, int port, String clientToken, Closeable closeable) {
-            this(containerId, "http://" + host + ":" + port, clientToken, closeable);
-        }
-
-        public VaultInstance(String containerId, String url, String clientToken, Closeable closeable) {
-            this.containerId = containerId;
-            this.url = url;
-            this.clientToken = clientToken;
-            this.closeable = closeable;
-        }
-
-        public boolean isOwner() {
-            return closeable != null;
-        }
-
-        public Closeable getCloseable() {
-            return closeable;
-        }
-
-        public String getContainerId() {
-            return containerId;
-        }
-    }
-
-    private static class ConfiguredVaultContainer extends VaultContainer<ConfiguredVaultContainer> {
-        OptionalInt fixedExposedPort;
-
-        public ConfiguredVaultContainer(DockerImageName dockerImageName, OptionalInt fixedExposedPort, String serviceName) {
+        public ConfiguredVaultContainer(DockerImageName dockerImageName,
+                io.quarkus.vault.runtime.config.DevServicesConfig devServicesConfig,
+                String defaultNetworkId,
+                boolean useSharedNetwork,
+                Optional<Duration> startupTimeout) {
             super(dockerImageName);
-            this.fixedExposedPort = fixedExposedPort;
-            withNetwork(Network.SHARED);
-            if (serviceName != null) { // Only adds the label in dev mode.
-                withLabel(DEV_SERVICE_LABEL, serviceName);
+            this.fixedExposedPort = devServicesConfig.port();
+            this.useSharedNetwork = useSharedNetwork;
+            this.startupTimeout = startupTimeout;
+            withVaultToken(DEV_SERVICE_TOKEN);
+            if (devServicesConfig.transitEnabled()) {
+                withInitCommand("secrets enable transit");
             }
+            if (devServicesConfig.pkiEnabled()) {
+                withInitCommand("secrets enable pki");
+            }
+            devServicesConfig.initCommands().ifPresent(cmds -> cmds.forEach(this::withInitCommand));
+            this.hostName = ConfigureUtil.configureNetwork(this, defaultNetworkId, useSharedNetwork, "vault");
+        }
+
+        public ConfiguredVaultContainer withSharedServiceLabel(LaunchMode launchMode, String serviceName) {
+            return configureSharedServiceLabel(this, launchMode, DEV_SERVICE_LABEL, serviceName);
         }
 
         @Override
         protected void configure() {
             super.configure();
+            if (useSharedNetwork) {
+                return;
+            }
             if (fixedExposedPort.isPresent()) {
                 addFixedExposedPort(fixedExposedPort.getAsInt(), VAULT_EXPOSED_PORT);
             } else {
@@ -235,11 +153,35 @@ public class DevServicesVaultProcessor {
             }
         }
 
+        @Override
+        public void start() {
+            startupTimeout.ifPresent(this::withStartupTimeout);
+            super.start();
+        }
+
         public int getPort() {
+            if (useSharedNetwork) {
+                return VAULT_EXPOSED_PORT;
+            }
             if (fixedExposedPort.isPresent()) {
                 return fixedExposedPort.getAsInt();
             }
-            return super.getMappedPort(VAULT_EXPOSED_PORT);
+            return super.getFirstMappedPort();
+        }
+
+        @Override
+        public String getHost() {
+            return useSharedNetwork ? hostName : super.getHost();
+        }
+
+        @Override
+        public String getConnectionInfo() {
+            return getHost() + ":" + getPort();
+        }
+
+        @Override
+        public void close() {
+            super.close();
         }
     }
 }
