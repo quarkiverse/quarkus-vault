@@ -105,7 +105,7 @@ public class DevServicesVaultProcessor {
                         composeProjectBuildItem.getDefaultNetworkId(), useSharedNetwork, devServicesConfig.timeout())
                         .withSharedServiceLabel(launchMode.getLaunchMode(), vaultDevServicesConfig.serviceName()))
                 .configProvider(Map.of(
-                        URL_CONFIG_KEY, s -> "http://" + s.getHost() + ":" + s.getPort(),
+                        URL_CONFIG_KEY, s -> "http://" + s.hostName() + ":" + s.getPort(),
                         CLIENT_TOKEN_CONFIG_KEY, s -> DEV_SERVICE_TOKEN))
                 .build());
     }
@@ -169,14 +169,13 @@ public class DevServicesVaultProcessor {
             return super.getFirstMappedPort();
         }
 
-        @Override
-        public String getHost() {
+        public String hostName() {
             return useSharedNetwork ? hostName : super.getHost();
         }
 
         @Override
         public String getConnectionInfo() {
-            return getHost() + ":" + getPort();
+            return hostName() + ":" + getPort();
         }
 
         @Override
