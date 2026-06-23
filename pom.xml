@@ -19,7 +19,8 @@
     <module>runtime</module>
     <module>test-framework</module>
     <module>integration-tests</module>
-  </modules>
+      <module>docs-rag</module>
+    </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-vault.git</connection>
     <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-vault.git</developerConnection>
