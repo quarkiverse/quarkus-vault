@@ -71,7 +71,14 @@ public interface DevServicesConfig {
     boolean pkiEnabled();
 
     /**
-     * Custom container initialization commands
+     * Custom container initialization commands.
+     * <p>
+     * Each command is executed inside the started container with the Vault CLI, once the server
+     * is up and running. Since commands are passed directly to the {@code vault} executable,
+     * the {@code vault} prefix must be omitted. For instance, to create a Transit key,
+     * use {@code write -f transit/keys/my-key} instead of {@code vault write -f transit/keys/my-key}.
+     * <p>
+     * Commands are executed in the order they are defined, and are authenticated with the root token.
      */
     Optional<List<String>> initCommands();
 

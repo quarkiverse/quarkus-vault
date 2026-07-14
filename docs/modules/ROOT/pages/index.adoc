@@ -578,6 +578,34 @@ Enable the **PKI Secret Engine** at `pki/` using:
 quarkus.vault.devservices.pki-enabled=true
 ----
 
+=== Custom Provisioning with Init Commands
+
+For any provisioning beyond enabling the Transit and PKI secret engines, you can provide a list of
+_init commands_ that will be executed with the Vault CLI inside the container, once the server is up and running.
+
+Since the commands are passed directly to the `vault` executable running in the container, the `vault` prefix
+must be omitted. For instance, to create a Transit key named `my-key`, use `write -f transit/keys/my-key`
+instead of `vault write -f transit/keys/my-key`:
+
+[source,properties]
+----
+quarkus.vault.devservices.transit-enabled=true
+quarkus.vault.devservices.init-commands=write -f transit/keys/my-key
+----
+
+Commands are executed in the order they are defined, and are authenticated with the root token, e.g.:
+
+[source,properties]
+----
+quarkus.vault.devservices.init-commands[0]=secrets enable -path=apps kv-v2
+quarkus.vault.devservices.init-commands[1]=kv put apps/my-app foo=bar
+----
+
+NOTE: If a command fails, the remaining commands are skipped and an error is logged, but the container still starts.
+Since Dev Services collapses startup log output, the error may be easy to miss.
+To troubleshoot init commands, you can execute them manually against the running container with
+`docker exec -it <container-id> vault <command>`.
+
 == Conclusion
 
 As a general matter, you should consider reading the extensive https://www.vaultproject.io/docs/[Vault documentation]
