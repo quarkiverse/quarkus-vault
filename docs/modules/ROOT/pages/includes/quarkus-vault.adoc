@@ -195,7 +195,11 @@ a|icon:lock[title=Fixed at build time] [[quarkus-vault_quarkus-vault-devservices
 
 [.description]
 --
-Custom container initialization commands
+Custom container initialization commands.
+
+Each command is executed inside the started container with the Vault CLI, once the server is up and running. Since commands are passed directly to the `vault` executable, the `vault` prefix must be omitted. For instance, to create a Transit key, use `write -f transit/keys/my-key` instead of `vault write -f transit/keys/my-key`.
+
+Commands are executed in the order they are defined, and are authenticated with the root token.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEVSERVICES_INIT_COMMANDS+++[]
