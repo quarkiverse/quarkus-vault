@@ -15,6 +15,8 @@ public abstract class VersionedKv<T extends VaultRequestFactory> {
 
     public abstract Uni<Void> deleteSecret(String path);
 
+    public abstract Uni<Void> destroySecret(String path, List<Integer> versions);
+
     public abstract Uni<List<String>> listSecrets(String path);
 
     public Uni<Map<String, String>> readSecret(String path) {

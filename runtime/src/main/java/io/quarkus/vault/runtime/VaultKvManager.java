@@ -99,6 +99,16 @@ public class VaultKvManager implements VaultKVSecretReactiveEngine {
     }
 
     @Override
+    public Uni<Void> destroySecret(String path, List<Integer> versions) {
+        return destroySecret(DEFAULT, path, versions);
+    }
+
+    @Override
+    public Uni<Void> destroySecret(String alias, String path, List<Integer> versions) {
+        return getEngine(alias).destroySecret(path, versions);
+    }
+
+    @Override
     public Uni<List<String>> listSecrets(String path) {
         return listSecrets(DEFAULT, path);
     }

@@ -23,6 +23,7 @@ import java.sql.Statement;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -177,6 +178,27 @@ public class VaultTestExtension {
         assertEquals("{first=un, second=two, third=tres}", readSecretAsString(kvSecretEngine, CRUD_PATH));
 
         assertDeleteSecret(kvSecretEngine);
+    }
+
+    public static void assertDestroySecret(VaultKVSecretEngine kvSecretEngine) {
+
+        String path = "crud-destroy";
+
+        kvSecretEngine.writeSecret(path, Map.of("first", "one")); // version 1
+        kvSecretEngine.writeSecret(path, Map.of("first", "two")); // version 2
+
+        // destroying a non current version does not impact the current version
+        kvSecretEngine.destroySecret(path, List.of(1));
+        assertEquals("{first=two}", readSecretAsString(kvSecretEngine, path));
+
+        // destroying the current version makes the secret unavailable
+        kvSecretEngine.destroySecret(path, List.of(2));
+        try {
+            readSecretAsString(kvSecretEngine, path);
+            fail("expected read to fail with 404 after destroying all versions");
+        } catch (VaultClientException e) {
+            assertEquals(404, e.getStatus());
+        }
     }
 
     private static void assertDeleteSecret(VaultKVSecretEngine kvSecretEngine) {

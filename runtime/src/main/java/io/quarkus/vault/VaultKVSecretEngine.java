@@ -68,6 +68,18 @@ public class VaultKVSecretEngine {
     }
 
     /**
+     * Permanently deletes the specified secret versions at the given path. Destroyed versions cannot
+     * be undeleted. This operation is supported by kv version 2 secret engines only, and throws an
+     * {@link UnsupportedOperationException} for a kv version 1 secret engine.
+     *
+     * @param path in Vault, without the kv engine mount path
+     * @param versions the secret versions to destroy
+     */
+    public void destroySecret(String path, List<Integer> versions) {
+        engine.destroySecret(path, versions).await().indefinitely();
+    }
+
+    /**
      * List all paths under the specified path.
      *
      * @param path to list
