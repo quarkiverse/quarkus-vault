@@ -1,4 +1,5 @@
 {
   "password": "bar",
+  "username": "postgres",
   "mynull": null
 }
