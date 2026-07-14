@@ -28,6 +28,10 @@ be seen as a _Userpass_ for automated workflows - machines and services)
 * https://developer.hashicorp.com/vault/docs/auth/aws[AWS IAM]: authenticate an AWS IAM principal by signing a
 `sts:GetCallerIdentity` request, which is applicable to workloads running on AWS (EC2, ECS, EKS, Lambda, …​)
 
+Alternatively, authentication can be disabled entirely when the application talks to Vault through a
+https://developer.hashicorp.com/vault/docs/agent-and-proxy/autoauth[Vault Agent with Auto-Auth enabled],
+which authenticates on behalf of the application. See <<vault-agent-auto-auth>>.
+
 This guide aims at providing examples for each of those authentication methods.
 
 == Prerequisites
@@ -552,4 +556,49 @@ attacks), set the matching value so it is included in the signed `X-Vault-AWS-IA
 [source,properties,subs=attributes+]
 ----
 quarkus.vault.authentication.aws-iam.vault-server-id=vault.example.com
+----
+
+[[vault-agent-auto-auth]]
+== Vault Agent Auto-Auth
+
+https://developer.hashicorp.com/vault/docs/agent-and-proxy/agent[Vault Agent] is a client daemon, usually deployed
+as a sidecar next to the application, that can take over authentication through its
+https://developer.hashicorp.com/vault/docs/agent-and-proxy/autoauth[Auto-Auth] feature. When the agent's listener
+is used as a proxy to the Vault server, the agent authenticates on behalf of the application and injects the Vault
+token into proxied requests itself. In that situation the application must not send any `X-Vault-Token` header.
+
+To support this deployment model, point the Vault url at the agent's listener and disable authentication explicitly:
+
+[source, properties]
+----
+# address of the Vault Agent listener, e.g. as a sidecar on localhost
+quarkus.vault.url=http://localhost:8100
+quarkus.vault.authentication.none=true
+----
+
+With `quarkus.vault.authentication.none=true` the extension skips the login step and sends all requests without
+a client token, letting the agent add it. This property is exclusive with all other authentication settings
+(e.g. `client-token`, `userpass`, `approle`, `kubernetes`, `github` or `aws-iam`); combining them results in an error when the
+Vault client gets created.
+
+An example agent configuration using the Kubernetes auth method and requiring token injection looks like:
+
+[source, hcl]
+----
+auto_auth {
+  method "kubernetes" {
+    config = {
+      role = "myapp"
+    }
+  }
+}
+
+listener "tcp" {
+  address = "127.0.0.1:8100"
+  tls_disable = true
+}
+
+api_proxy {
+  use_auto_auth_token = "force"
+}
 ----

@@ -691,6 +691,25 @@ h|[[quarkus-vault_quarkus-vault-authentication-authentication]]link:#quarkus-vau
 h|Type
 h|Default
 
+a| [[quarkus-vault_quarkus-vault-authentication-none]]`link:#quarkus-vault_quarkus-vault-authentication-none[quarkus.vault.authentication.none]`
+
+
+[.description]
+--
+Disable authentication: no client token will be sent to Vault. This is useful when the Vault url points to a Vault Agent with Auto-Auth enabled, which authenticates on behalf of the application and injects the Vault token into proxied requests. This property is exclusive with all other authentication settings.
+
+See link:https://developer.hashicorp.com/vault/docs/agent-and-proxy/autoauth[Vault Agent Auto-Auth]
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_NONE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_NONE+++`
+endif::add-copy-button-to-env-var[]
+--|boolean
+|`false`
+
+
 a| [[quarkus-vault_quarkus-vault-authentication-client-token]]`link:#quarkus-vault_quarkus-vault-authentication-client-token[quarkus.vault.authentication.client-token]`
 
 

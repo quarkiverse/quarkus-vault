@@ -6,6 +6,7 @@ import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.AWS_IAM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.GITHUB;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.NONE;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
 
 import java.net.URL;
@@ -294,7 +295,9 @@ public interface VaultRuntimeConfig {
     Map<String, String> health();
 
     default VaultAuthenticationType getAuthenticationType() {
-        if (authentication().kubernetes().role().isPresent()) {
+        if (authentication().none()) {
+            return NONE;
+        } else if (authentication().kubernetes().role().isPresent()) {
             return KUBERNETES;
         } else if (authentication().isUserpass()) {
             return USERPASS;

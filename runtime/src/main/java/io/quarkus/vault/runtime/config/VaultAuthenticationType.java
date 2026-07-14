@@ -54,6 +54,17 @@ public enum VaultAuthenticationType {
      * <p>
      * see https://developer.hashicorp.com/vault/api-docs/auth/aws
      */
-    AWS_IAM
+    AWS_IAM,
+
+    /**
+     * No authentication
+     * <p>
+     * Requests are sent to Vault without any client token. This is useful when the configured Vault url points
+     * to a Vault Agent configured with Auto-Auth, which authenticates on behalf of the application and injects
+     * the Vault token into proxied requests.
+     * <p>
+     * https://developer.hashicorp.com/vault/docs/agent-and-proxy/autoauth
+     */
+    NONE
 
 }

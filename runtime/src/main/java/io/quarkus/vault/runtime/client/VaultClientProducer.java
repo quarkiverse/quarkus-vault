@@ -72,7 +72,18 @@ public class VaultClientProducer {
 
         var authConfig = config.authentication();
 
-        if (authConfig.isDirectClientToken()) {
+        if (authConfig.none()) {
+
+            if (authConfig.isDirectClientToken() || authConfig.isAppRole() || authConfig.isUserpass()
+                    || authConfig.isGithub() || authConfig.isAwsIam()
+                    || authConfig.kubernetes().role().isPresent()) {
+                throw new VaultException("'quarkus.vault.authentication.none' is exclusive with all other " +
+                        "authentication properties; remove the other authentication settings or set 'none' to false");
+            }
+
+            // no token provider: requests are sent without a token, e.g. through a Vault Agent with auto-auth enabled
+
+        } else if (authConfig.isDirectClientToken()) {
 
             if (authConfig.clientTokenWrappingToken().isPresent()) {
                 builder.clientToken(VaultStaticClientTokenAuthOptions.builder()
@@ -84,7 +95,13 @@ public class VaultClientProducer {
 
         } else {
 
-            switch (config.getAuthenticationType()) {
+            var authenticationType = config.getAuthenticationType();
+            if (authenticationType == null) {
+                throw new VaultException("no vault authentication configured; if this is intentional, e.g. when " +
+                        "using a Vault Agent with auto-auth enabled, set 'quarkus.vault.authentication.none' to true");
+            }
+
+            switch (authenticationType) {
 
                 case KUBERNETES:
                     var k8sConfig = authConfig.kubernetes();

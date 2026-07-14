@@ -3,9 +3,20 @@ package io.quarkus.vault.runtime.config;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
+import io.smallrye.config.WithDefault;
 
 @ConfigGroup
 public interface VaultAuthenticationConfig {
+
+    /**
+     * Disable authentication: no client token will be sent to Vault. This is useful when the Vault url points to
+     * a Vault Agent with Auto-Auth enabled, which authenticates on behalf of the application and injects the Vault
+     * token into proxied requests. This property is exclusive with all other authentication settings.
+     * <p>
+     * See <a href="https://developer.hashicorp.com/vault/docs/agent-and-proxy/autoauth">Vault Agent Auto-Auth</a>
+     */
+    @WithDefault("false")
+    boolean none();
 
     /**
      * Vault token, bypassing Vault authentication (kubernetes, userpass or approle). This is useful in development
