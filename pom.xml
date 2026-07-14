@@ -35,6 +35,7 @@
     <jandex.version>3.6.0</jandex.version>
     <assertj.version>3.27.7</assertj.version>
     <wiremock.version>3.13.2</wiremock.version>
+    <aws-sdk.version>2.42.7</aws-sdk.version>
     <wiremock-maven-plugin.version>7.3.0</wiremock-maven-plugin.version>
     <sundrio-maven-plugin.version>0.300.0</sundrio-maven-plugin.version>
   </properties>
@@ -44,6 +45,13 @@
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-bom</artifactId>
         <version>${quarkus.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws-sdk.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

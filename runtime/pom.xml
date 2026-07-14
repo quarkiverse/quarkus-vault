@@ -57,6 +57,35 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- GraalVM substitution annotations (build-time only), used to keep the optional AWS SDK
+             out of the native image closed-world analysis when it is not on the classpath. -->
+        <dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>nativeimage</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- AWS IAM AUTH (optional): applications using the AWS IAM authentication method must add
+             these AWS SDK dependencies (or an extension that brings them) to their own build. -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>auth</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>regions</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- HTTP client implementation used by the AWS SDK to resolve credentials from the default
+             provider chain (IMDS, ECS, STS web identity/IRSA). Discovered at runtime via ServiceLoader.
+             Not needed when only static credentials are configured. -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>url-connection-client</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit</artifactId>

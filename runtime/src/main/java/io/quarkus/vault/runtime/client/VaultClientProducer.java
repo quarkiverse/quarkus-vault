@@ -146,6 +146,12 @@ public class VaultClientProducer {
                     builder.github(githubOptions.build());
                     break;
 
+                case AWS_IAM:
+                    // Isolated so that the optional AWS SDK is referenced from exactly one place,
+                    // which can be substituted away in native images when the SDK is absent.
+                    VaultAwsIamAuthConfigurator.configure(builder, config);
+                    break;
+
                 default:
                     throw new VaultException("Unsupported authentication type: " + config.getAuthenticationType());
             }

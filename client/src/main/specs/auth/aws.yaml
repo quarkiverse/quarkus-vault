@@ -1,0 +1,27 @@
+name: Aws
+category: auth
+traceNameTag: aws
+basePath: auth
+
+operations:
+
+- name: login
+  method: POST
+  path: login
+  authenticated: false
+  bodyFrom: [role, iamHttpRequestMethod, iamRequestUrl, iamRequestBody, iamRequestHeaders]
+  parameters:
+  - name: role
+    type: String
+  - name: iamHttpRequestMethod
+    type: String
+  - name: iamRequestUrl
+    type: String
+  - name: iamRequestBody
+    type: String
+  - name: iamRequestHeaders
+    type: String
+  result:
+    kind: leased
+    unwrapAuth: true
+    auth: []

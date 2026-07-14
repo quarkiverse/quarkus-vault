@@ -114,6 +114,10 @@ public class VaultClient implements VaultRequestExecutor {
             return tokenProvider(new VaultKubernetesTokenProvider(options).caching(options.cachingRenewGracePeriod));
         }
 
+        public Builder awsIam(VaultAwsIamAuthOptions options) {
+            return tokenProvider(new VaultAwsIamTokenProvider(options).caching(options.cachingRenewGracePeriod));
+        }
+
         public Builder tokenProvider(VaultTokenProvider tokenProvider) {
             this.tokenProvider = tokenProvider;
             return this;

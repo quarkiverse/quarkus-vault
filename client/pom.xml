@@ -36,6 +36,17 @@
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
         </dependency>
+        <!-- AWS IAM AUTH (optional): only needed when using the AWS IAM authentication method -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>auth</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>regions</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- TEST DEPS -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

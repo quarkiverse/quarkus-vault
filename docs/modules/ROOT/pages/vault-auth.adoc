@@ -25,6 +25,8 @@ There are several Vault authentication methods supported in Quarkus today, namel
 * https://www.vaultproject.io/docs/auth/approle[AppRole]: authenticate with a role id and a secret id (which can
 be seen as a _Userpass_ for automated workflows - machines and services)
 * https://www.vaultproject.io/docs/auth/kubernetes[Kubernetes], which is applicable to workloads deployed into Kubernetes
+* https://developer.hashicorp.com/vault/docs/auth/aws[AWS IAM]: authenticate an AWS IAM principal by signing a
+`sts:GetCallerIdentity` request, which is applicable to workloads running on AWS (EC2, ECS, EKS, Lambda, …​)
 
 This guide aims at providing examples for each of those authentication methods.
 
@@ -470,3 +472,84 @@ curl http://localhost:30400/hello/private-key
 ----
 
 You should see `{private-key}`.
+
+== AWS IAM Authentication
+
+Vault's https://developer.hashicorp.com/vault/docs/auth/aws[AWS auth method] (in its `iam` flavor) lets a
+workload running on AWS authenticate using the AWS IAM credentials it already has, without provisioning any
+Vault-specific secret. The client builds a `sts:GetCallerIdentity` request, signs it with AWS SigV4, and sends
+the signed request to Vault, which replays it against STS to verify the caller's identity and maps the resolved
+IAM principal (ARN) to a Vault role.
+
+=== AWS SDK dependency
+
+Because it relies on the AWS SigV4 signer and credential resolution, this authentication method requires the AWS
+SDK, which is an *optional* dependency of the Vault extension. Applications using AWS IAM authentication must add
+it to their build:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>auth</artifactId>
+</dependency>
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>regions</artifactId>
+</dependency>
+<!-- Required unless only static credentials (aws-access-key/aws-secret-key) are used -->
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>url-connection-client</artifactId>
+</dependency>
+----
+
+The `url-connection-client` provides the HTTP client implementation the AWS SDK uses to resolve credentials
+from the default provider chain (EC2 instance metadata, ECS, STS web identity / IRSA, …​). It can be omitted
+when the application only relies on static credentials (`aws-access-key` / `aws-secret-key`); any other AWS SDK
+HTTP client (for example `apache-client` or `netty-nio-client`) can be substituted for it.
+
+NOTE: Applications that do *not* use AWS IAM authentication never need these dependencies, in JVM mode or in
+native mode. In a native image, the AWS IAM support is substituted away when the AWS SDK is absent from the
+classpath, so it does not take part in the closed-world analysis.
+
+=== Vault setup
+
+Enable the auth method and map an IAM principal ARN to a Vault role:
+
+[source,bash,subs=attributes+]
+----
+/ # vault auth enable aws
+/ # vault write auth/aws/role/vault-quickstart-role auth_type=iam \
+      bound_iam_principal_arn="arn:aws:iam::123456789012:role/my-app-role" \
+      policies=vault-quickstart-policy
+----
+
+=== Application configuration
+
+Selecting the `role` is what activates AWS IAM authentication:
+
+[source,properties,subs=attributes+]
+----
+quarkus.vault.url=http://localhost:8200
+quarkus.vault.authentication.aws-iam.role=vault-quickstart-role
+quarkus.vault.authentication.aws-iam.region=us-east-1
+----
+
+By default the AWS credentials are resolved through the standard AWS default credentials provider chain
+(environment variables, system properties, web identity token, EC2/ECS/EKS instance metadata, …​), so nothing
+else is usually required when running on AWS. Static credentials can be supplied explicitly for testing:
+
+[source,properties,subs=attributes+]
+----
+quarkus.vault.authentication.aws-iam.aws-access-key=AKIA...
+quarkus.vault.authentication.aws-iam.aws-secret-key=...
+----
+
+If the Vault AWS auth method is configured with an `iam_server_id_header_value` (recommended, to mitigate replay
+attacks), set the matching value so it is included in the signed `X-Vault-AWS-IAM-Server-ID` header:
+
+[source,properties,subs=attributes+]
+----
+quarkus.vault.authentication.aws-iam.vault-server-id=vault.example.com
+----
