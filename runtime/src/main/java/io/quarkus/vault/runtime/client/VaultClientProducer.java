@@ -108,6 +108,7 @@ public class VaultClientProducer {
                     } else {
                         appRoleOptions.secretId(appRoleConfig.secretId().orElseThrow());
                     }
+                    appRoleOptions.caching(config.renewGracePeriod());
 
                     builder.appRole(appRoleOptions.build());
                     break;
