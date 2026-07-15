@@ -4,6 +4,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -19,7 +20,7 @@ import io.quarkus.vault.VaultKVSecretEngine;
 public class RenewTestResource {
 
     @Inject
-    DataSource dataSource;
+    Instance<DataSource> dataSource;
 
     @Inject
     VaultKVSecretEngine kv;
@@ -31,7 +32,7 @@ public class RenewTestResource {
     @GET
     @Path("db")
     public String db() {
-        try (var connection = dataSource.getConnection();
+        try (var connection = dataSource.get().getConnection();
                 var statement = connection.createStatement();
                 var resultSet = statement.executeQuery("SELECT name FROM demo")) {
             resultSet.next();
