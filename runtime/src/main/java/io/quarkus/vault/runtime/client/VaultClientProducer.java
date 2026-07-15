@@ -10,6 +10,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.quarkus.vault.client.VaultClient;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.client.auth.VaultAppRoleAuthOptions;
+import io.quarkus.vault.client.auth.VaultGithubAuthOptions;
 import io.quarkus.vault.client.auth.VaultKubernetesAuthOptions;
 import io.quarkus.vault.client.auth.VaultStaticClientTokenAuthOptions;
 import io.quarkus.vault.client.auth.VaultUserPassAuthOptions;
@@ -127,6 +128,22 @@ public class VaultClientProducer {
                     userPassOptions.caching(config.renewGracePeriod());
 
                     builder.userPass(userPassOptions.build());
+                    break;
+
+                case GITHUB:
+                    var githubConfig = authConfig.github();
+
+                    var githubOptions = VaultGithubAuthOptions.builder()
+                            .mountPath(githubConfig.authMountPath());
+                    if (githubConfig.tokenWrappingToken().isPresent()) {
+                        githubOptions.unwrappingToken(githubConfig.tokenWrappingToken().orElseThrow(),
+                                config.kvSecretEngineVersion());
+                    } else {
+                        githubOptions.token(githubConfig.token().orElseThrow());
+                    }
+                    githubOptions.caching(config.renewGracePeriod());
+
+                    builder.github(githubOptions.build());
                     break;
 
                 default:

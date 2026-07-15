@@ -45,6 +45,13 @@ public interface VaultAuthenticationConfig {
      */
     VaultKubernetesAuthenticationConfig kubernetes();
 
+    /**
+     * GitHub authentication method
+     * <p>
+     * See <a href="https://developer.hashicorp.com/vault/api-docs/auth/github">GitHub Auth Method</a>
+     */
+    VaultGithubAuthenticationConfig github();
+
     default boolean isDirectClientToken() {
         return clientToken().isPresent() || clientTokenWrappingToken().isPresent();
     }
@@ -57,5 +64,9 @@ public interface VaultAuthenticationConfig {
     default boolean isUserpass() {
         return userpass().username().isPresent()
                 && (userpass().password().isPresent() || userpass().passwordWrappingToken().isPresent());
+    }
+
+    default boolean isGithub() {
+        return github().token().isPresent() || github().tokenWrappingToken().isPresent();
     }
 }

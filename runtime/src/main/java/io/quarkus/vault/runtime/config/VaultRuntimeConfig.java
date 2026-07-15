@@ -3,6 +3,7 @@ package io.quarkus.vault.runtime.config;
 import static io.quarkus.vault.client.logging.LogConfidentialityLevel.LOW;
 import static io.quarkus.vault.client.logging.LogConfidentialityLevel.MEDIUM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.GITHUB;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
 
@@ -43,6 +44,7 @@ public interface VaultRuntimeConfig {
     String DEFAULT_KUBERNETES_AUTH_MOUNT_PATH = "kubernetes";
     String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "approle";
     String DEFAULT_USERPASS_AUTH_MOUNT_PATH = "userpass";
+    String DEFAULT_GITHUB_AUTH_MOUNT_PATH = "github";
 
     @WithName("kv-secret-engine")
     @ConfigDocMapKey("alias")
@@ -295,6 +297,8 @@ public interface VaultRuntimeConfig {
             return USERPASS;
         } else if (authentication().isAppRole()) {
             return APPROLE;
+        } else if (authentication().isGithub()) {
+            return GITHUB;
         } else {
             return null;
         }
@@ -318,6 +322,12 @@ public interface VaultRuntimeConfig {
                 + logConfidentialityLevel().maskWithTolerance(authentication().appRole().secretId().orElse(""), LOW) + '\'' +
                 ", appRoleSecretIdWrappingToken='"
                 + logConfidentialityLevel().maskWithTolerance(authentication().appRole().secretIdWrappingToken().orElse(""),
+                        LOW)
+                + '\'' +
+                ", githubToken='"
+                + logConfidentialityLevel().maskWithTolerance(authentication().github().token().orElse(""), LOW) + '\'' +
+                ", githubTokenWrappingToken='"
+                + logConfidentialityLevel().maskWithTolerance(authentication().github().tokenWrappingToken().orElse(""),
                         LOW)
                 + '\'' +
                 ", clientToken=" + logConfidentialityLevel().maskWithTolerance(authentication().clientToken().orElse(""), LOW) +

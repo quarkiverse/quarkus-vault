@@ -32,6 +32,16 @@ public enum VaultAuthenticationType {
      * <p>
      * https://www.vaultproject.io/api/auth/approle/index.html
      */
-    APPROLE
+    APPROLE,
+
+    /**
+     * GitHub token vault authentication
+     * <p>
+     * Vault supports authentication using GitHub personal access tokens. Before using it, the github auth
+     * method needs to be enabled in vault, and configured with the GitHub organization users belong to.
+     * <p>
+     * https://developer.hashicorp.com/vault/api-docs/auth/github
+     */
+    GITHUB
 
 }

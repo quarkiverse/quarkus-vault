@@ -10,6 +10,7 @@ include::./includes/attributes.adoc[]
 :role-id: b15460ff-fea0-43fc-1002-a045fb60dfc4
 :secret-id: d2f13e1f-f32a-f60a-86d8-0b5cdaeb821b
 :secret-id-wrapping-token: s.aSq7tcRqfeboZqLMPfa5gkXJ
+:github-token: ghp_16C7e42F292c6912E7710c838347Ae178B4a
 
 Working with Vault is typically a 2 step process:
 
@@ -20,6 +21,7 @@ There are several Vault authentication methods supported in Quarkus today, namel
 
 * https://www.vaultproject.io/docs/auth/token[Token]: whenever you already have a token
 * https://www.vaultproject.io/docs/auth/userpass[Userpass]: authenticate with a username and a password
+* https://www.vaultproject.io/docs/auth/github[GitHub]: authenticate with a GitHub personal access token
 * https://www.vaultproject.io/docs/auth/approle[AppRole]: authenticate with a role id and a secret id (which can
 be seen as a _Userpass_ for automated workflows - machines and services)
 * https://www.vaultproject.io/docs/auth/kubernetes[Kubernetes], which is applicable to workloads deployed into Kubernetes
@@ -161,6 +163,42 @@ You should see: `{private-key}`.
 Userpass supports response wrapping as well for the `password` property, although it is more
 unusual to use this approach as response wrapping typically involves a technical workflow,
 which is better suited for `approle`.
+====
+
+== GitHub Authentication
+
+The `github` auth method allows users to authenticate with Vault using a GitHub personal access token
+(with the `read:org` scope, generated from https://github.com/settings/tokens). Vault validates the token
+against the GitHub API and checks that the user is a member of the configured GitHub organization.
+
+To set it up, enable the `github` auth method, configure the organization, and map GitHub teams
+and/or users to Vault policies:
+[source,bash]
+----
+vault auth enable github
+vault write auth/github/config organization=myorg
+vault write auth/github/map/users/bob value=vault-quickstart-policy
+vault write auth/github/map/teams/dev-team value=vault-quickstart-policy
+----
+
+And simply specify the GitHub personal access token in the application configuration:
+[source, properties, subs=attributes+]
+----
+quarkus.vault.authentication.github.token={github-token}
+----
+
+Test the application endpoint after compiling and starting the application again:
+[source,bash, subs=attributes+]
+----
+curl http://localhost:8080/hello/private-key
+----
+
+You should see: `{private-key}`.
+
+[NOTE]
+====
+GitHub authentication supports response wrapping as well through the `token-wrapping-token` property,
+referencing a wrapping token containing a Kv secret with a `token` key holding the GitHub token.
 ====
 
 == Approle Authentication

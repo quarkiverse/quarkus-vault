@@ -928,6 +928,65 @@ endif::add-copy-button-to-env-var[]
 |`kubernetes`
 
 
+a| [[quarkus-vault_quarkus-vault-authentication-github-token]]`link:#quarkus-vault_quarkus-vault-authentication-github-token[quarkus.vault.authentication.github.token]`
+
+
+[.description]
+--
+GitHub personal access token for the github auth method. This property is required when selecting the github authentication type.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_GITHUB_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_GITHUB_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-vault_quarkus-vault-authentication-github-token-wrapping-token]]`link:#quarkus-vault_quarkus-vault-authentication-github-token-wrapping-token[quarkus.vault.authentication.github.token-wrapping-token]`
+
+
+[.description]
+--
+Wrapping token containing a GitHub token, obtained from:
+
+vault kv get -wrap-ttl=60s secret/
+
+The key has to be 'token', meaning the GitHub token has initially been provisioned with:
+
+vault kv put secret/ token=
+
+token and token-wrapping-token are exclusive
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_GITHUB_TOKEN_WRAPPING_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_GITHUB_TOKEN_WRAPPING_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-vault_quarkus-vault-authentication-github-auth-mount-path]]`link:#quarkus-vault_quarkus-vault-authentication-github-auth-mount-path[quarkus.vault.authentication.github.auth-mount-path]`
+
+
+[.description]
+--
+Allows configure github authentication mount path.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_AUTHENTICATION_GITHUB_AUTH_MOUNT_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_AUTHENTICATION_GITHUB_AUTH_MOUNT_PATH+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`github`
+
+
 h|[[quarkus-vault_quarkus-vault-tls-tls]]link:#quarkus-vault_quarkus-vault-tls-tls[TLS]
 
 h|Type

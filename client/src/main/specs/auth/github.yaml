@@ -1,0 +1,182 @@
+name: Github
+category: auth
+basePath: auth
+
+operations:
+
+- name: login
+  method: POST
+  path: login
+  authenticated: false
+  bodyFrom: [token]
+  parameters:
+  - name: token
+    type: String
+  result:
+    kind: leased
+    unwrapAuth: true
+    auth:
+    - name: username
+      type: String
+    - name: org
+      type: String
+
+
+- name: configure
+  method: POST
+  path: "config"
+  parameters:
+  - name: params
+    body: true
+    object:
+    - name: organization
+      type: String
+    - name: organizationId
+      type: Long
+    - name: baseUrl
+      type: String
+    - name: tokenTtl
+      type: java.time.Duration
+    - name: tokenMaxTtl
+      type: java.time.Duration
+    - name: tokenPolicies
+      type: java.util.List<String>
+    - name: tokenBoundCidrs
+      type: java.util.List<String>
+    - name: tokenExplicitMaxTtl
+      type: java.time.Duration
+    - name: tokenNoDefaultPolicy
+      type: Boolean
+    - name: tokenNumUses
+      type: Integer
+    - name: tokenPeriod
+      type: java.time.Duration
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+
+
+- name: readConfig
+  method: GET
+  path: "config"
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: organization
+      type: String
+    - name: organizationId
+      type: Long
+    - name: baseUrl
+      type: String
+    - name: tokenTtl
+      type: java.time.Duration
+    - name: tokenMaxTtl
+      type: java.time.Duration
+    - name: tokenPolicies
+      type: java.util.List<String>
+    - name: tokenBoundCidrs
+      type: java.util.List<String>
+    - name: tokenExplicitMaxTtl
+      type: java.time.Duration
+    - name: tokenNoDefaultPolicy
+      type: Boolean
+    - name: tokenNumUses
+      type: Integer
+    - name: tokenPeriod
+      type: java.time.Duration
+    - name: tokenType
+      type: $$.api.common.VaultTokenType
+
+
+- name: updateTeamMapping
+  method: POST
+  path: "map/teams/:team"
+  bodyFrom: [value]
+  parameters:
+  - name: team
+    type: String
+  - name: value
+    type: String
+
+
+- name: readTeamMapping
+  method: GET
+  path: "map/teams/:team"
+  parameters:
+  - name: team
+    type: String
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: key
+      type: String
+    - name: value
+      type: String
+
+
+- name: listTeamMappings
+  method: LIST
+  path: "map/teams"
+  result:
+    kind: leased
+    unwrapUsing: r.getData().getKeys()
+    unwrappedType: java.util.List<String>
+    data:
+    - name: keys
+      type: java.util.List<String>
+
+
+- name: deleteTeamMapping
+  method: DELETE
+  path: "map/teams/:team"
+  parameters:
+  - name: team
+    type: String
+
+
+- name: updateUserMapping
+  method: POST
+  path: "map/users/:user"
+  bodyFrom: [value]
+  parameters:
+  - name: user
+    type: String
+  - name: value
+    type: String
+
+
+- name: readUserMapping
+  method: GET
+  path: "map/users/:user"
+  parameters:
+  - name: user
+    type: String
+  result:
+    kind: leased
+    unwrapData: true
+    data:
+    - name: key
+      type: String
+    - name: value
+      type: String
+
+
+- name: listUserMappings
+  method: LIST
+  path: "map/users"
+  result:
+    kind: leased
+    unwrapUsing: r.getData().getKeys()
+    unwrappedType: java.util.List<String>
+    data:
+    - name: keys
+      type: java.util.List<String>
+
+
+- name: deleteUserMapping
+  method: DELETE
+  path: "map/users/:user"
+  parameters:
+  - name: user
+    type: String
