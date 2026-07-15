@@ -13,5 +13,6 @@
         <module>vault</module>
         <module>vault-agroal</module>
         <module>vault-app</module>
+        <module>vault-renew</module>
     </modules>
 </project>
