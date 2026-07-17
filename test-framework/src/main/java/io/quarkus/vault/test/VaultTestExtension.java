@@ -314,7 +314,7 @@ public class VaultTestExtension {
         execVault("vault auth enable kubernetes");
 
         // github auth
-        githubMockServer = new GithubMockServer();
+        githubMockServer = new GithubMockServer(VAULT_AUTH_GITHUB_TOKEN);
         githubMockServer.start();
         execVault("vault auth enable github");
         execVault(format("vault write auth/github/config organization=%s organization_id=%d base_url=%s",

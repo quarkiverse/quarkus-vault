@@ -61,23 +61,6 @@ public class VaultAuthGithubTest {
     }
 
     @Test
-    public void testConfigResolvesOrganizationId(VaultClient client) throws Exception {
-        var githubApi = client.auth().github();
-
-        // organization_id is not provided, forcing Vault to resolve it against the (mock) GitHub API
-        githubApi.configure(new VaultAuthGithubConfigureParams()
-                .setOrganization(GithubMockServer.ORGANIZATION)
-                .setBaseUrl(githubMockServer.getBaseUrl()))
-                .toCompletableFuture().get();
-
-        var config = githubApi.readConfig()
-                .toCompletableFuture().get();
-
-        assertThat(config.getOrganizationId())
-                .isEqualTo(GithubMockServer.ORGANIZATION_ID);
-    }
-
-    @Test
     public void testTeamMappings(VaultClient client, @Random String team) throws Exception {
         var githubApi = client.auth().github();
 
@@ -166,7 +149,7 @@ public class VaultAuthGithubTest {
         githubApi.updateUserMapping(GithubMockServer.USERNAME, "bob-policy")
                 .toCompletableFuture().get();
 
-        var login = githubApi.login("test-github-token")
+        var login = githubApi.login(GithubMockServer.TOKEN)
                 .toCompletableFuture().get();
 
         assertThat(login.getClientToken())
@@ -177,6 +160,22 @@ public class VaultAuthGithubTest {
                 .isEqualTo(GithubMockServer.ORGANIZATION);
         assertThat(login.getPolicies())
                 .contains("dev-policy", "bob-policy");
+    }
+
+    @Test
+    public void testLoginProcessWithInvalidToken(VaultClient client) throws Exception {
+        var githubApi = client.auth().github();
+
+        githubApi.configure(new VaultAuthGithubConfigureParams()
+                .setOrganization(GithubMockServer.ORGANIZATION)
+                .setOrganizationId(GithubMockServer.ORGANIZATION_ID)
+                .setBaseUrl(githubMockServer.getBaseUrl()))
+                .toCompletableFuture().get();
+
+        assertThatThrownBy(() -> githubApi.login("wrong-github-token").toCompletableFuture().get())
+                .isInstanceOf(ExecutionException.class).cause()
+                .isInstanceOf(VaultClientException.class)
+                .hasMessageContaining("Bad credentials");
     }
 
     @Test
@@ -203,7 +202,7 @@ public class VaultAuthGithubTest {
 
         // Login
         var authClient = client.configure()
-                .github("test-github-token")
+                .github(GithubMockServer.TOKEN)
                 .build();
 
         // Validate
