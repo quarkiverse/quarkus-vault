@@ -93,6 +93,16 @@ public class VaultClient implements VaultRequestExecutor {
             return tokenProvider(new VaultAppRoleTokenProvider(options).caching(options.cachingRenewGracePeriod));
         }
 
+        public Builder github(String token) {
+            return github(VaultGithubAuthOptions.builder()
+                    .token(token)
+                    .build());
+        }
+
+        public Builder github(VaultGithubAuthOptions options) {
+            return tokenProvider(new VaultGithubTokenProvider(options).caching(options.cachingRenewGracePeriod));
+        }
+
         public Builder kubernetes(String role, Path jwtTokenPath) {
             return kubernetes(VaultKubernetesAuthOptions.builder()
                     .role(role)

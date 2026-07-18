@@ -70,6 +70,8 @@ public class VaultTestExtension {
     public static final String VAULT_AUTH_USERPASS_USER = "bob";
     public static final String VAULT_AUTH_USERPASS_PASSWORD = "sinclair";
     public static final String VAULT_AUTH_APPROLE = "myapprole";
+    public static final String VAULT_AUTH_GITHUB_TOKEN = "github-test-token";
+    public static final String GITHUB_TOKEN_TEST_PATH = "github-wrapping-test";
     public static final String SECRET_PATH_V1 = "secret-v1";
     public static final String SECRET_PATH_V2 = "secret";
     public static final String LIST_PATH = "hello";
@@ -113,6 +115,7 @@ public class VaultTestExtension {
     public GenericContainer vaultContainer;
     public PostgreSQLContainer postgresContainer;
     public RabbitMQContainer rabbitMQContainer;
+    public GithubMockServer githubMockServer;
     public String rootToken = null;
     public String appRoleSecretId = null;
     public String appRoleRoleId = null;
@@ -121,6 +124,7 @@ public class VaultTestExtension {
     public String passwordKvv1WrappingToken = null;
     public String passwordKvv2WrappingToken = null;
     public String anotherPasswordKvv2WrappingToken = null;
+    public String githubTokenKvv2WrappingToken = null;
 
     private String db_default_ttl = "1m";
     private String db_max_ttl = "10m";
@@ -246,6 +250,8 @@ public class VaultTestExtension {
                 .withClasspathResourceMapping("config.json", "/tmp/config.json", READ_ONLY)
                 .withClasspathResourceMapping("cred-provider.json", "/tmp/cred-provider.json", READ_ONLY)
                 .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY)
+                // allows Vault to call back services running on the host (e.g. mock GitHub API)
+                .withAccessToHost(true)
                 .withCommand("server", "-log-level=debug", "-config=" + TMP_VAULT_CONFIG_JSON_FILE);
 
         vaultContainer.setPortBindings(Arrays.asList(VAULT_PORT + ":" + VAULT_PORT));
@@ -306,6 +312,14 @@ public class VaultTestExtension {
 
         // k8s auth
         execVault("vault auth enable kubernetes");
+
+        // github auth
+        githubMockServer = new GithubMockServer(VAULT_AUTH_GITHUB_TOKEN);
+        githubMockServer.start();
+        execVault("vault auth enable github");
+        execVault(format("vault write auth/github/config organization=%s organization_id=%d base_url=%s",
+                GithubMockServer.ORGANIZATION, GithubMockServer.ORGANIZATION_ID, githubMockServer.getBaseUrl()));
+        execVault(format("vault write auth/github/map/users/%s value=%s", GithubMockServer.USERNAME, VAULT_POLICY));
 
         // approle auth
         execVault("vault auth enable approle");
@@ -374,6 +388,12 @@ public class VaultTestExtension {
         anotherPasswordKvv2WrappingToken = fetchWrappingToken(
                 execVault(format("vault kv get -wrap-ttl=120s %s/%s", SECRET_PATH_V2, WRAPPING_TEST_PATH)));
         log.info("anotherPasswordKvv2WrappingToken=" + anotherPasswordKvv2WrappingToken);
+
+        execVault(format("vault kv put %s/%s %s=%s", SECRET_PATH_V2, GITHUB_TOKEN_TEST_PATH, "token",
+                VAULT_AUTH_GITHUB_TOKEN));
+        githubTokenKvv2WrappingToken = fetchWrappingToken(
+                execVault(format("vault kv get -wrap-ttl=120s %s/%s", SECRET_PATH_V2, GITHUB_TOKEN_TEST_PATH)));
+        log.info("githubTokenKvv2WrappingToken=" + githubTokenKvv2WrappingToken);
 
         // dynamic secrets
 
@@ -552,6 +572,9 @@ public class VaultTestExtension {
         }
         if (rabbitMQContainer != null && rabbitMQContainer.isRunning()) {
             rabbitMQContainer.stop();
+        }
+        if (githubMockServer != null) {
+            githubMockServer.close();
         }
 
         // VaultManager.getInstance().reset();

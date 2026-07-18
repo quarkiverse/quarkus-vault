@@ -42,6 +42,7 @@ public class VaultTestLifecycleManager implements QuarkusTestResourceLifecycleMa
         sysprops.put("vault-test.password-kv-v1-wrapping-token", vaultTestExtension.passwordKvv1WrappingToken);
         sysprops.put("vault-test.password-kv-v2-wrapping-token", vaultTestExtension.passwordKvv2WrappingToken);
         sysprops.put("vault-test.another-password-kv-v2-wrapping-token", vaultTestExtension.anotherPasswordKvv2WrappingToken);
+        sysprops.put("vault-test.github-token-kv-v2-wrapping-token", vaultTestExtension.githubTokenKvv2WrappingToken);
 
         log.info("using system properties " + sysprops);
 

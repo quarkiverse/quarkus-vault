@@ -57,6 +57,8 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
             .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY)
             .withVaultToken("root")
             .withEnv("VAULT_ADDR", "http://127.0.0.1:8200")
+            // allows Vault to call back services running on the host (e.g. mock GitHub API)
+            .withAccessToHost(true)
             .withNetwork(Network.SHARED);
 
     private final JDKVaultHttpClient httpClient = new JDKVaultHttpClient(HttpClient.newHttpClient());
