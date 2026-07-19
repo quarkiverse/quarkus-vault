@@ -52,6 +52,13 @@ public interface VaultAuthenticationConfig {
      */
     VaultGithubAuthenticationConfig github();
 
+    /**
+     * AWS IAM authentication method
+     * <p>
+     * See <a href="https://developer.hashicorp.com/vault/api-docs/auth/aws">AWS Auth Method</a>
+     */
+    VaultAwsIamAuthenticationConfig awsIam();
+
     default boolean isDirectClientToken() {
         return clientToken().isPresent() || clientTokenWrappingToken().isPresent();
     }
@@ -68,5 +75,9 @@ public interface VaultAuthenticationConfig {
 
     default boolean isGithub() {
         return github().token().isPresent() || github().tokenWrappingToken().isPresent();
+    }
+
+    default boolean isAwsIam() {
+        return awsIam().role().isPresent();
     }
 }

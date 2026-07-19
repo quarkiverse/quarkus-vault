@@ -42,6 +42,18 @@ public enum VaultAuthenticationType {
      * <p>
      * https://developer.hashicorp.com/vault/api-docs/auth/github
      */
-    GITHUB
+    GITHUB,
+
+    /**
+     * AWS IAM vault authentication
+     * <p>
+     * The aws auth method provides an automated mechanism to retrieve a Vault token for IAM principals.
+     * A special AWS request signed with AWS IAM credentials ({@code sts:GetCallerIdentity}) is used for
+     * authentication, so no Vault-specific secret needs to be provisioned to the client: the IAM
+     * credentials already available to AWS instances, Lambda functions, etc. are used to authenticate.
+     * <p>
+     * see https://developer.hashicorp.com/vault/api-docs/auth/aws
+     */
+    AWS_IAM
 
 }

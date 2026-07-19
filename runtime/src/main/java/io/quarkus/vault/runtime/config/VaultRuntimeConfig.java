@@ -3,6 +3,7 @@ package io.quarkus.vault.runtime.config;
 import static io.quarkus.vault.client.logging.LogConfidentialityLevel.LOW;
 import static io.quarkus.vault.client.logging.LogConfidentialityLevel.MEDIUM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.APPROLE;
+import static io.quarkus.vault.runtime.config.VaultAuthenticationType.AWS_IAM;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.GITHUB;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.KUBERNETES;
 import static io.quarkus.vault.runtime.config.VaultAuthenticationType.USERPASS;
@@ -45,6 +46,8 @@ public interface VaultRuntimeConfig {
     String DEFAULT_APPROLE_AUTH_MOUNT_PATH = "approle";
     String DEFAULT_USERPASS_AUTH_MOUNT_PATH = "userpass";
     String DEFAULT_GITHUB_AUTH_MOUNT_PATH = "github";
+    String DEFAULT_AWS_IAM_AUTH_MOUNT_PATH = "aws";
+    String DEFAULT_AWS_IAM_STS_URL = "https://sts.amazonaws.com";
 
     @WithName("kv-secret-engine")
     @ConfigDocMapKey("alias")
@@ -299,6 +302,8 @@ public interface VaultRuntimeConfig {
             return APPROLE;
         } else if (authentication().isGithub()) {
             return GITHUB;
+        } else if (authentication().isAwsIam()) {
+            return AWS_IAM;
         } else {
             return null;
         }
