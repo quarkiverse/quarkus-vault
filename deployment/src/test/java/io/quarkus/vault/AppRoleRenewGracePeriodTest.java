@@ -10,18 +10,19 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.inject.Inject;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -37,9 +38,9 @@ import io.quarkus.test.junit.TestProfile;
  * client's hard-coded 30s default, no renewal happens (the token still has ~58s to live) and this
  * test fails.
  * <p>
- * Note: the test class and the test profile run in different classloaders, each with its own copy
- * of the stub's statics, so the test reads the stub's counters over HTTP instead of accessing them
- * directly.
+ * Note: the test class and the test resource managing the stub run in different classloaders, each
+ * with its own copy of the stub's statics, so the test reads the stub's counters over HTTP instead
+ * of accessing them directly.
  */
 @QuarkusTest
 @TestProfile(AppRoleRenewGracePeriodTest.Profile.class)
@@ -82,20 +83,48 @@ public class AppRoleRenewGracePeriodTest {
                 .body();
     }
 
-    @AfterAll
-    public static void stopStub() {
-        VaultStub.stop();
-    }
-
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
             return Map.of(
-                    "quarkus.vault.url", VaultStub.start(),
                     "quarkus.vault.renew-grace-period", RENEW_GRACE_PERIOD,
                     "quarkus.vault.authentication.app-role.role-id", "test-role-id",
                     "quarkus.vault.authentication.app-role.secret-id", "test-secret-id",
                     "quarkus.vault.devservices.enabled", "false");
+        }
+
+        @Override
+        public List<TestResourceEntry> testResources() {
+            return List.of(new TestResourceEntry(VaultStubResource.class));
+        }
+    }
+
+    /**
+     * Manages the stub server lifecycle; the framework guarantees {@link #stop()} is called on the
+     * same instance that was started, so the server never outlives the test.
+     */
+    public static class VaultStubResource implements QuarkusTestResourceLifecycleManager {
+
+        HttpServer server;
+
+        @Override
+        public Map<String, String> start() {
+            try {
+                server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            server.createContext("/", VaultStub::handle);
+            server.start();
+            return Map.of("quarkus.vault.url", "http://localhost:" + server.getAddress().getPort());
+        }
+
+        @Override
+        public void stop() {
+            if (server != null) {
+                server.stop(0);
+                server = null;
+            }
         }
     }
 
@@ -107,28 +136,6 @@ public class AppRoleRenewGracePeriodTest {
 
         static final AtomicInteger logins = new AtomicInteger();
         static final AtomicInteger renewals = new AtomicInteger();
-
-        static volatile HttpServer server;
-
-        static synchronized String start() {
-            if (server == null) {
-                try {
-                    server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                server.createContext("/", VaultStub::handle);
-                server.start();
-            }
-            return "http://localhost:" + server.getAddress().getPort();
-        }
-
-        static synchronized void stop() {
-            if (server != null) {
-                server.stop(0);
-                server = null;
-            }
-        }
 
         static void handle(HttpExchange exchange) throws IOException {
             String path = exchange.getRequestURI().getPath();
