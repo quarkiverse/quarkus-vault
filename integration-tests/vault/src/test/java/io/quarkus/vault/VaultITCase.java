@@ -149,6 +149,11 @@ public class VaultITCase {
         VaultTestExtension.assertCrudSecret(kvSecretEngine);
     }
 
+    @Test
+    public void destroySecret() throws Exception {
+        VaultTestExtension.assertDestroySecret(kvSecretEngine);
+    }
+
     static class WrapExample {
         public String foo = "bar";
         public String zip = "zap";

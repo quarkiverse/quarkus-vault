@@ -1,10 +1,13 @@
 package io.quarkus.vault;
 
+import java.util.List;
+
 import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -33,5 +36,11 @@ public class VaultKv1ITCase {
     @Test
     public void crudSecretV1() {
         VaultTestExtension.assertCrudSecret(kvSecretEngine);
+    }
+
+    @Test
+    public void destroySecretV1NotSupported() {
+        Assertions.assertThrows(UnsupportedOperationException.class,
+                () -> kvSecretEngine.destroySecret(CRUD_PATH, List.of(1)));
     }
 }

@@ -32,6 +32,11 @@ public class KvV2 extends VersionedKv<VaultSecretsKV2RequestFactory> {
     }
 
     @Override
+    public Uni<Void> destroySecret(String path, List<Integer> versions) {
+        return Uni.createFrom().completionStage(kvv2.destroySecretVersions(path, versions));
+    }
+
+    @Override
     public Uni<List<String>> listSecrets(String path) {
         return Uni.createFrom().completionStage(kvv2.listSecrets(path));
     }

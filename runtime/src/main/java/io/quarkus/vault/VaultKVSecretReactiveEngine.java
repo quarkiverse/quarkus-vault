@@ -81,6 +81,24 @@ public interface VaultKVSecretReactiveEngine {
     Uni<Void> deleteSecret(String path);
 
     /**
+     * Permanently deletes the specified secret versions at the given path. Destroyed versions cannot
+     * be undeleted. This operation is supported by kv version 2 secret engines only; the returned
+     * {@link Uni} fails with an {@link UnsupportedOperationException} for a kv version 1 secret engine.
+     *
+     * @param alias the name of the kv engine mount path, or <default> for the default kv engine
+     * @param path in Vault, without the kv engine mount path
+     * @param versions the secret versions to destroy
+     */
+    Uni<Void> destroySecret(String alias, String path, List<Integer> versions);
+
+    /**
+     * destroy secret versions for the default kv engine mount path.
+     *
+     * @see VaultKVSecretReactiveEngine#destroySecret(String, String, List)
+     */
+    Uni<Void> destroySecret(String path, List<Integer> versions);
+
+    /**
      * List all paths under the specified path.
      *
      * @param alias the name of the kv engine mount path, or <default> for the default kv engine

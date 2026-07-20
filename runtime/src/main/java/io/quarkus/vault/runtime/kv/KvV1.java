@@ -31,6 +31,12 @@ public class KvV1 extends VersionedKv<VaultSecretsKV1RequestFactory> {
     }
 
     @Override
+    public Uni<Void> destroySecret(String path, List<Integer> versions) {
+        return Uni.createFrom()
+                .failure(new UnsupportedOperationException("destroy secret is not supported by the kv v1 secret engine"));
+    }
+
+    @Override
     public Uni<List<String>> listSecrets(String path) {
         return Uni.createFrom().completionStage(kvv1.list(path));
     }
