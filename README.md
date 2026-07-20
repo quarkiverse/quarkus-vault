@@ -1,6 +1,6 @@
 # Quarkus Vault
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse.vault/quarkus-vault?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.vault/quarkus-vault)
@@ -35,6 +35,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/sberyozkin"><img src="https://avatars.githubusercontent.com/u/467639?v=4?s=100" width="100px;" alt="sberyozkin"/><br /><sub><b>sberyozkin</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-vault/commits?author=sberyozkin" title="Code">💻</a> <a href="#maintenance-sberyozkin" title="Maintenance">🚧</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/kdubb"><img src="https://avatars.githubusercontent.com/u/787655?v=4?s=100" width="100px;" alt="Kevin Wooten"/><br /><sub><b>Kevin Wooten</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-vault/commits?author=kdubb" title="Code">💻</a> <a href="#maintenance-kdubb" title="Maintenance">🚧</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://yuriytkach.com"><img src="https://avatars.githubusercontent.com/u/18635300?v=4?s=100" width="100px;" alt="Yuriy Tkach"/><br /><sub><b>Yuriy Tkach</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-vault/commits?author=yuriytkach" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://blog.omatheusmesmo.dev"><img src="https://avatars.githubusercontent.com/u/99829531?v=4?s=100" width="100px;" alt="Matheus Oliveira"/><br /><sub><b>Matheus Oliveira</b></sub></a><br /><a href="https://github.com/quarkiverse/quarkus-vault/commits?author=omatheusmesmo" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
