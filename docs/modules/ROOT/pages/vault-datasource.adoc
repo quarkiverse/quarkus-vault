@@ -196,7 +196,9 @@ quarkus.vault.credentials-provider.mydatabase.kv-path=myapps/vault-quickstart/db
 ----
 
 This defines a credentials provider `mydatabase` that will fetch the password from key `password`
-at path `myapps/vault-quickstart/db`.
+at path `myapps/vault-quickstart/db`. The keys used to look up the password and the username in the
+Vault secret can be changed with `kv-password-key` (defaults to `password`) and `kv-username-key`
+(defaults to `username`).
 
 The credentials provider can now be used in the datasource configuration, in place of the `password`
 property:
@@ -208,6 +210,15 @@ quarkus.datasource.db-kind = postgresql
 quarkus.datasource.username = sarah
 quarkus.datasource.credentials-provider = mydatabase
 quarkus.datasource.jdbc.url = jdbc:postgresql://localhost:5432/mydatabase
+----
+
+If the Vault secret contains a `username` key (or the key configured with `kv-username-key`), the
+credentials provider will return the username as well, allowing you to drop the
+`quarkus.datasource.username` property and manage both credentials in Vault:
+
+[source,bash, subs=attributes+]
+----
+vault kv put secret/myapps/vault-quickstart/db username=sarah password=connor
 ----
 
 Recompile, start and test the `gift-count` endpoint. You should see `0` again.

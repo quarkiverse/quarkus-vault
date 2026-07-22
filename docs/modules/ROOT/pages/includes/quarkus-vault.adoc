@@ -623,7 +623,7 @@ a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-pa
 
 [.description]
 --
-A path in vault kv store, where we will find the kv-key.
+A path in vault kv store, where we will find the kv-password-key and the kv-username-key.
 <p>
 One of `database-credentials-role` or `kv-path` needs to be defined. not both.
 <p>
@@ -639,25 +639,47 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-key]]`link:#quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-key[quarkus.vault.credentials-provider."credentials-provider".kv-key]`
+a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-password-key]]`link:#quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-password-key[quarkus.vault.credentials-provider."credentials-provider".kv-password-key]`
 
 
 [.description]
 --
-Key name to search in vault path `kv-path`. The value for that key is the credential.
+Key name to search in vault path `kv-path` for the password credential. The value for that key is the password.
 <p>
-`kv-key` should not be defined if `kv-path` is not.
+`kv-password-key` should not be defined if `kv-path` is not.
 <p>
 see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_KEY+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_PASSWORD_KEY+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_KEY+++`
+Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_PASSWORD_KEY+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--|string
 |`password`
+
+
+a| [[quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-username-key]]`link:#quarkus-vault_quarkus-vault-credentials-provider-credentials-provider-kv-username-key[quarkus.vault.credentials-provider."credentials-provider".kv-username-key]`
+
+
+[.description]
+--
+Key name to search in vault path `kv-path` for the username credential. The value for that key is the username.
+If the key is not present in the secret, no username is returned by the credentials provider.
+<p>
+`kv-username-key` should not be defined if `kv-path` is not.
+<p>
+see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_USERNAME_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_CREDENTIALS_PROVIDER__CREDENTIALS_PROVIDER__KV_USERNAME_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string
+|`username`
 
 
 h|[[quarkus-vault_quarkus-vault-enterprise-vault-enterprise]]link:#quarkus-vault_quarkus-vault-enterprise-vault-enterprise[Vault Enterprise]

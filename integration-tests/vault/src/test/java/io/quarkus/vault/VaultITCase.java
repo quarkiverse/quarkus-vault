@@ -96,7 +96,16 @@ public class VaultITCase {
     @Test
     public void credentialsProvider() {
         Map<String, String> staticCredentials = credentialsProvider.getCredentials("static");
-        assertEquals("{" + PASSWORD_PROPERTY_NAME + "=" + DB_PASSWORD + "}", staticCredentials.toString());
+        assertEquals(DB_PASSWORD, staticCredentials.get(PASSWORD_PROPERTY_NAME));
+        assertEquals("postgres", staticCredentials.get(USER_PROPERTY_NAME));
+
+        Map<String, String> explicitKeysCredentials = credentialsProvider.getCredentials("static-explicit-keys");
+        assertEquals(DB_PASSWORD, explicitKeysCredentials.get(PASSWORD_PROPERTY_NAME));
+        assertEquals("postgres", explicitKeysCredentials.get(USER_PROPERTY_NAME));
+
+        Map<String, String> deprecatedKvKeyCredentials = credentialsProvider.getCredentials("static-deprecated-kv-key");
+        assertEquals(DB_PASSWORD, deprecatedKvKeyCredentials.get(PASSWORD_PROPERTY_NAME));
+        assertEquals("postgres", deprecatedKvKeyCredentials.get(USER_PROPERTY_NAME));
 
         Map<String, String> dynamicCredentials = credentialsProvider.getCredentials("dynamic");
         String username = dynamicCredentials.get(USER_PROPERTY_NAME);

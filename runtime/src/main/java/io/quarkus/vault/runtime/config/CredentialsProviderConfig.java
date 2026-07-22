@@ -62,7 +62,7 @@ public interface CredentialsProviderConfig {
     String credentialsRequestPath();
 
     /**
-     * A path in vault kv store, where we will find the kv-key.
+     * A path in vault kv store, where we will find the kv-password-key and the kv-username-key.
      * <p>
      * One of `database-credentials-role` or `kv-path` needs to be defined. not both.
      * <p>
@@ -79,10 +79,36 @@ public interface CredentialsProviderConfig {
      * <p>
      * see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
      *
+     * @deprecated Use `kv-password-key`
+     * @asciidoclet
+     */
+    @Deprecated(since = "4.9")
+    Optional<String> kvKey();
+
+    /**
+     * Key name to search in vault path `kv-path` for the password credential. The value for that key is the password.
+     * <p>
+     * `kv-password-key` should not be defined if `kv-path` is not.
+     * <p>
+     * see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
+     *
      * @asciidoclet
      */
     @WithDefault(PASSWORD_PROPERTY_NAME)
-    String kvKey();
+    String kvPasswordKey();
+
+    /**
+     * Key name to search in vault path `kv-path` for the username credential. The value for that key is the username.
+     * If the key is not present in the secret, no username is returned by the credentials provider.
+     * <p>
+     * `kv-username-key` should not be defined if `kv-path` is not.
+     * <p>
+     * see <a href="https://www.vaultproject.io/docs/secrets/kv/index.html">KV Secrets Engine</a>
+     *
+     * @asciidoclet
+     */
+    @WithDefault("username")
+    String kvUsernameKey();
 
     @Override
     String toString();
