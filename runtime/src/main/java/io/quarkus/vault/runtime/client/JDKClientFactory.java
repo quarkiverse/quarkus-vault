@@ -56,18 +56,23 @@ public class JDKClientFactory {
         }
     }
 
-    private static SSLContext buildSslContextFromPem(String file) throws VaultException {
+    static SSLContext buildSslContextFromPem(String file) throws VaultException {
         try {
 
-            final var certificate = X509Parsing.parsePEMCertificate(Files.readString(Paths.get(file), UTF_8));
+            final var certificates = X509Parsing.parsePEMCertificates(Files.readString(Paths.get(file), UTF_8));
+            if (certificates.isEmpty()) {
+                throw new CertificateException("No certificate found in " + file);
+            }
 
             final TrustManagerFactory trustManagerFactory = TrustManagerFactory
                     .getInstance(TrustManagerFactory.getDefaultAlgorithm());
 
-            // Build a truststore
+            // Build a truststore, trusting every certificate in the file (e.g. a full CA chain)
             final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             keyStore.load(null);
-            keyStore.setCertificateEntry("caCert", certificate);
+            for (int i = 0; i < certificates.size(); i++) {
+                keyStore.setCertificateEntry("caCert-" + i, certificates.get(i));
+            }
             trustManagerFactory.init(keyStore);
             TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
 
