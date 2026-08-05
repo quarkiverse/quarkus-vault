@@ -2,5 +2,12 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>quarkiverse/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["software.amazon.awssdk:bom"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": false
+    }
   ]
 }
