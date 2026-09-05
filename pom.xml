@@ -37,7 +37,7 @@
     <wiremock.version>3.13.2</wiremock.version>
     <aws-sdk.version>2.54.0</aws-sdk.version>
     <wiremock-maven-plugin.version>7.3.0</wiremock-maven-plugin.version>
-    <sundrio-maven-plugin.version>0.300.0</sundrio-maven-plugin.version>
+    <sundrio-maven-plugin.version>0.400.0</sundrio-maven-plugin.version>
   </properties>
   <dependencyManagement>
     <dependencies>
