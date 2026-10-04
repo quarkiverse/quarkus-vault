@@ -13,7 +13,7 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.test.VaultTestExtension;
 import io.quarkus.vault.test.VaultTestLifecycleManager;
@@ -27,7 +27,7 @@ public class VaultKv1ITCase {
     public static final String CRUD_PATH = "crud";
 
     @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest().setArchiveProducer(
+    static final QuarkusExtensionTest config = new QuarkusExtensionTest().setArchiveProducer(
             () -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("application-vault-kv-version1-datasource.properties", "application.properties"));
     @Inject

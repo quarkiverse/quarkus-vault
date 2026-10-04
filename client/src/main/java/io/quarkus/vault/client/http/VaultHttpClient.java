@@ -8,14 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import io.quarkus.vault.client.VaultClientException;
 import io.quarkus.vault.client.common.VaultErrorResponse;
 import io.quarkus.vault.client.common.VaultRequest;
 import io.quarkus.vault.client.common.VaultRequestExecutor;
 import io.quarkus.vault.client.common.VaultResponse;
 import io.quarkus.vault.client.json.JsonMapping;
+import tools.jackson.core.JacksonException;
 
 public abstract class VaultHttpClient implements VaultRequestExecutor, AutoCloseable {
 
@@ -41,7 +40,7 @@ public abstract class VaultHttpClient implements VaultRequestExecutor, AutoClose
                         x = x.getCause();
                     }
 
-                    if (x instanceof JsonProcessingException) {
+                    if (x instanceof JacksonException) {
                         x = new VaultClientException(request, statusCode, List.of("Failed to parse response body"), x);
                     } else if (x instanceof ConnectException) {
                         // unable to establish connection

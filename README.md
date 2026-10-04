@@ -9,6 +9,18 @@ Note: Quarkus Vault `3.3.0` introduced an issue breaking Vault Dev Service in Qu
 that issue, and is the default version for Quarkus `3.6`. If you want Dev Service to work with Quarkus `3.5`
 you can force an upgrade to Quarkus Vault `3.4.0`, which should work with both Quarkus `3.5` and `3.6`.
 
+Note: starting with the Quarkus `4` based release, the standalone Vault client (`quarkus-vault-client`) uses Jackson 3
+instead of Jackson 2. This is a breaking change for applications that use the client's JSON support directly:
+- The client depends on `tools.jackson.core:jackson-databind` instead of `com.fasterxml.jackson.core:jackson-databind`,
+  and no longer brings in `jackson-datatype-jdk8` and `jackson-datatype-jsr310`, which are built into Jackson 3.
+- Jackson types exposed by the client, such as `JsonMapping.mapper`, the `TypeReference` parameter of
+  `JsonMapping.convert`, and the serializers and deserializers in `io.quarkus.vault.client.json`, are now the
+  `tools.jackson` ones.
+- JSON processing errors are reported as `tools.jackson.core.JacksonException`, which is unchecked, instead of
+  `com.fasterxml.jackson.core.JsonProcessingException`.
+
+Jackson annotations are not affected: they remain in the `com.fasterxml.jackson.annotation` package in Jackson 3.
+
 ## Introduction
 
 This Quarkus extension enables the use of [HashiCorp Vault](https://www.vaultproject.io) as a config source in Quarkus.

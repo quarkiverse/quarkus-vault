@@ -10,7 +10,6 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.ExtensionSslNativeSupportBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.RunTimeConfigBuilderBuildItem;
-import io.quarkus.deployment.builditem.SslNativeConfigBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
 import io.quarkus.vault.VaultAppRoleAuthService;
@@ -40,11 +39,10 @@ public class VaultProcessor {
     void build(
             BuildProducer<ReflectiveClassBuildItem> reflectiveClasses,
             CombinedIndexBuildItem combinedIndexBuildItem,
-            SslNativeConfigBuildItem sslNativeConfig,
             BuildProducer<ExtensionSslNativeSupportBuildItem> sslNativeSupport) {
 
         final String[] modelClasses = combinedIndexBuildItem.getIndex()
-                .getAllKnownImplementors(DotName.createSimple(VaultModel.class.getName()))
+                .getAllKnownImplementations(DotName.createSimple(VaultModel.class.getName()))
                 .stream()
                 .map(c -> c.name().toString())
                 .toArray(String[]::new);

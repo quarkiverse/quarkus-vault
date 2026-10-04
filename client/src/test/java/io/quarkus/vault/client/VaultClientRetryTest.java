@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.Duration;
 import java.time.InstantSource;
 import java.util.List;
@@ -95,7 +95,7 @@ public class VaultClientRetryTest {
         assertThat(client.getApiVersion())
                 .isEqualTo("v2");
         assertThat(client.getBaseUrl())
-                .isEqualTo(new URL("https://example.com:8200"));
+                .isEqualTo(URI.create("https://example.com:8200").toURL());
         assertThat(client.getExecutor())
                 .isEqualTo(executor);
         assertThat(client.getRequestTimeout())

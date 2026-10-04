@@ -229,13 +229,13 @@ types:
   - name: lockoutThreshold
     type: Integer
     annotations:
-    - type: com.fasterxml.jackson.databind.annotation.JsonSerialize
+    - type: tools.jackson.databind.annotation.JsonSerialize
       members:
         using:
           format: $serializer:T.class
           arguments:
             serializer: <type>io.quarkus.vault.client.json.NumberToStringSerializer
-    - type: com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    - type: tools.jackson.databind.annotation.JsonDeserialize
       members:
         using:
           format: $deserializer:T.class

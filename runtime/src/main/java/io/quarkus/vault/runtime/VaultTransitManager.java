@@ -279,21 +279,22 @@ public class VaultTransitManager implements VaultTransitSecretReactiveEngine {
     @Override
     public Uni<Map<SigningRequest, String>> sign(String keyName, List<SigningRequest> requests,
             SignVerifyOptions options) {
-        return Multi.createFrom().iterable(requests)
-                .map(SigningRequestResultPair::new)
+        List<SigningRequestResultPair> requestPairs = requests.stream().map(SigningRequestResultPair::new).collect(toList());
+        return Multi.createFrom().iterable(requestPairs)
                 .group().by(SigningRequestResultPair::getKeyVersion)
                 .onItem().transformToMultiAndMerge(group -> {
-                    // Sign each batch of requests, which are grouped by key version. When each
-                    // batch is complete, return the result from each request pair as a merged stream.
+                    // Sign each batch of requests, which are grouped by key version. The result
+                    // of each request is stored in its pair.
                     int keyVersion = group.key();
                     return group.collect().asList().onItem().transformToMulti(pairs -> {
                         return signBatch(keyName, keyVersion, pairs, options)
-                                .onItem().transformToMulti(v -> {
-                                    return Multi.createFrom().iterable(pairs).map(SigningRequestResultPair::getResult);
-                                });
+                                .onItem().transformToMulti(v -> Multi.createFrom().iterable(pairs));
                     });
                 })
-                .collect().asList().map(results -> {
+                .collect().asList().map(signed -> {
+                    // Batches complete in any order, so read the results back in request order.
+                    List<SigningResult> results = requestPairs.stream().map(SigningRequestResultPair::getResult)
+                            .collect(toList());
                     checkBatchErrors(results,
                             errors -> new VaultSigningBatchException(errors + " signing errors",
                                     zip(requests, results)));

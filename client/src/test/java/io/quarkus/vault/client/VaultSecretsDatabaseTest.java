@@ -12,9 +12,9 @@ import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import io.quarkus.vault.client.api.secrets.database.*;
 import io.quarkus.vault.client.test.Random;
@@ -26,8 +26,11 @@ import io.quarkus.vault.client.test.VaultClientTest;
 @Testcontainers
 public class VaultSecretsDatabaseTest {
 
+    // replicated in VaultTestExtension
+    public static final String TEST_POSTGRES_VERSION = "18";
+
     @Container
-    public static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14")
+    public static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:" + TEST_POSTGRES_VERSION)
             .withNetwork(Network.SHARED)
             .withNetworkAliases("pg")
             .withDatabaseName("test")

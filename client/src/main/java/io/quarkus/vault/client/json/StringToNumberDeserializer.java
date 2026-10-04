@@ -1,15 +1,12 @@
 package io.quarkus.vault.client.json;
 
-import java.io.IOException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-
-public class StringToNumberDeserializer extends JsonDeserializer<Number> {
+public class StringToNumberDeserializer extends ValueDeserializer<Number> {
     @Override
-    public Number deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-            throws IOException {
+    public Number deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) {
         String jsonString = jsonParser.getValueAsString();
         if (jsonString == null) {
             return null;

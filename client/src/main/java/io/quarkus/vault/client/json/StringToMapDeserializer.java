@@ -1,17 +1,15 @@
 package io.quarkus.vault.client.json;
 
-import java.io.IOException;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 
-public class StringToMapDeserializer extends JsonDeserializer<Map<String, Object>> {
+public class StringToMapDeserializer extends ValueDeserializer<Map<String, Object>> {
     @Override
-    public Map<String, Object> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-            throws IOException {
+    public Map<String, Object> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) {
         String jsonString = jsonParser.getValueAsString();
         if (jsonString == null) {
             return null;

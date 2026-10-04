@@ -104,9 +104,9 @@ public class DevServicesVaultProcessor {
                 .startable(() -> new ConfiguredVaultContainer(dockerImageName, vaultDevServicesConfig,
                         composeProjectBuildItem.getDefaultNetworkId(), useSharedNetwork, devServicesConfig.timeout())
                         .withSharedServiceLabel(launchMode.getLaunchMode(), vaultDevServicesConfig.serviceName()))
-                .configProvider(Map.of(
-                        URL_CONFIG_KEY, s -> "http://" + s.hostName() + ":" + s.getPort(),
-                        CLIENT_TOKEN_CONFIG_KEY, s -> DEV_SERVICE_TOKEN))
+                .configProvider(s -> Map.of(
+                        URL_CONFIG_KEY, "http://" + s.hostName() + ":" + s.getPort(),
+                        CLIENT_TOKEN_CONFIG_KEY, DEV_SERVICE_TOKEN))
                 .build());
     }
 

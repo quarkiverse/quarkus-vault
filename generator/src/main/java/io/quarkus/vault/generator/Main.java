@@ -9,10 +9,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-
 import io.quarkus.vault.generator.errors.SpecError;
 import io.quarkus.vault.generator.model.API;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 public class Main {
 
@@ -104,8 +103,10 @@ public class Main {
 
     static API generateAPI(URL url, Path dir) throws Exception {
 
-        var mapper = new YAMLMapper().findAndRegisterModules();
-        var api = mapper.readValue(url, API.class);
+        var mapper = YAMLMapper.builder()
+                .findAndAddModules()
+                .build();
+        var api = mapper.readValue(url.openStream(), API.class);
 
         var requestFactoryContract = new APIRequestFactoryContract(api);
         var requestFactoryGenerator = new APIGenerator(api, requestFactoryContract);

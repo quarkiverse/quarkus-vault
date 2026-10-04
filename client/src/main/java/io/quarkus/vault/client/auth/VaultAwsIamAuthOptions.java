@@ -96,7 +96,7 @@ public class VaultAwsIamAuthOptions extends VaultAuthOptions {
         this.stsUrl = Objects.requireNonNull(builder.stsUrl);
         this.vaultServerId = Optional.ofNullable(builder.vaultServerId);
         this.credentialsProvider = builder.credentialsProvider != null ? builder.credentialsProvider
-                : DefaultCredentialsProvider.create();
+                : DefaultCredentialsProvider.builder().build();
     }
 
     public static Builder builder() {

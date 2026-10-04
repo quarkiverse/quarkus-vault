@@ -16,10 +16,10 @@ import io.quarkus.vault.client.api.auth.aws.VaultAuthAws;
 import io.quarkus.vault.client.common.VaultResponse;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.auth.signer.Aws4Signer;
-import software.amazon.awssdk.auth.signer.params.Aws4SignerParams;
 import software.amazon.awssdk.http.SdkHttpFullRequest;
 import software.amazon.awssdk.http.SdkHttpMethod;
+import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.http.auth.aws.signer.AwsV4HttpSigner;
 import software.amazon.awssdk.regions.Region;
 
 /**
@@ -80,7 +80,7 @@ public class VaultAwsIamTokenProvider implements VaultTokenProvider {
                 });
     }
 
-    private SdkHttpFullRequest buildSignedRequest() {
+    private SdkHttpRequest buildSignedRequest() {
         var credentials = credentialsProvider.resolveCredentials();
         return signRequest(buildGetCallerIdentityRequest(), credentials);
     }
@@ -98,13 +98,14 @@ public class VaultAwsIamTokenProvider implements VaultTokenProvider {
         return builder.build();
     }
 
-    private SdkHttpFullRequest signRequest(SdkHttpFullRequest request, AwsCredentials credentials) {
-        var params = Aws4SignerParams.builder()
-                .awsCredentials(credentials)
-                .signingName("sts")
-                .signingRegion(region)
-                .build();
-        return Aws4Signer.create().sign(request, params);
+    private SdkHttpRequest signRequest(SdkHttpFullRequest request, AwsCredentials credentials) {
+        return AwsV4HttpSigner.create().sign(r -> r
+                .identity(credentials)
+                .request(request)
+                .payload(request.contentStreamProvider().orElse(null))
+                .putProperty(AwsV4HttpSigner.SERVICE_SIGNING_NAME, "sts")
+                .putProperty(AwsV4HttpSigner.REGION_NAME, region.id()))
+                .request();
     }
 
     private static String base64(String value) {

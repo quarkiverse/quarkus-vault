@@ -69,7 +69,7 @@ public class VaultClientException extends VaultException {
     }
 
     public boolean isPermissionDenied() {
-        return status == 403;
+        return status != null && status == 403;
     }
 
     public VaultClientException withError(String error) {

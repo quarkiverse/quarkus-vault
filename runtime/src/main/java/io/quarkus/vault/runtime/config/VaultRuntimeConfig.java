@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocIgnore;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -286,12 +287,14 @@ public interface VaultRuntimeConfig {
      */
     @Deprecated
     @WithName("devservices")
+    @ConfigDocIgnore
     Map<String, String> devServices();
 
     /**
      * Deprecated.
      */
     @Deprecated
+    @ConfigDocIgnore
     Map<String, String> health();
 
     default VaultAuthenticationType getAuthenticationType() {

@@ -23,7 +23,7 @@ To complete this guide, you need:
 * to complete the {base-guide}
 * roughly 20 minutes
 * an IDE
-* JDK 11+ installed with `JAVA_HOME` configured appropriately
+* JDK 21+ installed with `JAVA_HOME` configured appropriately
 * Apache Maven {maven-version}
 * Docker installed
 
@@ -103,7 +103,7 @@ Start a PostgreSQL database:
 
 [source,bash]
 ----
-docker run --ulimit memlock=-1:-1 -it --rm=true --memory-swappiness=0 --name postgres-quarkus-hibernate -e POSTGRES_USER=sarah -e POSTGRES_PASSWORD=connor -e POSTGRES_DB=mydatabase -p 5432:5432 postgres:10.5
+docker run --ulimit memlock=-1:-1 -it --rm=true --memory-swappiness=0 --name postgres-quarkus-hibernate -e POSTGRES_USER=sarah -e POSTGRES_PASSWORD=connor -e POSTGRES_DB=mydatabase -p 5432:5432 postgres:18
 ----
 
 Now we are ready to configure Vault and Quarkus to be able to connect to this database from the application.
@@ -137,7 +137,7 @@ quarkus.datasource.password = ${dbpassword}
 quarkus.datasource.jdbc.url = jdbc:postgresql://localhost:5432/mydatabase
 
 # drop and create the database at startup (use `update` to only update the schema)
-quarkus.hibernate-orm.database.generation=drop-and-create
+quarkus.hibernate-orm.schema-management.strategy=drop-and-create
 ----
 
 Compile and start the application:
@@ -291,11 +291,11 @@ quarkus.vault.credentials-provider.mydatabase.credentials-mount=database
 
 [NOTE]
 ====
-When using `quarkus.hibernate-orm.database.generation=drop-create`, objects get created with the applicative
+When using `quarkus.hibernate-orm.schema-management.strategy=drop-and-create`, objects get created with the applicative
 user. Since a user will be created every time the applications starts, database objects will be created
 with the first created user, then we will attempt to drop them on the second run with a different user that
 is not the owner. As expected this will fail. As a result, it is recommended to use
-`quarkus.hibernate-orm.database.generation=update` in this section.
+`quarkus.hibernate-orm.schema-management.strategy=update` in this section.
 ====
 
 Finally, we need to tell our Quarkus database configuration to recycle connections before the lease TTL we
