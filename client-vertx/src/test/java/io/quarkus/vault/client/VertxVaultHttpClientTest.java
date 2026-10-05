@@ -21,7 +21,7 @@ import io.vertx.ext.web.client.WebClient;
 public class VertxVaultHttpClientTest {
 
     @Container
-    public static final VaultContainer<?> vault = new VaultContainer<>("hashicorp/vault:1.15.4")
+    public static final VaultContainer<?> vault = new VaultContainer<>("hashicorp/vault:2.1.1")
             .withInitCommand("secrets enable -path=kv1 -version=1 kv")
             .withVaultToken("root");
 

@@ -44,7 +44,7 @@ public class VaultSysHealthTest {
         assertThat(health.getServerTimeUtc())
                 .isBetween(now().minusSeconds(1).getEpochSecond(), now().plusSeconds(1).getEpochSecond());
         assertThat(health.getVersion())
-                .startsWith("1.");
+                .startsWith("2.");
         assertThat(health.getClusterName())
                 .startsWith("vault-cluster-");
         assertThat(health.getClusterId())
