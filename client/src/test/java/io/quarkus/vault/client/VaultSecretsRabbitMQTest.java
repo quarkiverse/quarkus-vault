@@ -25,7 +25,7 @@ import io.quarkus.vault.client.test.VaultClientTest;
 public class VaultSecretsRabbitMQTest {
 
     @Container
-    public static final RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:3.12-management")
+    public static final RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:4.3-management")
             .withNetworkAliases("rmq")
             .withNetwork(Network.SHARED);
 
