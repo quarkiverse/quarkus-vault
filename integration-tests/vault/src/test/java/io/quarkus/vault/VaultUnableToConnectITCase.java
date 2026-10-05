@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @Disabled // test is expected to fail on quarkus app startup
 public class VaultUnableToConnectITCase {
@@ -22,7 +22,7 @@ public class VaultUnableToConnectITCase {
     // again you are expected to see several attempts in the logs
 
     @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest()
+    static final QuarkusExtensionTest config = new QuarkusExtensionTest()
             .withApplicationRoot((jar) -> jar
                     .addAsResource("application-unable-to-connect.properties", "application.properties"));
 

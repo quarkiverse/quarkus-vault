@@ -8,14 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.testcontainers.containers.BindMode.READ_ONLY;
-import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
+import static org.testcontainers.postgresql.PostgreSQLContainer.POSTGRESQL_PORT;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,17 +38,13 @@ import org.jboss.logging.Logger;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.RabbitMQContainer;
-import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.localstack.LocalStackContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.rabbitmq.RabbitMQContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import io.quarkus.vault.VaultKVSecretEngine;
 import io.quarkus.vault.client.VaultClient;
@@ -62,6 +56,9 @@ import io.quarkus.vault.runtime.VaultVersions;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 public class VaultTestExtension {
 
@@ -108,17 +105,13 @@ public class VaultTestExtension {
     public static final String TMP_VAULT_CONFIG_JSON_FILE = "/tmp/vault-config.json";
     public static final String TMP_POSTGRES_INIT_SQL_FILE = "/tmp/postgres-init.sql";
     public static final String TEST_QUERY_STRING = "SELECT 1";
-    public static final String CONTAINER_TMP_CMD = "/tmp/cmd";
-    public static final String HOST_VAULT_TMP_CMD = "target/vault_cmd";
-    public static final String HOST_POSTGRES_TMP_CMD = "target/postgres_cmd";
-    public static final String OUT_FILE = "/out";
     public static final String WRAPPING_TEST_PATH = "wrapping-test";
     private static final String VAULT_AWS_SERVER_ID = "vault.example.com";
 
     public static final String TEST_POSTGRES_CONFIG = "vault-test.postgres.version";
     public static final String TEST_RABBITMQ_CONFIG = "vault-test.rabbitmq.version";
     public static final String TEST_RABBITMQ_4_CONFIG = "vault-test.test-rabbitmq-4";
-    public static final String TEST_POSTGRES_VERSION = PostgreSQLContainer.DEFAULT_TAG;
+    public static final String TEST_POSTGRES_VERSION = "18";
     public static final String TEST_RABBITMQ_VERSION_3 = "3.13.7-management-alpine";
     public static final String TEST_RABBITMQ_VERSION_4 = "4.0.2-management-alpine";
 
@@ -228,7 +221,7 @@ public class VaultTestExtension {
 
     private static Optional<URL> getVaultUrl() {
         try {
-            return Optional.of(new URL(VAULT_URL));
+            return Optional.of(URI.create(VAULT_URL).toURL());
         } catch (MalformedURLException e) {
             throw new VaultException(e);
         }
@@ -238,17 +231,14 @@ public class VaultTestExtension {
 
         log.info("start containers on " + System.getProperty("os.name"));
 
-        new File(HOST_POSTGRES_TMP_CMD).mkdirs();
-
         Network network = Network.newNetwork();
 
-        postgresContainer = new PostgreSQLContainer<>(DockerImageName.parse(PostgreSQLContainer.IMAGE).withTag(
+        postgresContainer = new PostgreSQLContainer(DockerImageName.parse(PostgreSQLContainer.IMAGE).withTag(
                 config.getOptionalValue(TEST_POSTGRES_CONFIG, String.class).orElse(TEST_POSTGRES_VERSION)))
                 .withDatabaseName(DB_NAME)
                 .withUsername(DB_USERNAME)
                 .withPassword(DB_PASSWORD)
                 .withNetwork(network)
-                .withFileSystemBind(HOST_POSTGRES_TMP_CMD, CONTAINER_TMP_CMD)
                 .withNetworkAliases(POSTGRESQL_HOST)
                 .withExposedPorts(POSTGRESQL_PORT)
                 .withClasspathResourceMapping("postgres-init.sql", TMP_POSTGRES_INIT_SQL_FILE, READ_ONLY);
@@ -268,7 +258,7 @@ public class VaultTestExtension {
         Consumer<OutputFrame> localstackConsumer = outputFrame -> System.out.print("AWS >> " + outputFrame.getUtf8String());
 
         localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.1"))
-                .withServices(LocalStackContainer.Service.STS, LocalStackContainer.Service.IAM)
+                .withServices("sts", "iam")
                 .withLogConsumer(localstackConsumer)
                 .withNetwork(network)
                 .withNetworkAliases(LOCALSTACK_HOST);
@@ -278,15 +268,12 @@ public class VaultTestExtension {
         String vaultImage = getVaultImage();
         log.info("starting " + vaultImage + " with url=" + VAULT_URL + " and config file=" + configFile);
 
-        new File(HOST_VAULT_TMP_CMD).mkdirs();
-
         vaultContainer = new GenericContainer<>(vaultImage)
                 .withExposedPorts(VAULT_PORT)
                 .withEnv("SKIP_SETCAP", "true")
                 .withEnv("VAULT_SKIP_VERIFY", "true") // this is internal to the container
                 .withEnv("VAULT_ADDR", VAULT_URL)
                 .withNetwork(network)
-                .withFileSystemBind(HOST_VAULT_TMP_CMD, CONTAINER_TMP_CMD)
                 .withClasspathResourceMapping(configFile, TMP_VAULT_CONFIG_JSON_FILE, READ_ONLY)
                 .withClasspathResourceMapping("vault-tls.key", "/tmp/vault-tls.key", READ_ONLY)
                 .withClasspathResourceMapping("vault-tls.crt", "/tmp/vault-tls.crt", READ_ONLY)
@@ -323,9 +310,9 @@ public class VaultTestExtension {
 
     private void initLocalStack() throws IOException, InterruptedException {
         ObjectMapper objectMapper = JsonMapper.builder()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
-                .serializationInclusion(JsonInclude.Include.NON_NULL)
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL)
+                        .withValueInclusion(JsonInclude.Include.NON_NULL))
                 .build();
 
         createLocalstackIamUser("vault-user", objectMapper);
@@ -622,23 +609,22 @@ public class VaultTestExtension {
     }
 
     private String execPostgres(String command) throws IOException, InterruptedException {
-        String[] cmd = { "/bin/sh", "-c", command + " > " + CONTAINER_TMP_CMD + OUT_FILE };
-        return exec(postgresContainer, command, cmd, HOST_POSTGRES_TMP_CMD + OUT_FILE);
+        String[] cmd = { "/bin/sh", "-c", command };
+        return exec(postgresContainer, command, cmd);
     }
 
     private String execVault(String command) throws IOException, InterruptedException {
-        String[] cmd = createVaultCommand(command + " > " + CONTAINER_TMP_CMD + OUT_FILE);
-        return exec(vaultContainer, command, cmd, HOST_VAULT_TMP_CMD + OUT_FILE);
+        String[] cmd = createVaultCommand(command);
+        return exec(vaultContainer, command, cmd);
     }
 
     private String execLocalStack(final String... command) throws IOException, InterruptedException {
         return exec(localStackContainer, command).getStdout();
     }
 
-    private String exec(GenericContainer container, String command, String[] cmd, String outFile)
+    private String exec(GenericContainer container, String command, String[] cmd)
             throws IOException, InterruptedException {
-        exec(container, cmd);
-        String out = Files.readString(Paths.get(outFile));
+        String out = exec(container, cmd).getStdout();
         log.info("> " + command + "\n" + out);
         return out;
     }

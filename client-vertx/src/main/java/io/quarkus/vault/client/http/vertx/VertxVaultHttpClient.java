@@ -28,13 +28,14 @@ public class VertxVaultHttpClient extends VaultHttpClient {
     @Override
     public <T> CompletionStage<VaultResponse<T>> execute(VaultRequest<T> request) {
         var requestOptions = requestOptions(request);
-        var httpRequest = webClient.request(httpMethodFor(request), requestOptions);
+        var httpRequest = webClient.request(requestOptions);
         return send(request, httpRequest)
                 .thenCompose(res -> buildResponse(request, res));
     }
 
     private RequestOptions requestOptions(VaultRequest<?> request) {
         var options = new RequestOptions()
+                .setMethod(httpMethodFor(request))
                 .setTraceOperation(request.getOperation())
                 .setAbsoluteURI(request.getUrl())
                 .setTimeout(request.getTimeout().toMillis());

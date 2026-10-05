@@ -22,7 +22,7 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.auth.VaultAppRoleAuthRole;
 import io.quarkus.vault.auth.VaultAppRoleSecretId;
@@ -35,7 +35,7 @@ import io.quarkus.vault.test.VaultTestLifecycleManager;
 public class VaultAppRoleITCase {
 
     @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest()
+    static final QuarkusExtensionTest config = new QuarkusExtensionTest()
             .withApplicationRoot((jar) -> jar
                     .addAsResource("application-vault-approle.properties", "application.properties"));
 

@@ -1,12 +1,11 @@
 package io.quarkus.vault.client.json;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Locale;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 public class VaultDurationStringSerializer extends StdSerializer<Duration> {
 
@@ -15,7 +14,7 @@ public class VaultDurationStringSerializer extends StdSerializer<Duration> {
     }
 
     @Override
-    public void serialize(Duration value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    public void serialize(Duration value, JsonGenerator gen, SerializationContext provider) {
         var fmt = value.toString();
         if (fmt.startsWith("PT")) {
             fmt = fmt.substring(2);

@@ -9,9 +9,9 @@ import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 import io.quarkus.vault.client.api.secrets.rabbitmq.VaultSecretsRabbitMQConfigureConnectionParams;
 import io.quarkus.vault.client.api.secrets.rabbitmq.VaultSecretsRabbitMQVHosts;

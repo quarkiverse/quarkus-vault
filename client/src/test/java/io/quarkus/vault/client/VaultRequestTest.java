@@ -2,7 +2,7 @@ package io.quarkus.vault.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,7 @@ public class VaultRequestTest {
     public void testBuilderBasics() throws Exception {
 
         var request = VaultRequest.post("Test")
-                .baseUrl(new URL("https://example.com:8200"))
+                .baseUrl(URI.create("https://example.com:8200").toURL())
                 .apiVersion("v2")
                 .path("/test")
                 .body("{}")
@@ -42,7 +42,7 @@ public class VaultRequestTest {
         assertThat(request.getOperation())
                 .isEqualTo("Test");
         assertThat(request.getBaseUrl())
-                .isEqualTo(new URL("https://example.com:8200"));
+                .isEqualTo(URI.create("https://example.com:8200").toURL());
         assertThat(request.getApiVersion())
                 .isEqualTo("v2");
         assertThat(request.getPath())
@@ -76,7 +76,7 @@ public class VaultRequestTest {
         assertThat(request.getResultExtractor())
                 .isInstanceOf(VaultVoidResultExtractor.class);
         assertThat(request.getUrl())
-                .isEqualTo(new URL("https://example.com:8200/v2/test?baz=qux"));
+                .isEqualTo(URI.create("https://example.com:8200/v2/test?baz=qux").toURL());
         assertThat(request.getHTTPHeaders())
                 .containsEntry(VaultHttpClient.X_VAULT_TOKEN, "test")
                 .containsEntry(VaultHttpClient.X_VAULT_NAMESPACE, "test-ns")
@@ -179,30 +179,50 @@ public class VaultRequestTest {
     }
 
     @Test
+    public void testUrlIncludesBaseUrlPath() throws Exception {
+
+        var request = VaultRequest.get("Test")
+                .baseUrl(URI.create("https://example.com:8200/vault/").toURL())
+                .path("test")
+                .build();
+
+        assertThat(request.getUrl())
+                .isEqualTo(URI.create("https://example.com:8200/vault/v1/test").toURL());
+
+        var request2 = VaultRequest.get("Test")
+                .baseUrl(URI.create("https://example.com:8200/vault").toURL())
+                .path("test")
+                .build();
+
+        assertThat(request2.getUrl())
+                .isEqualTo(URI.create("https://example.com:8200/vault/v1/test").toURL());
+    }
+
+    @Test
     public void testQueryParamFormatsNullValuesAsFlags() throws Exception {
 
         var request = VaultRequest.post("Test")
-                .baseUrl(new URL("https://example.com:8200"))
+                .baseUrl(URI.create("https://example.com:8200").toURL())
                 .path("test")
                 .queryParam("foo", null)
                 .queryParam("bar", "baz")
                 .build();
 
         assertThat(request.getUrl())
-                .isEqualTo(new URL("https://example.com:8200/v1/test?foo&bar=baz"));
+                .isEqualTo(URI.create("https://example.com:8200/v1/test?foo&bar=baz").toURL());
     }
 
     @Test
     public void testQueryParamEncodesEnumsWithJsonProperty() throws Exception {
 
         var request = VaultRequest.post("Test")
-                .baseUrl(new URL("https://example.com:8200"))
+                .baseUrl(URI.create("https://example.com:8200").toURL())
                 .path("test")
                 .queryParam("foo", TestEnum.FOO)
                 .build();
 
         assertThat(request.getUrl())
-                .isEqualTo(new URL("https://example.com:8200/v1/test?foo=foo_option"));
+                .isEqualTo(URI.create("https://example.com:8200/v1/test?foo=foo_option").toURL());
     }
 
     @Test
@@ -222,7 +242,7 @@ public class VaultRequestTest {
     public void testHeaderEncodesValuesAsString() throws Exception {
 
         var request = VaultRequest.post("Test")
-                .baseUrl(new URL("https://example.com:8200"))
+                .baseUrl(URI.create("https://example.com:8200").toURL())
                 .path("test")
                 .header("foo", 200)
                 .build();
@@ -231,7 +251,7 @@ public class VaultRequestTest {
                 .containsEntry("foo", "200");
 
         var request2 = VaultRequest.post("Test")
-                .baseUrl(new URL("https://example.com:8200"))
+                .baseUrl(URI.create("https://example.com:8200").toURL())
                 .path("test")
                 .header("foo", Duration.ofSeconds(200))
                 .build();
@@ -244,7 +264,7 @@ public class VaultRequestTest {
     public void testHeaderEncodesEnumsWithJsonProperty() throws Exception {
 
         var request = VaultRequest.post("Test")
-                .baseUrl(new URL("https://example.com:8200"))
+                .baseUrl(URI.create("https://example.com:8200").toURL())
                 .path("test")
                 .header("foo", TestEnum.FOO)
                 .build();

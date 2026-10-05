@@ -1,21 +1,19 @@
 package io.quarkus.vault.client.json;
 
-import java.io.IOException;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-public class MapToStringSerializer extends JsonSerializer<Map<String, Object>> {
+public class MapToStringSerializer extends ValueSerializer<Map<String, Object>> {
     @Override
-    public void serialize(Map<String, Object> map, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
-            throws IOException {
+    public void serialize(Map<String, Object> map, JsonGenerator jsonGenerator, SerializationContext serializerProvider) {
         if (map == null) {
             jsonGenerator.writeNull();
         } else {
             String jsonString = JsonMapping.mapper.writeValueAsString(map);
-            jsonGenerator.writeObject(jsonString);
+            jsonGenerator.writePOJO(jsonString);
         }
     }
 }

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.agroal.api.AgroalDataSource;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.test.VaultTestLifecycleManager;
 
@@ -26,7 +26,7 @@ public class AgroalVaultKv1ITCase {
     private static final Logger log = Logger.getLogger(AgroalVaultKv1ITCase.class.getName());
 
     @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest().setArchiveProducer(
+    static final QuarkusExtensionTest config = new QuarkusExtensionTest().setArchiveProducer(
             () -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("application-vault-kv-version1-datasource.properties", "application.properties"));
 

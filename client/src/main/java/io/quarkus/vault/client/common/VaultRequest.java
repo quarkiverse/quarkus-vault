@@ -5,6 +5,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.time.Duration;
@@ -302,7 +303,9 @@ public class VaultRequest<T> {
         try {
             return Optional.of(JsonMapping.mapper.writeValueAsString(body));
         } catch (Exception e) {
-            throw new VaultClientException(this, null, List.of("Failed to serialize request body"), null);
+            // the cause may expose parts of the request body
+            var cause = logConfidentialityLevel == LogConfidentialityLevel.LOW ? e : null;
+            throw new VaultClientException(this, null, List.of("Failed to serialize request body"), cause);
         }
     }
 
@@ -329,8 +332,8 @@ public class VaultRequest<T> {
         }
 
         try {
-            return new URL(baseUrl, fullPath);
-        } catch (MalformedURLException e) {
+            return baseUrl.toURI().resolve("/" + fullPath).toURL();
+        } catch (URISyntaxException | IllegalArgumentException | MalformedURLException e) {
             throw new IllegalStateException("Invalid URL for Vault request", e);
         }
     }

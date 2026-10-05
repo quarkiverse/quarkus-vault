@@ -1,12 +1,11 @@
 package io.quarkus.vault.client.json;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Locale;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
 
 public class VaultDurationStringDeserializer extends StdDeserializer<Duration> {
 
@@ -15,10 +14,10 @@ public class VaultDurationStringDeserializer extends StdDeserializer<Duration> {
     }
 
     @Override
-    public Duration deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public Duration deserialize(JsonParser p, DeserializationContext ctxt) {
         switch (p.currentToken()) {
             case VALUE_STRING:
-                return Duration.parse("PT" + p.getText().toUpperCase(Locale.ROOT));
+                return Duration.parse("PT" + p.getString().toUpperCase(Locale.ROOT));
             case VALUE_NUMBER_INT:
                 return Duration.ofSeconds(p.getLongValue());
             default:

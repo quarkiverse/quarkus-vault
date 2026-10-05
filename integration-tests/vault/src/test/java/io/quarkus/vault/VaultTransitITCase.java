@@ -34,7 +34,7 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.client.VaultClient;
 import io.quarkus.vault.client.VaultException;
@@ -69,7 +69,7 @@ public class VaultTransitITCase {
     public static final String NEW_KEY = "new-key";
 
     @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest()
+    static final QuarkusExtensionTest config = new QuarkusExtensionTest()
             .withApplicationRoot((jar) -> jar
                     .addAsResource("application-vault.properties", "application.properties"));
     public static final String KEY_NAME = "mykey";
@@ -374,8 +374,6 @@ public class VaultTransitITCase {
         assertTrue(mykey.isSupportsDecryption());
         assertTrue(mykey.isSupportsEncryption());
         assertTrue(mykey.isSupportsDerivation());
-        assertEquals(1, mykey.getKeys().size());
-        assertTrue(mykey.getKeys().containsKey("1"));
         assertEquals(1, mykey.getVersions().size());
         assertTrue(mykey.getVersions().containsKey("1"));
         assertEquals(1, mykey.getMinDecryptionVersion());
@@ -411,8 +409,6 @@ public class VaultTransitITCase {
         assertFalse(mykey.isSupportsDerivation());
         assertTrue(mykey.isSupportsSigning());
         assertEquals(mykey.getType(), "ecdsa-p256");
-        assertEquals(1, mykey.getKeys().size());
-        assertTrue(mykey.getKeys().containsKey("1"));
         assertEquals(1, mykey.getVersions().size());
         assertTrue(mykey.getVersions().containsKey("1"));
         assertNotNull(mykey.getVersions().get("1").getCreationTime());
@@ -448,8 +444,6 @@ public class VaultTransitITCase {
         assertFalse(mykey.isSupportsDerivation());
         assertTrue(mykey.isSupportsSigning());
         assertEquals("rsa-2048", mykey.getType());
-        assertEquals(1, mykey.getKeys().size());
-        assertTrue(mykey.getKeys().containsKey("1"));
         assertEquals(1, mykey.getVersions().size());
         assertTrue(mykey.getVersions().containsKey("1"));
         assertNotNull(mykey.getVersions().get("1").getCreationTime());
@@ -485,8 +479,6 @@ public class VaultTransitITCase {
         assertTrue(mykey.isSupportsDerivation());
         assertFalse(mykey.isSupportsSigning());
         assertEquals(mykey.getType(), "aes256-gcm96");
-        assertEquals(1, mykey.getKeys().size());
-        assertTrue(mykey.getKeys().containsKey("1"));
         assertEquals(1, mykey.getVersions().size());
         assertTrue(mykey.getVersions().containsKey("1"));
         assertNotNull(mykey.getVersions().get("1").getCreationTime());

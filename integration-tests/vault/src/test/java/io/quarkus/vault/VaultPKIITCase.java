@@ -45,7 +45,7 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.pki.CAChainData;
 import io.quarkus.vault.pki.CRLData;
@@ -73,7 +73,7 @@ import io.quarkus.vault.test.VaultTestLifecycleManager;
 public class VaultPKIITCase {
 
     @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest()
+    static final QuarkusExtensionTest config = new QuarkusExtensionTest()
             .withApplicationRoot((jar) -> jar
                     .addAsResource("application-vault-pki.properties", "application.properties"));
 

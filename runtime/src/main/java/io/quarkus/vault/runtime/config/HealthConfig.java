@@ -6,7 +6,7 @@ import io.smallrye.config.WithDefault;
 @ConfigGroup
 public interface HealthConfig {
     /**
-     * Whether or not an health check is published in case the smallrye-health extension is present.
+     * Whether a health check is published in case the smallrye-health extension is present.
      */
     @WithDefault("false")
     boolean enabled();

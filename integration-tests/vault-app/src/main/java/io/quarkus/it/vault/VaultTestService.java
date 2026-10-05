@@ -90,7 +90,7 @@ public class VaultTestService {
         }
 
         try {
-            List gifts = entityManager.createQuery("select g from Gift g").getResultList();
+            List<Gift> gifts = entityManager.createQuery("select g from Gift g", Gift.class).getResultList();
             int count = gifts.size();
             log.info("found " + count + " gifts");
         } catch (Exception e) {

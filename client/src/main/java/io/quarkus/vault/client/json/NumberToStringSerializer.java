@@ -1,20 +1,17 @@
 package io.quarkus.vault.client.json;
 
-import java.io.IOException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
-
-public class NumberToStringSerializer extends JsonSerializer<Number> {
+public class NumberToStringSerializer extends ValueSerializer<Number> {
     @Override
-    public void serialize(Number number, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
-            throws IOException {
+    public void serialize(Number number, JsonGenerator jsonGenerator, SerializationContext serializerProvider) {
         if (number == null) {
             jsonGenerator.writeNull();
         } else {
             String jsonString = JsonMapping.mapper.writeValueAsString(number);
-            jsonGenerator.writeObject(jsonString);
+            jsonGenerator.writePOJO(jsonString);
         }
     }
 }

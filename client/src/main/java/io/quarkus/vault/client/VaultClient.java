@@ -2,6 +2,7 @@ package io.quarkus.vault.client;
 
 import static java.util.Objects.requireNonNull;
 
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -46,7 +47,7 @@ public class VaultClient implements VaultRequestExecutor {
 
         public Builder baseUrl(String baseUrl) {
             try {
-                return baseUrl(new URL(baseUrl));
+                return baseUrl(URI.create(baseUrl).toURL());
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid URL: " + baseUrl, e);
             }

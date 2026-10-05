@@ -101,4 +101,4 @@ methods:
     return wrap($mapping:T.convert(data, new $typeRef:T<>() {}), wrapTtl);
   bodyArguments:
     mapping: <type>io.quarkus.vault.client.json.JsonMapping
-    typeRef: <type>com.fasterxml.jackson.core.type.TypeReference
+    typeRef: <type>tools.jackson.core.type.TypeReference

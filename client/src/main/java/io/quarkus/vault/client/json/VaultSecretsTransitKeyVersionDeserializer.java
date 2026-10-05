@@ -2,30 +2,28 @@ package io.quarkus.vault.client.json;
 
 import static java.time.ZoneOffset.UTC;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.deser.std.DelegatingDeserializer;
-
 import io.quarkus.vault.client.api.secrets.transit.VaultSecretsTransitKeyVersion;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.deser.std.DelegatingDeserializer;
 
 public class VaultSecretsTransitKeyVersionDeserializer extends DelegatingDeserializer {
 
-    public VaultSecretsTransitKeyVersionDeserializer(JsonDeserializer<?> defaultDeserializer) {
+    public VaultSecretsTransitKeyVersionDeserializer(ValueDeserializer<?> defaultDeserializer) {
         super(defaultDeserializer);
     }
 
     @Override
-    protected JsonDeserializer<?> newDelegatingInstance(JsonDeserializer<?> newDelegatee) {
+    protected ValueDeserializer<?> newDelegatingInstance(ValueDeserializer<?> newDelegatee) {
         return new VaultSecretsTransitKeyVersionDeserializer(newDelegatee);
     }
 
     @Override
-    public VaultSecretsTransitKeyVersion deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public VaultSecretsTransitKeyVersion deserialize(JsonParser p, DeserializationContext ctxt) {
         if (p.currentToken().isNumeric()) {
             var creationTime = OffsetDateTime.ofInstant(Instant.ofEpochSecond(p.readValueAs(Long.class)), UTC);
             return new VaultSecretsTransitKeyVersion()

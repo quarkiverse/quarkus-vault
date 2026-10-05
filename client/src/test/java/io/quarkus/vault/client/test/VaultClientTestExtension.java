@@ -4,6 +4,7 @@ import static org.testcontainers.containers.BindMode.READ_ONLY;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.security.MessageDigest;
@@ -92,7 +93,7 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
                 .clientToken("root")
                 .build();
 
-        vaultBaseUrl = new URL(vaultContainer.getHttpHostAddress());
+        vaultBaseUrl = URI.create(vaultContainer.getHttpHostAddress()).toURL();
 
         var secretMounts = annotation.secrets();
         for (var secretMount : secretMounts) {

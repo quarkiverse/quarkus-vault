@@ -48,7 +48,7 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkus.credentials.CredentialsProvider;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.vault.client.VaultClient;
 import io.quarkus.vault.client.VaultClientException;
@@ -71,7 +71,7 @@ public class VaultITCase {
     public static final String MY_PASSWORD = "my-password";
 
     @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest()
+    static final QuarkusExtensionTest config = new QuarkusExtensionTest()
             .withApplicationRoot((jar) -> jar
                     .addAsResource("application-vault.properties", "application.properties"));
 
