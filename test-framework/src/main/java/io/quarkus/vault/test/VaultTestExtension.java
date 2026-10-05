@@ -43,6 +43,7 @@ import org.testcontainers.localstack.LocalStackContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -281,7 +282,8 @@ public class VaultTestExtension {
                 .withClasspathResourceMapping("secret.json", "/tmp/secret.json", READ_ONLY)
                 .withClasspathResourceMapping("config.json", "/tmp/config.json", READ_ONLY)
                 .withClasspathResourceMapping("cred-provider.json", "/tmp/cred-provider.json", READ_ONLY)
-                .withClasspathResourceMapping(getTestPluginFilename(), "/vault/plugins/test-plugin", READ_ONLY)
+                .withCopyFileToContainer(MountableFile.forClasspathResource(getTestPluginFilename(), 0755),
+                        "/vault/plugins/test-plugin")
                 // allows Vault to call back services running on the host (e.g. mock GitHub API)
                 .withAccessToHost(true)
                 .withCommand("server", "-log-level=debug", "-config=" + TMP_VAULT_CONFIG_JSON_FILE);
@@ -420,9 +422,6 @@ public class VaultTestExtension {
         String policyContent = readResourceContent("vault.policy");
         vaultClient.sys().policy().update(VAULT_POLICY, policyContent)
                 .toCompletableFuture().get();
-
-        // executable permission for test-plugin
-        execVault("chmod +x /vault/plugins/test-plugin");
 
         // static secrets kv v1
         execVault(format("vault secrets enable -path=%s kv", SECRET_PATH_V1));

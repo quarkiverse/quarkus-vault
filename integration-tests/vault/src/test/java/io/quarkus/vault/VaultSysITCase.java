@@ -267,7 +267,7 @@ public class VaultSysITCase {
         assertEquals("supported", kvDetails.getDeprecationStatus());
         assertEquals("kv", kvDetails.getName());
         assertEquals("secret", kvDetails.getType());
-        assertTrue(kvDetails.getVersion().matches("v[0-9]+\\.[0-9]+\\.[0-9]+\\+builtin"));
+        assertTrue(kvDetails.getVersion().matches("v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?\\+builtin"));
         assertNull(kvDetails.getSha256());
         assertNull(kvDetails.getCommand());
         assertNull(kvDetails.getArgs());
@@ -304,7 +304,7 @@ public class VaultSysITCase {
         assertEquals("supported", details.getDeprecationStatus());
         assertEquals("kv", details.getName());
         assertNull(details.getType());
-        assertTrue(details.getVersion().matches("v[0-9]+\\.[0-9]+\\.[0-9]+\\+builtin"));
+        assertTrue(details.getVersion().matches("v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?\\+builtin"));
         assertEquals("", details.getSha256());
         assertEquals("", details.getCommand());
         assertNull(details.getArgs());
@@ -351,8 +351,11 @@ public class VaultSysITCase {
         // assertEquals(List.of("ENV_VAR=1"), testPluginDetails.getEnv());
         assertNull(details.getEnv());
 
-        // Can't get details of a versioned custom plugin without specifying a version
-        assertNull(vaultSystemBackendEngine.getPluginDetails("secret", "test-plugin", null));
+        // Without specifying a version, Vault returns the only registered version of a custom plugin
+        var unversionedDetails = vaultSystemBackendEngine.getPluginDetails("secret", "test-plugin", null);
+        assertNotNull(unversionedDetails);
+        assertEquals("v0.0.1", unversionedDetails.getVersion());
+        assertEquals(testPluginSHA, unversionedDetails.getSha256());
     }
 
     @Test

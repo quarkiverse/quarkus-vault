@@ -292,6 +292,8 @@ public class VaultPKIITCase {
         // Generate root CA in "pki"
         GenerateRootOptions genRootOptions = new GenerateRootOptions();
         genRootOptions.subjectCommonName = "root.example.com";
+        // the signed intermediate CA cannot outlive the root
+        genRootOptions.timeToLive = "8760h";
 
         GeneratedRootCertificate generatedRoot = pkiSecretEngine.generateRoot(genRootOptions);
         assertNotNull(generatedRoot.certificate);
@@ -1001,9 +1003,9 @@ public class VaultPKIITCase {
 
         // Update URLs & read them
         ConfigURLsOptions options = new ConfigURLsOptions();
-        options.issuingCertificates = asList("certs1.example.com", "certs2.example.com");
-        options.crlDistributionPoints = asList("crl1.example.com", "crl2.example.com");
-        options.ocspServers = asList("ocsp1.example.com", "ocsp2.example.com");
+        options.issuingCertificates = asList("http://certs1.example.com", "http://certs2.example.com");
+        options.crlDistributionPoints = asList("http://crl1.example.com", "http://crl2.example.com");
+        options.ocspServers = asList("http://ocsp1.example.com", "http://ocsp2.example.com");
 
         pkiSecretEngine.configURLs(options);
 

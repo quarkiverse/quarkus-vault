@@ -1196,8 +1196,7 @@ public class VaultSecretsTransitTest {
 
         var signature = transitApi.sign(keyName, new VaultSecretsTransitSignParams()
                 .setInput(data)
-                .setContext(context)
-                .setHashAlgorithm(SHA2_512))
+                .setContext(context))
                 .toCompletableFuture().get();
 
         assertThat(signature)
@@ -1385,7 +1384,6 @@ public class VaultSecretsTransitTest {
                 .toCompletableFuture().get();
 
         var signature = transitApi.signBatch(keyName, new VaultSecretsTransitSignBatchParams()
-                .setHashAlgorithm(SHA2_512)
                 .addBatchItem(
                         new VaultSecretsTransitSignBatchItem()
                                 .setInput(data1)

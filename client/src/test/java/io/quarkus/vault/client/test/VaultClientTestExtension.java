@@ -26,7 +26,7 @@ public class VaultClientTestExtension implements BeforeAllCallback, AfterAllCall
     private static final java.util.Random random = new java.util.Random();
 
     public static final String DEFAULT_VAULT_IMAGE_REPO = "hashicorp/vault";
-    public static final String DEFAULT_VAULT_IMAGE_VER = "1.15.4";
+    public static final String DEFAULT_VAULT_IMAGE_VER = "2.1.1";
 
     public static String getVaultImageVersion() {
         var version = System.getenv("VAULT_IMAGE_VER");
