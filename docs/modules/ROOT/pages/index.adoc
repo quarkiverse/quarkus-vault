@@ -606,6 +606,35 @@ Since Dev Services collapses startup log output, the error may be easy to miss.
 To troubleshoot init commands, you can execute them manually against the running container with
 `docker exec -it <container-id> vault <command>`.
 
+=== Dev UI
+
+In dev mode, the Vault card in the Dev UI (`/q/dev-ui`) links to the Vault web UI of the server configured in `quarkus.vault.url` (or started by Dev Services), and shows the server version.
+
+When Dev Services starts the Vault container, the card also shows the root token to log in to the Vault web UI, for instance to check the result of your init commands.
+The token is not shown for a container that Dev Services only discovered, such as a shared or Compose container.
+Without `quarkus.vault.url` and without Dev Services, the card states that no Vault is configured.
+
+The "Config sources" page lists, for each KV path read through `quarkus.vault.secret-config-kv-path` (including prefixed paths and named KV engines), the names of the properties it provides.
+It also shows when the paths were fetched and, for a path that could not be read, an error category such as `not found (404)` or `permission denied (403)`.
+The page reflects the last fetch: Vault is read again on the next config lookup once `quarkus.vault.secret-config-cache-period` has elapsed.
+If a refresh fails because Vault is unreachable, the application keeps serving the last known values, and the page keeps showing them with the refresh error.
+Values are never shown, consistent with the Vault config source not exposing its properties to other tools.
+A path that does not exist still fails the application at startup, as before.
+The page helps checking which property names a path provides, for instance to reference them with `${...}`.
+
+Config source metadata is available in the Dev UI by default, but is not shared with Dev MCP clients.
+To also expose it through Dev MCP, explicitly enable the following property in `application.properties`:
+
+[source,properties]
+----
+%dev.quarkus.vault.dev-ui.expose-config-source-metadata-to-mcp=true
+----
+
+This allows connected Dev MCP clients to read KV paths, property names, fetch times and refresh errors through the `quarkus-vault_getConfigSourcesForMcp` tool.
+When the property is disabled (the default), the tool returns a message explaining how to enable it instead of metadata.
+Enable it only when you intend to share this metadata with those clients.
+The setting affects only MCP access and is ignored outside dev mode.
+
 == Conclusion
 
 As a general matter, you should consider reading the extensive https://www.vaultproject.io/docs/[Vault documentation]
