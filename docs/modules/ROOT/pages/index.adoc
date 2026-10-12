@@ -606,6 +606,18 @@ Since Dev Services collapses startup log output, the error may be easy to miss.
 To troubleshoot init commands, you can execute them manually against the running container with
 `docker exec -it <container-id> vault <command>`.
 
+=== Dev UI
+
+In dev mode, the Vault card in the Dev UI (`/q/dev-ui`) links to the Vault web UI of the server configured in `quarkus.vault.url` (or started by Dev Services), and shows the server version.
+
+With Dev Services, the card also shows the root token to log in to the Vault web UI, for instance to check the result of your init commands.
+
+The "Config sources" page lists, for each KV path read through `quarkus.vault.secret-config-kv-path` (including prefixed paths and named KV engines), the names of the properties it provides.
+It also shows when the path was fetched and the last refresh error, if any.
+Values are never shown, consistent with the Vault config source not exposing its properties to other tools.
+A path that does not exist still fails the application at startup, as before.
+The page helps checking which property names a path provides, for instance to reference them with `${...}`.
+
 == Conclusion
 
 As a general matter, you should consider reading the extensive https://www.vaultproject.io/docs/[Vault documentation]
