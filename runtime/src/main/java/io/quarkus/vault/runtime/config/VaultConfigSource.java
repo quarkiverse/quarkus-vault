@@ -13,6 +13,7 @@ import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
+import io.quarkus.runtime.LaunchMode;
 import io.quarkus.vault.VaultKVSecretReactiveEngine;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.runtime.VaultKvManager;
@@ -125,26 +126,60 @@ public class VaultConfigSource implements ConfigSource {
     }
 
     private void fetchSecrets(Map<String, String> properties) {
-
-        // default kv paths
-        vaultRuntimeConfig.secretConfigKvPath()
-                .ifPresent(strings -> fetchSecrets(VaultKvManager.DEFAULT, strings, null, properties));
-        // prefixed kv paths
-        vaultRuntimeConfig.secretConfigKvPathPrefix()
-                .forEach((key, value) -> fetchSecrets(VaultKvManager.DEFAULT, value.paths(), key, properties));
-
-        for (var entry : new TreeMap<>(vaultRuntimeConfig.kvSecretEngineAlias()).entrySet()) {
-            String alias = entry.getKey();
+        List<VaultConfigSourceStatus.PathStatus> statuses = LaunchMode.current() == LaunchMode.DEVELOPMENT
+                ? new ArrayList<>()
+                : null;
+        try {
             // default kv paths
-            entry.getValue().secretConfigKvPath().ifPresent(strings -> fetchSecrets(alias, strings, null, properties));
+            vaultRuntimeConfig.secretConfigKvPath()
+                    .ifPresent(strings -> fetchSecrets(VaultKvManager.DEFAULT, strings, null, properties, statuses));
             // prefixed kv paths
-            entry.getValue().secretConfigKvPathPrefix()
-                    .forEach((key, value) -> fetchSecrets(alias, value.paths(), key, properties));
+            vaultRuntimeConfig.secretConfigKvPathPrefix()
+                    .forEach((key, value) -> fetchSecrets(VaultKvManager.DEFAULT, value.paths(), key, properties, statuses));
+
+            for (var entry : new TreeMap<>(vaultRuntimeConfig.kvSecretEngineAlias()).entrySet()) {
+                String alias = entry.getKey();
+                // default kv paths
+                entry.getValue().secretConfigKvPath()
+                        .ifPresent(strings -> fetchSecrets(alias, strings, null, properties, statuses));
+                // prefixed kv paths
+                entry.getValue().secretConfigKvPathPrefix()
+                        .forEach((key, value) -> fetchSecrets(alias, value.paths(), key, properties, statuses));
+            }
+        } finally {
+            if (statuses != null) {
+                VaultConfigSourceStatus.record(statuses);
+            }
         }
     }
 
-    private void fetchSecrets(String alias, List<String> paths, String prefix, Map<String, String> properties) {
-        paths.forEach(path -> properties.putAll(fetchSecrets(alias, path, prefix)));
+    private void fetchSecrets(String alias, List<String> paths, String prefix, Map<String, String> properties,
+            List<VaultConfigSourceStatus.PathStatus> statuses) {
+        for (String path : paths) {
+            try {
+                Map<String, String> secret = fetchSecrets(alias, path, prefix);
+                properties.putAll(secret);
+                if (statuses != null) {
+                    statuses.add(new VaultConfigSourceStatus.PathStatus(alias, path, prefix,
+                            secret.keySet().stream().sorted().toList(), null));
+                }
+            } catch (RuntimeException e) {
+                if (statuses != null) {
+                    statuses.add(new VaultConfigSourceStatus.PathStatus(alias, path, prefix, List.of(), shortMessage(e)));
+                }
+                throw e;
+            }
+        }
+    }
+
+    private static String shortMessage(RuntimeException e) {
+        String message = e.getMessage();
+        if (message == null) {
+            String className = e.getClass().getName();
+            message = className.substring(className.lastIndexOf('.') + 1);
+        }
+        String firstLine = message.lines().findFirst().orElse("");
+        return firstLine.length() > 300 ? firstLine.substring(0, 300) : firstLine;
     }
 
     private Map<String, String> fetchSecrets(String alias, String path, String prefix) {
