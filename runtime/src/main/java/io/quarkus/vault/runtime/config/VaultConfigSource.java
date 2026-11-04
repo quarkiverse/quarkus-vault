@@ -85,7 +85,8 @@ public class VaultConfigSource implements ConfigSource {
                     fetchSecrets(properties);
                     log.debug("refreshed " + properties.size() + " properties from vault");
                 } catch (RuntimeException e) {
-                    return tryReturnLastKnownValue(e, cacheEntry);
+                    // cache the last known values for another period, not the partial result of the failed refresh
+                    properties = tryReturnLastKnownValue(e, cacheEntry);
                 }
             }
         } finally {
