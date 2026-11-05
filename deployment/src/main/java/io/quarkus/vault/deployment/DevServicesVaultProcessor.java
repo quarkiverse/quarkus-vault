@@ -37,7 +37,7 @@ public class DevServicesVaultProcessor {
     private static final Logger log = Logger.getLogger(DevServicesVaultProcessor.class);
     private static final String VAULT_IMAGE = "hashicorp/vault:" + VaultVersions.VAULT_TEST_VERSION;
     private static final String DEV_SERVICE_LABEL = "quarkus-dev-service-vault";
-    private static final String DEV_SERVICE_TOKEN = "root";
+    public static final String DEV_SERVICE_TOKEN = "root";
     private static final int VAULT_EXPOSED_PORT = 8200;
     private static final String CONFIG_PREFIX = "quarkus.vault.";
     private static final String URL_CONFIG_KEY = CONFIG_PREFIX + "url";

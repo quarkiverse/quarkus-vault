@@ -14,6 +14,7 @@ import io.smallrye.config.ConfigSourceFactory.ConfigurableConfigSourceFactory;
 public class VaultConfigSourceFactory implements ConfigurableConfigSourceFactory<VaultRuntimeConfig> {
     @Override
     public Iterable<ConfigSource> getConfigSources(final ConfigSourceContext context, final VaultRuntimeConfig config) {
+        VaultConfigSourceStatus.clear();
         if (config.url().isPresent()) {
             ArcContainer container = Arc.container();
             if (container != null) {

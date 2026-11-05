@@ -13,6 +13,7 @@ import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
+import io.quarkus.runtime.LaunchMode;
 import io.quarkus.vault.VaultKVSecretReactiveEngine;
 import io.quarkus.vault.client.VaultException;
 import io.quarkus.vault.runtime.VaultKvManager;
@@ -74,36 +75,49 @@ public class VaultConfigSource implements ConfigSource {
         }
 
         Map<String, String> properties = new HashMap<>();
+        List<VaultConfigSourceStatus.PathStatus> statuses = LaunchMode.current() == LaunchMode.DEVELOPMENT
+                ? new ArrayList<>()
+                : null;
 
         try {
             if (firstTime) {
                 log.debug("fetch secrets first time with attempts = " + vaultRuntimeConfig.mpConfigInitialAttempts());
                 firstTime = false;
-                fetchSecretsFirstTime(properties);
+                fetchSecretsFirstTime(properties, statuses);
             } else {
                 try {
-                    fetchSecrets(properties);
+                    fetchSecrets(properties, statuses);
                     log.debug("refreshed " + properties.size() + " properties from vault");
                 } catch (RuntimeException e) {
                     // cache the last known values for another period, not the partial result of the failed refresh
                     properties = tryReturnLastKnownValue(e, cacheEntry);
+                    if (statuses != null) {
+                        VaultConfigSourceStatus.recordFailedRefresh(e);
+                        statuses = null;
+                    }
                 }
             }
         } finally {
             cache.set(new VaultCacheEntry<>(properties));
+            if (statuses != null) {
+                VaultConfigSourceStatus.recordFetch(statuses);
+            }
         }
 
         return properties;
     }
 
-    private void fetchSecretsFirstTime(Map<String, String> properties) {
+    private void fetchSecretsFirstTime(Map<String, String> properties, List<VaultConfigSourceStatus.PathStatus> statuses) {
         VaultException last = null;
         for (int i = 0; i < vaultRuntimeConfig.mpConfigInitialAttempts(); i++) {
             try {
                 if (i > 0) {
                     log.debug("retrying to fetch secrets");
                 }
-                fetchSecrets(properties);
+                if (statuses != null) {
+                    statuses.clear();
+                }
+                fetchSecrets(properties, statuses);
                 log.debug("loaded " + properties.size() + " properties from vault");
                 return;
             } catch (VaultException e) {
@@ -125,27 +139,43 @@ public class VaultConfigSource implements ConfigSource {
         }
     }
 
-    private void fetchSecrets(Map<String, String> properties) {
-
+    private void fetchSecrets(Map<String, String> properties, List<VaultConfigSourceStatus.PathStatus> statuses) {
         // default kv paths
         vaultRuntimeConfig.secretConfigKvPath()
-                .ifPresent(strings -> fetchSecrets(VaultKvManager.DEFAULT, strings, null, properties));
+                .ifPresent(strings -> fetchSecrets(VaultKvManager.DEFAULT, strings, null, properties, statuses));
         // prefixed kv paths
         vaultRuntimeConfig.secretConfigKvPathPrefix()
-                .forEach((key, value) -> fetchSecrets(VaultKvManager.DEFAULT, value.paths(), key, properties));
+                .forEach((key, value) -> fetchSecrets(VaultKvManager.DEFAULT, value.paths(), key, properties, statuses));
 
         for (var entry : new TreeMap<>(vaultRuntimeConfig.kvSecretEngineAlias()).entrySet()) {
             String alias = entry.getKey();
             // default kv paths
-            entry.getValue().secretConfigKvPath().ifPresent(strings -> fetchSecrets(alias, strings, null, properties));
+            entry.getValue().secretConfigKvPath()
+                    .ifPresent(strings -> fetchSecrets(alias, strings, null, properties, statuses));
             // prefixed kv paths
             entry.getValue().secretConfigKvPathPrefix()
-                    .forEach((key, value) -> fetchSecrets(alias, value.paths(), key, properties));
+                    .forEach((key, value) -> fetchSecrets(alias, value.paths(), key, properties, statuses));
         }
     }
 
-    private void fetchSecrets(String alias, List<String> paths, String prefix, Map<String, String> properties) {
-        paths.forEach(path -> properties.putAll(fetchSecrets(alias, path, prefix)));
+    private void fetchSecrets(String alias, List<String> paths, String prefix, Map<String, String> properties,
+            List<VaultConfigSourceStatus.PathStatus> statuses) {
+        for (String path : paths) {
+            try {
+                Map<String, String> secret = fetchSecrets(alias, path, prefix);
+                properties.putAll(secret);
+                if (statuses != null) {
+                    statuses.add(new VaultConfigSourceStatus.PathStatus(alias, path, prefix,
+                            secret.keySet().stream().sorted().toList(), null));
+                }
+            } catch (RuntimeException e) {
+                if (statuses != null) {
+                    statuses.add(new VaultConfigSourceStatus.PathStatus(alias, path, prefix, List.of(),
+                            VaultConfigSourceStatus.errorCategory(e)));
+                }
+                throw e;
+            }
+        }
     }
 
     private Map<String, String> fetchSecrets(String alias, String path, String prefix) {

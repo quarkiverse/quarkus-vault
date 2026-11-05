@@ -79,6 +79,12 @@ public interface VaultRuntimeConfig {
     Optional<URL> url();
 
     /**
+     * Dev UI configuration.
+     */
+    @ConfigDocSection
+    VaultDevUIConfig devUi();
+
+    /**
      * Vault Enterprise
      */
     @ConfigDocSection
