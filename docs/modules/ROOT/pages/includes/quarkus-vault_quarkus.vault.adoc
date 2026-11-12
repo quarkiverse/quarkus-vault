@@ -973,6 +973,32 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+h|[[quarkus-vault_section_quarkus-vault-dev-ui]] [.section-name.section-level0]##link:#quarkus-vault_section_quarkus-vault-dev-ui[Dev UI configuration]##
+h|Type
+h|Default
+
+a| [[quarkus-vault_quarkus-vault-dev-ui-expose-config-source-metadata-to-mcp]] [.property-path]##link:#quarkus-vault_quarkus-vault-dev-ui-expose-config-source-metadata-to-mcp[`+++quarkus.vault.dev-ui.expose-config-source-metadata-to-mcp+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.vault.dev-ui.expose-config-source-metadata-to-mcp+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Expose config source metadata to connected Dev MCP clients in dev mode. This includes KV paths, property names, fetch times and refresh errors, but never secret values. The Dev UI Config sources page remains available regardless of this setting. Enable only when you intend to share this metadata with connected MCP clients. Ignored outside dev mode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VAULT_DEV_UI_EXPOSE_CONFIG_SOURCE_METADATA_TO_MCP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VAULT_DEV_UI_EXPOSE_CONFIG_SOURCE_METADATA_TO_MCP+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+
 h|[[quarkus-vault_section_quarkus-vault-enterprise]] [.section-name.section-level0]##link:#quarkus-vault_section_quarkus-vault-enterprise[Vault Enterprise]##
 h|Type
 h|Default
