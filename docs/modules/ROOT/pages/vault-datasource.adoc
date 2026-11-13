@@ -1,4 +1,8 @@
 = Using HashiCorp Vault with Databases
+:extensions: io.quarkiverse.vault:quarkus-vault
+:summary: Use HashiCorp Vault for datasource credentials, through the config source, a credentials provider, or dynamic database credentials.
+:topics: vault,security,credentials,datasource,database
+:categories: security
 
 include::./includes/attributes.adoc[]
 :base-guide: xref:index.adoc[Vault guide]
