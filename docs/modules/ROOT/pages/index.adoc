@@ -1,4 +1,8 @@
 = Using HashiCorp Vault
+:extensions: io.quarkiverse.vault:quarkus-vault
+:summary: Load secrets from HashiCorp Vault as configuration properties, access the KV, TOTP and other secret engines, and start Vault automatically with Dev Services.
+:topics: vault,security,secrets,config,dev-services
+:categories: security
 
 include::./includes/attributes.adoc[]
 

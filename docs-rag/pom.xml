@@ -14,7 +14,7 @@
     <description>RAG vector embeddings for documentation</description>
 
     <properties>
-        <skipRagGeneration>true</skipRagGeneration>
+        <guides.dir>${project.basedir}/../docs/modules/ROOT/pages</guides.dir>
     </properties>
 
     <build>
@@ -27,43 +27,28 @@
                         <id>generate-extension-descriptor</id>
                         <phase>none</phase>
                     </execution>
-                    <execution>
-                        <phase>none</phase>
-                    </execution>
                 </executions>
             </plugin>
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-documentation-rag-maven-plugin</artifactId>
-                <version>0.0.8</version>
                 <executions>
                     <execution>
-                        <id>generate-rag</id>
-                        <goals>
-                            <goal>generate-rag</goal>
-                        </goals>
+                        <id>generate-extension-rag</id>
                         <configuration>
-                            <guidesDirectory>${project.basedir}/../docs/modules/ROOT/pages</guidesDirectory>
-                            <skip>${skipRagGeneration}</skip>
+                            <extensionName>quarkus-vault</extensionName>
+                            <guides>
+                                <guide>${guides.dir}/index.adoc</guide>
+                                <guide>${guides.dir}/vault-auth.adoc</guide>
+                                <guide>${guides.dir}/vault-transit.adoc</guide>
+                                <guide>${guides.dir}/vault-pki.adoc</guide>
+                                <guide>${guides.dir}/vault-datasource.adoc</guide>
+                            </guides>
+                            <guideBaseUrl>https://docs.quarkiverse.io/quarkus-vault/dev</guideBaseUrl>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>rag</id>
-            <properties>
-                <skipRagGeneration>false</skipRagGeneration>
-            </properties>
-        </profile>
-        <profile>
-            <id>release</id>
-            <properties>
-                <skipRagGeneration>false</skipRagGeneration>
-            </properties>
-        </profile>
-    </profiles>
 </project>

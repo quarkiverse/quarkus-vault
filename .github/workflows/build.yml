@@ -34,6 +34,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Validate documentation RAG guides
+        run: |
+          STATUS=0
+          for page in $(sed -n 's/^\*\+ xref:\([^[]*\.adoc\)\[.*/\1/p' docs/modules/ROOT/nav.adoc); do
+            if ! grep -q "<guide>\${guides.dir}/$page</guide>" docs-rag/pom.xml; then
+              echo "$page is in nav.adoc but not in the <guides> of docs-rag/pom.xml, so it is left out of the documentation RAG artifact."
+              STATUS=1
+            fi
+            if ! awk '/^$/{exit} /^:extensions:/{found=1} END{exit !found}' "docs/modules/ROOT/pages/$page"; then
+              echo "$page has no :extensions: attribute in its header. Add it right below the title, before the first blank line:"
+              echo "  :extensions: io.quarkiverse.vault:quarkus-vault"
+              STATUS=1
+            fi
+          done
+          exit $STATUS
+
       - name: Set up JDK 21
         uses: actions/setup-java@v6
         with:
@@ -55,3 +71,11 @@ jobs:
 
       - name: Build with Maven
         run: mvn -B formatter:validate verify --file pom.xml -Dnative
+
+      - name: Build documentation RAG artifact
+        run: |
+          mvn -B -Drag -pl docs-rag package
+          if ! unzip -l docs-rag/target/quarkus-vault-docs-rag-*.jar | grep -q META-INF/quarkus-rag.sql; then
+            echo "docs-rag/target/quarkus-vault-docs-rag-*.jar has no META-INF/quarkus-rag.sql"
+            exit 1
+          fi

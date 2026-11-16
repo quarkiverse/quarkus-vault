@@ -1,4 +1,8 @@
 = Working with HashiCorp Vault’s Authentication
+:extensions: io.quarkiverse.vault:quarkus-vault
+:summary: Authenticate with HashiCorp Vault using a token, userpass, AppRole, Kubernetes, GitHub or AWS IAM, with optional response wrapping or a Vault Agent.
+:topics: vault,security,authentication
+:categories: security
 
 include::./includes/attributes.adoc[]
 :base-guide: xref:index.adoc[Vault guide]

@@ -1,4 +1,8 @@
 = Using HashiCorp Vault's PKI Secret Engine
+:extensions: io.quarkiverse.vault:quarkus-vault
+:summary: Generate, sign and revoke X.509 certificates with the HashiCorp Vault PKI secret engine.
+:topics: vault,security,pki,certificates
+:categories: security
 
 include::./includes/attributes.adoc[]
 :root-token: s.5VUS8pte13RqekCB2fmMT3u2
