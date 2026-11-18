@@ -1,4 +1,4 @@
-:quarkus-version: 4.0.0.CR1
+:quarkus-version: 4.0.0
 :quarkus-vault-version: 5.0.0.CR1
 :maven-version: 3.9.6+
 
