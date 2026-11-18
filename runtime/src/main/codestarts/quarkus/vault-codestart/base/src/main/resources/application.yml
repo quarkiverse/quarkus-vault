@@ -1,0 +1,6 @@
+quarkus:
+  vault:
+    devservices:
+      init-commands: "kv put secret/myapps/vault-codestart greeting=hello-from-vault"
+    secret-config-kv-path: "myapps/vault-codestart"
+
