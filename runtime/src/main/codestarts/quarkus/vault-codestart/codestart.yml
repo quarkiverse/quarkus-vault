@@ -1,0 +1,16 @@
+name: vault-codestart
+ref: vault
+type: code
+tags: extension-codestart
+metadata:
+  title: HashiCorp Vault Dev Services Example
+  description: Read secrets from HashiCorp Vault Dev Services using @ConfigProperty and VaultKVSecretEngine.
+  path: /vault/config
+  related-guide-section: https://docs.quarkiverse.io/quarkus-vault/dev/index.html
+language:
+  base:
+    dependencies:
+      - io.quarkus:quarkus-rest
+    test-dependencies:
+      - io.rest-assured:rest-assured
+

@@ -7,6 +7,11 @@ metadata:
   - "security"
   categories:
   - "security"
-  guide: https://quarkiverse.github.io/quarkiverse-docs/quarkus-vault/dev/index.html
+  guide: https://docs.quarkiverse.io/quarkus-vault/dev/index.html
   config:
   - "quarkus.vault."
+  codestart:
+    name: "vault"
+    languages:
+      - "java"
+    artifact: "io.quarkiverse.vault:quarkus-vault:codestarts:jar:${project.version}"
