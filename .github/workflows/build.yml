@@ -70,7 +70,7 @@ jobs:
           key: maven-repo-${{ runner.os }}-${{ steps.get-date.outputs.date }}
 
       - name: Build with Maven
-        run: mvn -B formatter:validate verify --file pom.xml -Dnative
+        run: mvn -B formatter:validate install --file pom.xml -Dnative
 
       - name: Build documentation RAG artifact
         run: |
